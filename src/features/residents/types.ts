@@ -121,6 +121,7 @@ export interface ResidentForm {
   emergency_contact_phone: string;
   id_type: string;
   id_number_last4: string;
+  portal_password?: string;
 }
 
 /** New admission wizard: charges step fields (amounts as typed strings). */

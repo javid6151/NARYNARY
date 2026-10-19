@@ -2,8 +2,9 @@
  * ZIPCO platform admin portal (`/platform/*`): onboarding review, building requests, tenants,
  * plans and the cross-tenant audit log. Access requires an active `platform_admins` row.
  */
+import { useState } from 'react';
 import { NavLink, Route, Routes, useNavigate } from 'react-router-dom';
-import { Briefcase, Building2, ClipboardCheck, CreditCard, LogOut, ScrollText } from 'lucide-react';
+import { Briefcase, Building2, ClipboardCheck, CreditCard, KeyRound, LogOut, ScrollText } from 'lucide-react';
 import { cx } from '../../lib/cx';
 import { useAuth } from '../access/useAuth';
 import { Logo } from '../../components/Logo';
@@ -12,6 +13,7 @@ import { BuildingQueue } from './screens/BuildingQueue';
 import { OnboardingQueue } from './screens/OnboardingQueue';
 import { Plans } from './screens/Plans';
 import { Tenants } from './screens/Tenants';
+import { SuperAdminPasswordModal } from './components/SuperAdminPasswordModal';
 
 const NAV = [
   { to: '/platform', label: 'Onboarding', icon: ClipboardCheck, end: true },
@@ -24,6 +26,8 @@ const NAV = [
 export default function PlatformApp() {
   const { signOut } = useAuth();
   const nav = useNavigate();
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+
   return (
     <div className="min-h-full">
       <header className="bg-nav text-white">
@@ -49,6 +53,15 @@ export default function PlatformApp() {
           </nav>
           <div className="flex-1" />
           <button
+            aria-label="Change Super Admin Password"
+            title="Change Super Admin Password"
+            onClick={() => setShowPasswordModal(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] bg-white/10 hover:bg-white/20 cursor-pointer transition-colors"
+          >
+            <KeyRound className="size-4" />
+            <span className="hidden sm:inline">Change Password</span>
+          </button>
+          <button
             aria-label="Sign out"
             onClick={async () => {
               await signOut();
@@ -60,6 +73,11 @@ export default function PlatformApp() {
           </button>
         </div>
       </header>
+
+      <SuperAdminPasswordModal
+        open={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+      />
       <main className="max-w-7xl mx-auto px-4 py-6">
         <Routes>
           <Route index element={<OnboardingQueue />} />

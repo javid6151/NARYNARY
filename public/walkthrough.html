@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zipnary — Interactive Product & Workflow Tour</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4C2365;
+      --primary-light: #6b338e;
+      --primary-subtle: #f4ecf8;
+      --accent: #9333ea;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #3b82f6;
+      --bg: #0f1117;
+      --surface: #181b24;
+      --surface-elevated: #222634;
+      --border: #2e3446;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Top Navigation */
+    header {
+      background: rgba(24, 27, 36, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, #4C2365 0%, #7e22ce 100%);
+      color: white;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 12px rgba(76, 35, 101, 0.4);
+    }
+
+    .brand-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .brand-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .quick-links {
+      display: flex;
+      gap: 8px;
+    }
+
+    .port-chip {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 4px 10px;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .port-chip:hover {
+      border-color: var(--accent);
+      color: white;
+      transform: translateY(-1px);
+    }
+
+    .port-chip.active {
+      background: var(--primary);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      max-width: 1300px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Video Player Frame */
+    .player-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Stage Canvas */
+    .screen-stage {
+      position: relative;
+      background: #090b10;
+      min-height: 520px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow: hidden;
+    }
+
+    /* Simulated App Window */
+    .app-window {
+      background: #ffffff;
+      color: #1e293b;
+      width: 100%;
+      max-width: 1050px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      border: 1px solid #cbd5e1;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      display: flex;
+      flex-direction: column;
+      min-height: 470px;
+    }
+
+    .window-chrome {
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .window-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .dot.red { background: #ef4444; }
+    .dot.yellow { background: #f59e0b; }
+    .dot.green { background: #10b981; }
+
+    .window-address {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 3px 14px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .window-badge {
+      background: #ede9fe;
+      color: #6b21a8;
+      font-weight: 600;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .window-content {
+      padding: 24px;
+      flex: 1;
+      overflow-y: auto;
+      max-height: 480px;
+    }
+
+    /* Simulated Cursor */
+    .virtual-cursor {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='%239333ea' viewBox='0 0 24 24'%3E%3Cpath d='M3 3l7 18 3-7 7-3L3 3z' stroke='%23ffffff' stroke-width='1.5' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat;
+      pointer-events: none;
+      z-index: 100;
+      transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+      transform: translate(-2px, -2px);
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4));
+    }
+
+    .cursor-ripple {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #a855f7;
+      animation: ripple 0.8s ease-out infinite;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    @keyframes ripple {
+      0% { transform: scale(0.6); opacity: 1; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+
+    /* Video Player Controls Bar */
+    .controls-bar {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Progress scrubber */
+    .scrubber-track {
+      width: 100%;
+      height: 8px;
+      background: var(--surface-elevated);
+      border-radius: 4px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .scrubber-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4C2365, #9333ea);
+      border-radius: 4px;
+      width: 16.66%;
+      transition: width 0.3s ease;
+    }
+
+    .chapter-ticks {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .tick {
+      width: 2px;
+      height: 100%;
+      background: var(--bg);
+    }
+
+    /* Player actions */
+    .player-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .left-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-icon {
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      color: white;
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-icon:hover {
+      background: var(--primary);
+      border-color: var(--accent);
+      transform: scale(1.05);
+    }
+
+    .btn-play {
+      background: linear-gradient(135deg, #4C2365 0%, #7e22ce 100%);
+      width: 44px;
+      height: 44px;
+      font-size: 18px;
+      box-shadow: 0 4px 14px rgba(126, 34, 206, 0.4);
+    }
+
+    .time-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-left: 8px;
+    }
+
+    .narration-badge {
+      background: rgba(76, 35, 101, 0.3);
+      border: 1px solid rgba(147, 51, 234, 0.4);
+      color: #e9d5ff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    /* Chapter Navigation Selector */
+    .chapters-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+      gap: 12px;
+      margin-top: 6px;
+    }
+
+    .chapter-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chapter-card:hover {
+      border-color: var(--accent);
+      background: var(--surface-elevated);
+      transform: translateY(-2px);
+    }
+
+    .chapter-card.active {
+      border-color: #9333ea;
+      background: rgba(76, 35, 101, 0.25);
+      box-shadow: 0 4px 16px rgba(147, 51, 234, 0.2);
+    }
+
+    .chapter-card.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: #9333ea;
+    }
+
+    .chapter-num {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--accent);
+      text-transform: uppercase;
+    }
+
+    .chapter-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .chapter-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* UI Simulation Components */
+    .sim-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 14px;
+    }
+
+    .sim-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    .sim-subtitle {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .sim-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 4px rgba(76, 35, 101, 0.2);
+    }
+
+    .sim-btn-outline {
+      background: transparent;
+      border: 1px solid #cbd5e1;
+      color: #475569;
+    }
+
+    .sim-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .badge-success { background: #dcfce7; color: #15803d; }
+    .badge-warning { background: #fef3c7; color: #b45309; }
+    .badge-purple { background: #f3e8ff; color: #7e22ce; }
+    .badge-blue { background: #dbeafe; color: #1d4ed8; }
+
+    /* Tables */
+    .sim-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .sim-table th {
+      text-align: left;
+      padding: 10px 12px;
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 600;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .sim-table td {
+      padding: 12px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+    }
+
+    /* Grid cards */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .metric-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .metric-label {
+      font-size: 11px;
+      color: #64748b;
+      font-weight: 500;
+    }
+
+    .metric-val {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 4px;
+    }
+
+    /* Floor Plan Grid */
+    .floor-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .room-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 14px;
+      background: #ffffff;
+    }
+
+    .room-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-weight: 600;
+      font-size: 13px;
+    }
+
+    .bed-pills {
+      display: flex;
+      gap: 6px;
+    }
+
+    .bed-pill {
+      flex: 1;
+      padding: 8px 4px;
+      border-radius: 6px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      border: 1px solid transparent;
+    }
+
+    .bed-occupied {
+      background: #ecfdf5;
+      color: #047857;
+      border-color: #a7f3d0;
+    }
+
+    .bed-available {
+      background: #faf5ff;
+      color: #7e22ce;
+      border-color: #e9d5ff;
+    }
+
+    /* Stepper */
+    .stepper {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .stepper::before {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 30px;
+      right: 30px;
+      height: 2px;
+      background: #e2e8f0;
+      z-index: 1;
+    }
+
+    .step-item {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      background: white;
+      padding: 0 8px;
+    }
+
+    .step-circle {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #f1f5f9;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      border: 2px solid #cbd5e1;
+    }
+
+    .step-item.active .step-circle {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px #f3e8ff;
+    }
+
+    .step-item.done .step-circle {
+      background: #10b981;
+      color: white;
+      border-color: #10b981;
+    }
+
+    .step-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    .step-item.active .step-name {
+      color: var(--primary);
+    }
+
+    /* Explanation Banner */
+    .explainer-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .explainer-text h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .explainer-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    @media (max-width: 900px) {
+      .metric-grid { grid-template-columns: repeat(2, 1fr); }
+      .floor-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="logo-badge">ZIPNARY</div>
+      <div>
+        <div class="brand-title">Interactive Product & Workflow Tour</div>
+        <div class="brand-sub">Multi-Tenant PG & Hostel Management SaaS</div>
+      </div>
+    </div>
+
+    <div class="quick-links">
+      <span style="font-size: 11px; color: var(--text-muted); align-self: center; margin-right: 4px;">Direct Portals:</span>
+      <a href="http://localhost:1000/platform" target="_blank" class="port-chip" title="Platform Super Admin">1000 Admin</a>
+      <a href="http://localhost:2000/app" target="_blank" class="port-chip" title="PG Owner Console">2000 Owner</a>
+      <a href="http://localhost:3000/app" target="_blank" class="port-chip" title="Manager Console">3000 Manager</a>
+      <a href="http://localhost:4000/kitchen" target="_blank" class="port-chip" title="Kitchen & Mess Portal">4000 Chef</a>
+      <a href="http://localhost:5000/resident" target="_blank" class="port-chip" title="Resident Portal">5000 Resident</a>
+    </div>
+  </header>
+
+  <main>
+    <!-- Video Player Simulation Container -->
+    <div class="player-container">
+      <div class="screen-stage" id="screenStage">
+        <!-- Virtual Animated Cursor -->
+        <div class="virtual-cursor" id="virtualCursor"></div>
+        <div class="cursor-ripple" id="cursorRipple"></div>
+
+        <!-- Rendered App Window -->
+        <div class="app-window" id="appWindow">
+          <!-- Dynamic Content Rendered Here by JS -->
+        </div>
+      </div>
+
+      <!-- Video Control Bar -->
+      <div class="controls-bar">
+        <div class="scrubber-track" id="scrubberTrack">
+          <div class="scrubber-fill" id="scrubberFill"></div>
+          <div class="chapter-ticks">
+            <div class="tick"></div>
+            <div class="tick"></div>
+            <div class="tick"></div>
+            <div class="tick"></div>
+            <div class="tick"></div>
+            <div class="tick"></div>
+          </div>
+        </div>
+
+        <div class="player-actions">
+          <div class="left-controls">
+            <button class="btn-icon" id="btnPrev" title="Previous Chapter">⏮</button>
+            <button class="btn-icon btn-play" id="btnPlay" title="Play / Pause">⏸</button>
+            <button class="btn-icon" id="btnNext" title="Next Chapter">⏭</button>
+            <button class="btn-icon" id="btnSpeed" title="Playback Speed" style="font-size: 12px; font-weight: 700;">1x</button>
+            <div class="time-display" id="timeDisplay">Scene 1 of 6 • 00:05 / 00:30</div>
+          </div>
+
+          <div class="narration-badge">
+            <div class="live-dot"></div>
+            <span id="narrationText">Platform Super Admin: Reviewing & Approving PG Business Onboarding</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chapter Selectors -->
+    <div class="chapters-grid">
+      <div class="chapter-card active" onclick="jumpToChapter(0)">
+        <div class="chapter-num">Scene 1 • :1000</div>
+        <div class="chapter-title">Platform Onboarding</div>
+        <div class="chapter-desc">Super Admin verifies business & generates code ZPN-000001.</div>
+      </div>
+
+      <div class="chapter-card" onclick="jumpToChapter(1)">
+        <div class="chapter-num">Scene 2 • :2000</div>
+        <div class="chapter-title">Property & Floor Setup</div>
+        <div class="chapter-desc">Floors, rooms, and bed map with real-time occupancy.</div>
+      </div>
+
+      <div class="chapter-card" onclick="jumpToChapter(2)">
+        <div class="chapter-num">Scene 3 • :2000</div>
+        <div class="chapter-title">5-Step Admission Wizard</div>
+        <div class="chapter-desc">Details ➔ Bed ➔ Terms ➔ KYC ➔ Double-booking protection.</div>
+      </div>
+
+      <div class="chapter-card" onclick="jumpToChapter(3)">
+        <div class="chapter-num">Scene 4 • :5000</div>
+        <div class="chapter-title">Resident Portal</div>
+        <div class="chapter-desc">Rent dues, meal cutoffs ("Not Eating"), and complaints.</div>
+      </div>
+
+      <div class="chapter-card" onclick="jumpToChapter(4)">
+        <div class="chapter-num">Scene 5 • :4000</div>
+        <div class="chapter-title">Kitchen Headcount</div>
+        <div class="chapter-desc">Live headcount, resident opt-out list, and stock ledger.</div>
+      </div>
+
+      <div class="chapter-card" onclick="jumpToChapter(5)">
+        <div class="chapter-num">Scene 6 • :2000</div>
+        <div class="chapter-title">Billing & Checkout</div>
+        <div class="chapter-desc">Atomic receipts, deposit settlement, and bed release.</div>
+      </div>
+    </div>
+
+    <!-- Explainer Callout -->
+    <div class="explainer-box">
+      <div class="explainer-text">
+        <h4>⚡ Multi-Portal Architecture Active</h4>
+        <p>Each portal runs completely isolated on its own port with strict database Row-Level Security (RLS) enforcement. Click any quick link at the top to interact live!</p>
+      </div>
+      <div>
+        <a href="http://localhost:2000/app" target="_blank" class="sim-btn" style="text-decoration: none;">Launch Owner App 🚀</a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const CHAPTERS = [
+      {
+        id: 0,
+        port: 1000,
+        route: '/platform',
+        role: 'ZIPCO Platform Admin',
+        title: 'Platform Super Admin Onboarding Queue',
+        narration: 'Platform Super Admin: Reviewing and approving PG onboarding queue',
+        cursorTarget: { x: 780, y: 140 },
+        render: () => `
+          <div class="window-chrome">
+            <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+            <div class="window-address">🔒 http://localhost:1000/platform/onboarding-queue</div>
+            <div class="window-badge">Platform Super Admin</div>
+          </div>
+          <div class="window-content">
+            <div class="sim-header">
+              <div>
+                <div class="sim-title">Pending Tenant Approvals</div>
+                <div class="sim-subtitle">Review business KYC, property documents and assign SaaS quotas</div>
+              </div>
+              <button class="sim-btn" id="targetBtn">Approve Tenant ✓</button>
+            </div>
+
+            <div class="metric-grid">
+              <div class="metric-card"><div class="metric-label">Queue Length</div><div class="metric-val">1 Pending</div></div>
+              <div class="metric-card"><div class="metric-label">Approved Tenants</div><div class="metric-val">14 Total</div></div>
+              <div class="metric-card"><div class="metric-label">Allocated Beds</div><div class="metric-val">1,240</div></div>
+              <div class="metric-card"><div class="metric-label">Platform Health</div><div class="metric-val" style="color: #10b981;">100% OK</div></div>
+            </div>
+
+            <table class="sim-table">
+              <thead>
+                <tr>
+                  <th>Business Name</th>
+                  <th>Owner</th>
+                  <th>Building & Address</th>
+                  <th>Plan & Quota</th>
+                  <th>Submitted</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style="background: #faf5ff;">
+                  <td><strong>Zipnary PG (YVR Block)</strong><br><span style="color:#64748b; font-size:10px;">ID: T-90812</span></td>
+                  <td>owner@zipnary.test<br><span style="color:#64748b;">+91 98765 43210</span></td>
+                  <td>YVR PG, Madhapur, Hyderabad<br><span style="color:#64748b;">4 Floors • 48 Beds</span></td>
+                  <td><span class="sim-badge badge-purple">Pro Plan (120 Beds)</span></td>
+                  <td>10 mins ago</td>
+                  <td><span class="sim-badge badge-warning">Ready for Approval</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `
+      },
+      {
+        id: 1,
+        port: 2000,
+        route: '/app/property',
+        role: 'PG Owner',
+        title: 'Property & Floor Layout Management',
+        narration: 'PG Owner: Managing floors, rooms, and live bed occupancy',
+        cursorTarget: { x: 520, y: 220 },
+        render: () => `
+          <div class="window-chrome">
+            <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+            <div class="window-address">🔒 http://localhost:2000/app/property</div>
+            <div class="window-badge">PG Owner Console</div>
+          </div>
+          <div class="window-content">
+            <div class="sim-header">
+              <div>
+                <div class="sim-title">Property Layout — YVR PG (Block A)</div>
+                <div class="sim-subtitle">Tenant Code: ZPN-000001 • Total Capacity: 48 Beds</div>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="sim-btn sim-btn-outline">+ Add Room</button>
+                <button class="sim-btn" id="targetBtn">+ New Floor</button>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 16px; display: flex; gap: 12px; font-size: 12px;">
+              <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:#ecfdf5; border:1px solid #10b981; border-radius:3px;"></span> Occupied (41)</span>
+              <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:#faf5ff; border:1px solid #9333ea; border-radius:3px;"></span> Available (7)</span>
+              <span style="display:flex; align-items:center; gap:4px;"><span style="width:10px; height:10px; background:#fef3c7; border:1px solid #f59e0b; border-radius:3px;"></span> Reserved (0)</span>
+            </div>
+
+            <div class="floor-grid">
+              <div class="room-card">
+                <div class="room-head">
+                  <span>Room 101 (Triple Sharing AC)</span>
+                  <span class="sim-badge badge-success">3/3 Full</span>
+                </div>
+                <div class="bed-pills">
+                  <div class="bed-pill bed-occupied">Bed A (Rahul)</div>
+                  <div class="bed-pill bed-occupied">Bed B (Amit)</div>
+                  <div class="bed-pill bed-occupied">Bed C (Suresh)</div>
+                </div>
+              </div>
+
+              <div class="room-card" style="border-color: #c084fc; box-shadow: 0 4px 12px rgba(147, 51, 234, 0.1);">
+                <div class="room-head">
+                  <span>Room 102 (Twin Sharing Non-AC)</span>
+                  <span class="sim-badge badge-purple">1 Vacant</span>
+                </div>
+                <div class="bed-pills">
+                  <div class="bed-pill bed-occupied">Bed A (Kiran)</div>
+                  <div class="bed-pill bed-available" id="targetBed">Bed B (Vacant • ₹7.5k)</div>
+                </div>
+              </div>
+
+              <div class="room-card">
+                <div class="room-head">
+                  <span>Room 103 (Single Private AC)</span>
+                  <span class="sim-badge badge-success">Occupied</span>
+                </div>
+                <div class="bed-pills">
+                  <div class="bed-pill bed-occupied">Bed A (Vikram • ₹12k)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 2,
+        port: 2000,
+        route: '/app/residents/new-admission',
+        role: 'PG Owner / Manager',
+        title: '5-Step Admission Wizard & Bed Reservation',
+        narration: 'Admission Wizard: 5 steps preventing double-booking with database constraints',
+        cursorTarget: { x: 860, y: 380 },
+        render: () => `
+          <div class="window-chrome">
+            <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+            <div class="window-address">🔒 http://localhost:2000/app/residents/new-admission</div>
+            <div class="window-badge">Admission Wizard</div>
+          </div>
+          <div class="window-content">
+            <div class="sim-header">
+              <div>
+                <div class="sim-title">New Resident Admission</div>
+                <div class="sim-subtitle">Atomic allocation with partial unique database constraints</div>
+              </div>
+            </div>
+
+            <div class="stepper">
+              <div class="step-item done"><div class="step-circle">✓</div><div class="step-name">1. Details</div></div>
+              <div class="step-item done"><div class="step-circle">✓</div><div class="step-name">2. Bed Selection</div></div>
+              <div class="step-item done"><div class="step-circle">✓</div><div class="step-name">3. Terms</div></div>
+              <div class="step-item done"><div class="step-circle">✓</div><div class="step-name">4. KYC Upload</div></div>
+              <div class="step-item active"><div class="step-circle">5</div><div class="step-name">5. Review</div></div>
+            </div>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin-bottom: 20px;">
+              <div style="font-weight: 700; font-size: 14px; margin-bottom: 12px; color: #0f172a;">Application Summary</div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; font-size: 12px;">
+                <div><span style="color:#64748b;">Resident:</span><br><strong>Rahul Verma</strong></div>
+                <div><span style="color:#64748b;">Phone / Email:</span><br><strong>+91 91234 56789</strong><br>rahul@resident.test</div>
+                <div><span style="color:#64748b;">Assigned Bed:</span><br><strong style="color: #7e22ce;">Room 102 • Bed B</strong></div>
+                <div><span style="color:#64748b;">Monthly Rent:</span><br><strong>₹7,500 / month</strong></div>
+                <div><span style="color:#64748b;">Security Deposit:</span><br><strong>₹15,000 (Refundable)</strong></div>
+                <div><span style="color:#64748b;">KYC Verification:</span><br><span class="sim-badge badge-success">Aadhaar Verified</span></div>
+              </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+              <button class="sim-btn sim-btn-outline">Back to KYC</button>
+              <button class="sim-btn" id="targetBtn">Approve Admission & Send Invite ✉️</button>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 3,
+        port: 5000,
+        route: '/resident',
+        role: 'Resident',
+        title: 'Resident Portal: Dues, Meal Cutoffs & Complaints',
+        narration: 'Resident Portal: Viewing rent receipts, opting out of dinner, filing tickets',
+        cursorTarget: { x: 740, y: 190 },
+        render: () => `
+          <div class="window-chrome">
+            <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+            <div class="window-address">🔒 http://localhost:5000/resident</div>
+            <div class="window-badge">Resident Portal (Rahul)</div>
+          </div>
+          <div class="window-content">
+            <div class="sim-header">
+              <div>
+                <div class="sim-title">Welcome back, Rahul 👋</div>
+                <div class="sim-subtitle">Room 102, Bed B • YVR PG (Block A)</div>
+              </div>
+              <button class="sim-btn" style="background: #10b981;">Pay Rent Dues (₹0)</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
+              <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 16px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                      <div style="font-size: 11px; color: #7e22ce; font-weight: 700; text-transform: uppercase;">Today's Dinner Cutoff</div>
+                      <div style="font-size: 15px; font-weight: 700; color: #0f172a; margin-top: 2px;">Dal Tadka, Paneer Butter Masala, Roti, Rice</div>
+                    </div>
+                    <button class="sim-btn" id="targetBtn" style="background: #ef4444;">Mark "Not Eating" ✕</button>
+                  </div>
+                  <div style="font-size: 11px; color: #64748b; margin-top: 8px;">⏰ Cutoff time: 7:00 PM (1 hr 15 mins remaining)</div>
+                </div>
+
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
+                  <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">Recent Payment Receipts</div>
+                  <table class="sim-table">
+                    <tr><td>#REC-2026-0812</td><td>₹7,500 (Rent Oct)</td><td>UPI Verified</td><td><a href="#" style="color:#7e22ce; font-weight:600;">Download PDF</a></td></tr>
+                    <tr><td>#REC-2026-0641</td><td>₹15,000 (Security Deposit)</td><td>Bank Transfer</td><td><a href="#" style="color:#7e22ce; font-weight:600;">Download PDF</a></td></tr>
+                  </table>
+                </div>
+              </div>
+
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px;">
+                <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">Quick Services</div>
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                  <button class="sim-btn sim-btn-outline" style="width: 100%; justify-content: flex-start;">🔧 Raise Complaint</button>
+                  <button class="sim-btn sim-btn-outline" style="width: 100%; justify-content: flex-start;">🎟️ Generate Visitor Pass</button>
+                  <button class="sim-btn sim-btn-outline" style="width: 100%; justify-content: flex-start;">⭐ Rate Yesterday's Food</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `
+      },
+      {
+        id: 4,
+        port: 4000,
+        route: '/kitchen',
+        role: 'Chef / Kitchen',
+        title: 'Kitchen & Mess Live Headcount & Inventory',
+        narration: 'Kitchen Portal: Live count of diners to eliminate food waste + ingredient ledger',
+        cursorTarget: { x: 700, y: 150 },
+        render: () => `
+          <div class="window-chrome">
+            <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+            <div class="window-address">🔒 http://localhost:4000/kitchen</div>
+            <div class="window-badge">Kitchen Portal (Chef)</div>
+          </div>
+          <div class="window-content">
+            <div class="sim-header">
+              <div>
+                <div class="sim-title">Kitchen Live Operations — YVR PG</div>
+                <div class="sim-subtitle">Chef Portal: Strictly scoped to mess & inventory (Zero KYC access)</div>
+              </div>
+              <button class="sim-btn" id="targetBtn">+ Log Ingredient Usage</button>
+            </div>
+
+            <div class="metric-grid">
+              <div class="metric-card" style="border-color: #10b981; background: #ecfdf5;">
+                <div class="metric-label" style="color: #047857;">Tonight's Dinner Headcount</div>
+                <div class="metric-val" style="color: #047857;">42 Eaters</div>
+              </div>
+              <div class="metric-card" style="border-color: #f87171; background: #fef2f2;">
+                <div class="metric-label" style="color: #b91c1c;">Opted Out ("Not Eating")</div>
+                <div class="metric-val" style="color: #b91c1c;">6 Residents</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">Food Waste Saved</div>
+                <div class="metric-val">~4.8 kg</div>
+              </div>
+              <div class="metric-card">
+                <div class="metric-label">Avg Meal Rating</div>
+                <div class="metric-val">★ 4.6 / 5</div>
+              </div>
+            </div>
+
+            <div style="font-weight: 700; font-size: 13px; margin-bottom: 8px;">Residents Who Opted Out (Cutoff Passed)</div>
+            <table class="sim-table">
+              <thead>
+                <tr><th>Resident</th><th>Room & Bed</th><th>Meal</th><th>Marked At</th><th>Reason</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Rahul Verma</td><td>Room 102 • Bed B</td><td>Dinner</td><td>6:15 PM</td><td>Office Dinner</td></tr>
+                <tr><td>Amit Kumar</td><td>Room 101 • Bed B</td><td>Dinner</td><td>5:40 PM</td><td>Weekend Leave</td></tr>
+                <tr><td>Pooja Sharma</td><td>Room 204 • Bed A</td><td>Dinner</td><td>4:10 PM</td><td>Eating with Friends</td></tr>
+              </tbody>
+            </table>
+          </div>
+        `
+      },
+      {
+        id: 5,
+        port: 2000,
+        route: '/app/billing',
+        role: 'PG Owner / Manager',
+        title: 'Billing, Atomic Receipts & Checkout Settlement',
+        narration: 'Billing & Checkout: Recording payments, issuing atomic receipts, handling refunds',
+        cursorTarget: { x: 800, y: 150 },
+        render: () => `
+          <div class="window-chrome">
+            <div class="window-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div>
+            <div class="window-address">🔒 http://localhost:2000/app/billing</div>
+            <div class="window-badge">Billing & Finance Ledger</div>
+          </div>
+          <div class="window-content">
+            <div class="sim-header">
+              <div>
+                <div class="sim-title">Collections & Audit Ledger</div>
+                <div class="sim-subtitle">Atomic allocation with FIFO settlement and immutable receipts</div>
+              </div>
+              <button class="sim-btn" id="targetBtn">+ Record Collection</button>
+            </div>
+
+            <div class="metric-grid">
+              <div class="metric-card"><div class="metric-label">Total Monthly Expected</div><div class="metric-val">₹3,48,000</div></div>
+              <div class="metric-card"><div class="metric-label">Total Collected</div><div class="metric-val" style="color: #10b981;">₹3,15,500</div></div>
+              <div class="metric-card"><div class="metric-label">Pending Dues</div><div class="metric-val" style="color: #f59e0b;">₹32,500</div></div>
+              <div class="metric-card"><div class="metric-label">Held Deposits</div><div class="metric-val">₹6,80,000</div></div>
+            </div>
+
+            <table class="sim-table">
+              <thead>
+                <tr><th>Receipt #</th><th>Resident</th><th>Room</th><th>Amount</th><th>Method</th><th>Status</th><th>Audit</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><strong>#REC-2026-0891</strong></td><td>Rahul Verma</td><td>102-B</td><td>₹7,500</td><td>UPI (Ref: 998124)</td><td><span class="sim-badge badge-success">Settled</span></td><td>Recorded by Manager</td></tr>
+                <tr><td><strong>#REC-2026-0890</strong></td><td>Suresh Reddy</td><td>101-C</td><td>₹8,000</td><td>Bank Transfer</td><td><span class="sim-badge badge-success">Settled</span></td><td>Recorded by Owner</td></tr>
+                <tr><td><strong>#REV-2026-0012</strong></td><td>Pravin Patel</td><td>203-A</td><td>-₹7,500</td><td>Reversal (Bounced)</td><td><span class="sim-badge badge-warning">Reversed</span></td><td>Reversal Note Attached</td></tr>
+              </tbody>
+            </table>
+          </div>
+        `
+      }
+    ];
+
+    let currentChapter = 0;
+    let isPlaying = true;
+    let playbackSpeed = 1;
+    let chapterTimer = null;
+    let progressTimer = null;
+    let elapsedSeconds = 0;
+    const totalDuration = 30; // 5s per chapter
+
+    const appWindow = document.getElementById('appWindow');
+    const virtualCursor = document.getElementById('virtualCursor');
+    const cursorRipple = document.getElementById('cursorRipple');
+    const narrationText = document.getElementById('narrationText');
+    const scrubberFill = document.getElementById('scrubberFill');
+    const btnPlay = document.getElementById('btnPlay');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const btnSpeed = document.getElementById('btnSpeed');
+    const timeDisplay = document.getElementById('timeDisplay');
+    const chapterCards = document.querySelectorAll('.chapter-card');
+
+    function renderChapter(index) {
+      currentChapter = index;
+      const ch = CHAPTERS[index];
+
+      // Update app window
+      appWindow.innerHTML = ch.render();
+
+      // Update chapter cards
+      chapterCards.forEach((card, i) => {
+        card.classList.toggle('active', i === index);
+      });
+
+      // Update narration & scrubber
+      narrationText.innerText = ch.narration;
+      scrubberFill.style.width = `${((index + 1) / CHAPTERS.length) * 100}%`;
+
+      // Update time display
+      timeDisplay.innerText = `Scene ${index + 1} of ${CHAPTERS.length} • 00:${String((index * 5) + 5).padStart(2, '0')} / 00:30`;
+
+      // Animate virtual cursor to simulate interaction
+      setTimeout(() => {
+        virtualCursor.style.left = `${ch.cursorTarget.x}px`;
+        virtualCursor.style.top = `${ch.cursorTarget.y}px`;
+
+        // Ripple click effect
+        setTimeout(() => {
+          cursorRipple.style.left = `${ch.cursorTarget.x - 3}px`;
+          cursorRipple.style.top = `${ch.cursorTarget.y - 3}px`;
+          cursorRipple.style.opacity = '1';
+          setTimeout(() => {
+            cursorRipple.style.opacity = '0';
+          }, 600);
+        }, 800);
+      }, 300);
+    }
+
+    function startAutoPlay() {
+      if (chapterTimer) clearInterval(chapterTimer);
+      chapterTimer = setInterval(() => {
+        if (!isPlaying) return;
+        let next = (currentChapter + 1) % CHAPTERS.length;
+        renderChapter(next);
+      }, 5000 / playbackSpeed);
+    }
+
+    function jumpToChapter(index) {
+      renderChapter(index);
+      if (isPlaying) startAutoPlay();
+    }
+
+    btnPlay.addEventListener('click', () => {
+      isPlaying = !isPlaying;
+      btnPlay.innerText = isPlaying ? '⏸' : '▶';
+      if (isPlaying) startAutoPlay();
+      else clearInterval(chapterTimer);
+    });
+
+    btnNext.addEventListener('click', () => {
+      let next = (currentChapter + 1) % CHAPTERS.length;
+      renderChapter(next);
+      if (isPlaying) startAutoPlay();
+    });
+
+    btnPrev.addEventListener('click', () => {
+      let prev = (currentChapter - 1 + CHAPTERS.length) % CHAPTERS.length;
+      renderChapter(prev);
+      if (isPlaying) startAutoPlay();
+    });
+
+    btnSpeed.addEventListener('click', () => {
+      if (playbackSpeed === 1) playbackSpeed = 1.5;
+      else if (playbackSpeed === 1.5) playbackSpeed = 2;
+      else playbackSpeed = 1;
+      btnSpeed.innerText = `${playbackSpeed}x`;
+      if (isPlaying) startAutoPlay();
+    });
+
+    // Scrubber click to jump
+    document.getElementById('scrubberTrack').addEventListener('click', (e) => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const clickRatio = (e.clientX - rect.left) / rect.width;
+      const targetIndex = Math.min(Math.floor(clickRatio * CHAPTERS.length), CHAPTERS.length - 1);
+      jumpToChapter(targetIndex);
+    });
+
+    // Initial render
+    renderChapter(0);
+    startAutoPlay();
+  </script>
+</body>
+</html>

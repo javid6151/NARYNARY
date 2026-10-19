@@ -22,6 +22,7 @@ export function ReviewStep({ res, terms, location, docCount, error }: {
     ['Security deposit', inr(terms.security_deposit)],
     ['Setup fee', inr(terms.setup_fee)],
     ['Mess', terms.mess_included ? 'Included' : 'Not included'],
+    ['Portal Password', res.portal_password || '—'],
     ['Documents', docCount ? `${docCount} file(s)` : 'None'],
   ];
   return (

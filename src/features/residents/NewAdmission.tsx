@@ -19,6 +19,7 @@ import { fileError } from '../files/rules';
 import { getBuildingLayout } from '../property/api';
 import type { LayoutFloor } from '../property/types';
 import { createAdmission, getAdmissionResidentId } from './api';
+import { setResidentPassword } from '../auth/api';
 import type { PendingDoc, ResidentForm, TermsForm } from './types';
 import { EMAIL_RE, ID_LAST4_RE, PHONE_RE } from '../../lib/validation';
 import { BedStep } from './new-admission/BedStep';
@@ -54,6 +55,7 @@ export default function NewAdmission() {
     emergency_contact_phone: '',
     id_type: 'aadhaar',
     id_number_last4: '',
+    portal_password: '',
   });
   const [terms, setTerms] = useState<TermsForm>({
     admission_date: isoDate(),
@@ -105,6 +107,20 @@ export default function NewAdmission() {
       },
       idempotencyKey: idemKey,
     });
+    if (res.portal_password) {
+      try {
+        const residentId = await getAdmissionResidentId(admissionId);
+        await setResidentPassword({
+          residentId,
+          phone: res.phone,
+          email: res.email || undefined,
+          fullName: res.full_name,
+          password: res.portal_password,
+        });
+      } catch (e) {
+        console.warn('Failed to set initial resident portal password:', e);
+      }
+    }
     const pending = docs.filter((d) => !uploaded.current.has(d.file));
     if (pending.length) {
       const residentId = await getAdmissionResidentId(admissionId);

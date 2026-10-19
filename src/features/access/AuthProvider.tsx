@@ -10,6 +10,8 @@ import { BUILDING_STORAGE_KEY } from './useBuilding';
 import { AuthContext, type AuthCtx } from './useAuth';
 import type { Access } from './types';
 
+import { CURRENT_PORTAL, getActivePortal } from '../../lib/portals';
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [access, setAccess] = useState<Access | null>(null);
@@ -19,9 +21,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       // Accept any staff invitation / link resident record matching the verified email.
       await claimPendingAccess();
+    } catch (e) {
+      console.warn('claimPendingAccess non-fatal:', e);
+    }
+    try {
       setAccess(await getMyAccess());
     } catch (e) {
-      console.error(e);
+      console.error('getMyAccess error:', e);
       setAccess(null);
     }
   }, []);
@@ -54,12 +60,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const chef = ms.find((m) => m.role === 'chef') ?? null;
     const resident = ms.find((m) => m.role === 'resident') ?? null;
     // Platform admin wins, then staff, chef, resident; a user with no membership goes to onboarding.
-    const homePath = !session ? '/login'
+    const defaultHome = !session ? '/login'
       : access?.is_platform_admin ? '/platform'
       : staff ? '/app'
       : chef ? '/kitchen'
       : resident ? '/resident'
       : '/onboarding';
+
+    // On a dedicated portal port, navigate to that portal's path only if permitted
+    const portal = CURRENT_PORTAL ?? getActivePortal();
+    let homePath = defaultHome;
+    if (session && portal) {
+      if (portal.id === 'platform' && access?.is_platform_admin) {
+        homePath = '/platform';
+      } else if (portal.id === 'owner' && (staff?.role === 'owner' || (!staff && !chef && !resident && !access?.is_platform_admin))) {
+        homePath = (staff?.role === 'owner' || access?.owned_tenant?.status === 'active') ? '/app' : '/onboarding';
+      } else if (portal.id === 'manager' && (staff?.role === 'manager' || staff?.role === 'owner')) {
+        homePath = '/app';
+      } else if (portal.id === 'kitchen' && (chef || staff)) {
+        homePath = '/kitchen';
+      } else if (portal.id === 'resident' && (resident || staff)) {
+        homePath = '/resident';
+      }
+    }
     return {
       session, access, loading, refreshAccess, staff, chef, resident, homePath,
       signOut: async () => {

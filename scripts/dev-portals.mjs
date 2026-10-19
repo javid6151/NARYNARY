@@ -1,4 +1,4 @@
-// Starts one Vite dev server per portal, in sequence: platform 1000 → owner 2001 → manager 3000
+// Starts one Vite dev server per portal, in sequence: platform 1000 → owner 2000 → manager 3000
 // → kitchen 4000 → resident 5000. Each server waits for the previous one to be ready.
 // Ctrl+C stops them all. Ports are defined in src/lib/portals.ts (keep both in sync).
 import { spawn, spawnSync } from 'node:child_process';
@@ -11,7 +11,7 @@ const killTree = (c) => {
 
 const PORTALS = [
   ['platform', 1000, '/platform'],
-  ['owner', 2001, '/app'],
+  ['owner', 2000, '/app'],
   ['manager', 3000, '/app'],
   ['kitchen', 4000, '/kitchen'],
   ['resident', 5000, '/resident'],

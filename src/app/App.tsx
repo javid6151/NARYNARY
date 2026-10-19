@@ -14,7 +14,7 @@ import { useAuth } from '../features/access/useAuth';
 import { BuildingProvider } from '../features/access/BuildingProvider';
 import Login from '../features/auth/Login';
 import Onboarding from '../features/onboarding/Onboarding';
-import { CURRENT_PORTAL, type PortalId } from '../lib/portals';
+import { CURRENT_PORTAL, getActivePortal, type PortalId } from '../lib/portals';
 import { FullLoading, Gate } from './Gate';
 import { WrongPortal } from './WrongPortal';
 import { StaffShell } from './StaffShell';
@@ -42,15 +42,28 @@ export default function App() {
   const { session, loading, homePath, staff, chef, resident, access } = useAuth();
   if (configError) return <div className="p-8 text-bad">{configError}</div>;
 
+  const activePortal = CURRENT_PORTAL ?? getActivePortal();
+
   // On a per-portal port, send users who belong elsewhere to their own portal's port.
   // (New owners without a membership complete onboarding on the owner port.)
-  if (CURRENT_PORTAL && session && !loading && access) {
-    const mine: PortalId = access.is_platform_admin ? 'platform'
-      : staff ? (staff.role === 'owner' ? 'owner' : 'manager')
-      : chef ? 'kitchen'
-      : resident ? 'resident'
-      : 'owner';
-    if (mine !== CURRENT_PORTAL.id) return <WrongPortal portal={mine} />;
+  if (activePortal && session && !loading) {
+    const isAllowed =
+      activePortal.id === 'platform' ? !!access?.is_platform_admin
+      : activePortal.id === 'owner' ? (staff?.role === 'owner' || (!staff && !chef && !resident && !access?.is_platform_admin))
+      : activePortal.id === 'manager' ? (staff?.role === 'manager' || staff?.role === 'owner')
+      : activePortal.id === 'kitchen' ? (!!chef || !!staff)
+      : activePortal.id === 'resident' ? (!!resident || !!staff)
+      : true;
+
+    if (!isAllowed) {
+      const targetPortal: PortalId = access?.is_platform_admin ? 'platform'
+        : staff?.role === 'owner' ? 'owner'
+        : staff?.role === 'manager' ? 'manager'
+        : chef ? 'kitchen'
+        : resident ? 'resident'
+        : 'owner';
+      return <WrongPortal portal={targetPortal} />;
+    }
   }
 
   // Signed-in users who open /login or /signup go straight to their portal.
@@ -61,7 +74,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={authPage(<Login />)} />
         <Route path="/signup" element={authPage(<Login mode="signup" />)} />
-        <Route path="/onboarding" element={<Gate allow={true}><Onboarding /></Gate>} />
+        <Route path="/onboarding" element={<Gate allow={!activePortal || activePortal.id === 'owner'}><Onboarding /></Gate>} />
 
         <Route
           path="/app"
@@ -100,7 +113,16 @@ export default function App() {
             </Gate>
           }
         />
-        <Route path="/resident/*" element={<Gate allow={!!resident}><ResidentApp /></Gate>} />
+        <Route
+          path="/resident/*"
+          element={
+            <Gate allow={!!resident || !!staff}>
+              <BuildingProvider>
+                <ResidentApp />
+              </BuildingProvider>
+            </Gate>
+          }
+        />
         <Route path="/platform/*" element={<Gate allow={!!access?.is_platform_admin}><PlatformApp /></Gate>} />
         <Route path="*" element={loading ? <FullLoading /> : <Navigate to={homePath} replace />} />
       </Routes>

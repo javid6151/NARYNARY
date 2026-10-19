@@ -17,8 +17,34 @@ export function DetailsStep({ res, setRes, errs }: {
       <Field label="Mobile number" required error={errs.phone}>
         {(id) => <Input id={id} value={res.phone} onChange={setR('phone')} inputMode="tel" placeholder="+91 98765 43210" />}
       </Field>
-      <Field label="Email" error={errs.email} hint="Needed for the resident to activate their portal">
+      <Field label="Email" error={errs.email} hint="Optional: Used for notices & updates">
         {(id) => <Input id={id} type="email" value={res.email} onChange={setR('email')} />}
+      </Field>
+      <Field
+        label="Portal Password (Unique for this resident)"
+        hint="Resident uses Mobile Number as ID and this unique password to log in"
+        error={errs.portal_password}
+      >
+        {(id) => (
+          <div className="flex gap-2">
+            <Input
+              id={id}
+              value={res.portal_password || ''}
+              onChange={setR('portal_password')}
+              placeholder="e.g. Res@9842"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                const randomPass = 'Res#' + Math.floor(1000 + Math.random() * 9000);
+                setRes({ ...res, portal_password: randomPass });
+              }}
+              className="px-3 py-1.5 text-xs font-medium bg-brand-50 text-brand-700 border border-brand-200 rounded-lg hover:bg-brand-100 whitespace-nowrap cursor-pointer"
+            >
+              Generate
+            </button>
+          </div>
+        )}
       </Field>
       <Field label="Date of birth">
         {(id) => <Input id={id} type="date" value={res.date_of_birth} onChange={setR('date_of_birth')} />}

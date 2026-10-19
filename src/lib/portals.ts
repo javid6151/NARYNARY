@@ -8,14 +8,24 @@ export type PortalId = 'platform' | 'owner' | 'manager' | 'kitchen' | 'resident'
 /** In start order. Owner and manager share the `/app` console; managers see only assigned buildings. */
 export const PORTALS: { id: PortalId; label: string; port: number; path: string }[] = [
   { id: 'platform', label: 'Platform admin', port: 1000, path: '/platform' },
-  { id: 'owner', label: 'Owner', port: 2001, path: '/app' },
+  { id: 'owner', label: 'Owner', port: 2000, path: '/app' },
   { id: 'manager', label: 'Manager', port: 3000, path: '/app' },
   { id: 'kitchen', label: 'Kitchen', port: 4000, path: '/kitchen' },
   { id: 'resident', label: 'Resident', port: 5000, path: '/resident' },
 ];
 
-/** The portal this server was started for, or undefined for the all-in-one dev server (5173). */
-export const CURRENT_PORTAL = PORTALS.find((p) => p.id === (import.meta.env.VITE_PORTAL as string | undefined));
+/** The portal this server was started for, detected via VITE_PORTAL or window.location.port. */
+export const getActivePortal = (): typeof PORTALS[number] | undefined => {
+  const fromEnv = PORTALS.find((p) => p.id === (import.meta.env.VITE_PORTAL as string | undefined));
+  if (fromEnv) return fromEnv;
+  if (typeof window !== 'undefined' && window.location.port) {
+    const portNum = Number(window.location.port);
+    return PORTALS.find((p) => p.port === portNum);
+  }
+  return undefined;
+};
+
+export const CURRENT_PORTAL = getActivePortal();
 
 export const portalUrl = (id: PortalId) => {
   const p = PORTALS.find((x) => x.id === id)!;

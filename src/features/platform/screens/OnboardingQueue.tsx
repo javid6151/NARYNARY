@@ -35,12 +35,12 @@ export function OnboardingQueue() {
               <Table head={['Business', 'Contact', 'Buildings', 'Submitted', 'Status', '']}>
                 {rows.map((r) => (
                   <tr key={r.id}>
-                    <Td className="font-medium">{r.business_details.business_name}</Td>
+                    <Td className="font-medium">{r.business_details?.business_name ?? 'Untitled'}</Td>
                     <Td>
-                      {r.contact_details.email}
-                      <p className="text-[12px] text-muted">{r.contact_details.phone}</p>
+                      {r.contact_details?.email ?? 'No email'}
+                      <p className="text-[12px] text-muted">{r.contact_details?.phone ?? 'No phone'}</p>
                     </Td>
-                    <Td>{r.business_details.buildings.map((b) => b.name).join(', ')}</Td>
+                    <Td>{r.business_details?.buildings?.map((b) => b?.name)?.filter(Boolean)?.join(', ') || 'None'}</Td>
                     <Td>{fmtDateTime(r.created_at)}</Td>
                     <Td><Badge status={r.status} /></Td>
                     <Td><Button variant="ghost" size="sm" onClick={() => setOpen(r)}>Review</Button></Td>
