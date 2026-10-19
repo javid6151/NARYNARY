@@ -11,9 +11,9 @@ const killTree = (c) => {
 
 const PORTALS = [
   ['platform', 1000, '/platform'],
-  ['owner', 2000, '/app'],
-  ['manager', 3000, '/app'],
-  ['kitchen', 4000, '/kitchen'],
+  ['owner', 2000, '/owner'],
+  ['manager', 3000, '/manager'],
+  ['kitchen', 4000, '/chef'],
   ['resident', 5000, '/resident'],
 ];
 

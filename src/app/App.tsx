@@ -1,11 +1,14 @@
 /**
- * Route table for all portals:
- * - `/app/*`      owner and manager (StaffShell); Settings is owner-only
- * - `/kitchen/*`  chef portal (owners/managers may open it too)
- * - `/resident/*` resident portal
- * - `/platform/*` ZIPCO platform admin
- * - `/onboarding` new owner application
- * Pages are lazy-loaded so each portal only downloads its own code.
+ * Route table for ZIPNARY:
+ * - `/`               Public marketing website with direct login/signup
+ * - `/owner/*`        Dedicated Owner Portal (OwnerShell with Settings)
+ * - `/:tenant/owner/*`Tenant-prefixed Owner Portal (e.g. `/yvr/owner`)
+ * - `/manager/*`      Dedicated Manager Portal (ManagerShell without Settings)
+ * - `/:tenant/manager/*` Tenant-prefixed Manager Portal (e.g. `/yvr/manager`)
+ * - `/chef/*`         Chef/Kitchen Portal (`/kitchen/*` alias)
+ * - `/resident/*`     Resident Portal
+ * - `/platform/*`     ZIPCO Platform Admin
+ * - `/onboarding`     New PG Owner application
  */
 import { lazy, Suspense, type ReactElement } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
@@ -14,10 +17,10 @@ import { useAuth } from '../features/access/useAuth';
 import { BuildingProvider } from '../features/access/BuildingProvider';
 import Login from '../features/auth/Login';
 import Onboarding from '../features/onboarding/Onboarding';
-import { CURRENT_PORTAL, getActivePortal, type PortalId } from '../lib/portals';
+import LandingPage from '../features/marketing/LandingPage';
 import { FullLoading, Gate } from './Gate';
-import { WrongPortal } from './WrongPortal';
-import { StaffShell } from './StaffShell';
+import { OwnerShell } from './OwnerShell';
+import { ManagerShell } from './ManagerShell';
 
 const Dashboard = lazy(() => import('../features/dashboard/Dashboard'));
 const Buildings = lazy(() => import('../features/property/Buildings'));
@@ -42,67 +45,136 @@ export default function App() {
   const { session, loading, homePath, staff, chef, resident, access } = useAuth();
   if (configError) return <div className="p-8 text-bad">{configError}</div>;
 
-  const activePortal = CURRENT_PORTAL ?? getActivePortal();
-
-  // On a per-portal port, send users who belong elsewhere to their own portal's port.
-  // (New owners without a membership complete onboarding on the owner port.)
-  if (activePortal && session && !loading) {
-    const isAllowed =
-      activePortal.id === 'platform' ? !!access?.is_platform_admin
-      : activePortal.id === 'owner' ? (staff?.role === 'owner' || (!staff && !chef && !resident && !access?.is_platform_admin))
-      : activePortal.id === 'manager' ? (staff?.role === 'manager' || staff?.role === 'owner')
-      : activePortal.id === 'kitchen' ? (!!chef || !!staff)
-      : activePortal.id === 'resident' ? (!!resident || !!staff)
-      : true;
-
-    if (!isAllowed) {
-      const targetPortal: PortalId = access?.is_platform_admin ? 'platform'
-        : staff?.role === 'owner' ? 'owner'
-        : staff?.role === 'manager' ? 'manager'
-        : chef ? 'kitchen'
-        : resident ? 'resident'
-        : 'owner';
-      return <WrongPortal portal={targetPortal} />;
-    }
-  }
-
-  // Signed-in users who open /login or /signup go straight to their portal.
+  // Signed-in users opening login/signup go straight to their portal.
   const authPage = (page: ReactElement) => (loading ? <FullLoading /> : session ? <Navigate to={homePath} replace /> : page);
+
+  const ownerRoutes = (
+    <>
+      <Route index element={<Dashboard />} />
+      <Route path="buildings" element={<Buildings />} />
+      <Route path="residents" element={<Residents />} />
+      <Route path="admissions" element={<Admissions />} />
+      <Route path="admissions/new" element={<NewAdmission />} />
+      <Route path="payments" element={<Payments />} />
+      <Route path="expenses" element={<Expenses />} />
+      <Route path="complaints" element={<Complaints />} />
+      <Route path="maintenance" element={<Maintenance />} />
+      <Route path="food" element={<Food />} />
+      <Route path="inventory" element={<Inventory />} />
+      <Route path="staff" element={<Staff />} />
+      <Route path="communication" element={<Communication />} />
+      <Route path="reports" element={<Reports />} />
+      <Route path="settings" element={<Settings />} />
+    </>
+  );
+
+  const managerRoutes = (
+    <>
+      <Route index element={<Dashboard />} />
+      <Route path="buildings" element={<Buildings />} />
+      <Route path="residents" element={<Residents />} />
+      <Route path="admissions" element={<Admissions />} />
+      <Route path="admissions/new" element={<NewAdmission />} />
+      <Route path="payments" element={<Payments />} />
+      <Route path="expenses" element={<Expenses />} />
+      <Route path="complaints" element={<Complaints />} />
+      <Route path="maintenance" element={<Maintenance />} />
+      <Route path="food" element={<Food />} />
+      <Route path="inventory" element={<Inventory />} />
+      <Route path="staff" element={<Staff />} />
+      <Route path="communication" element={<Communication />} />
+      <Route path="reports" element={<Reports />} />
+    </>
+  );
 
   return (
     <Suspense fallback={<FullLoading />}>
       <Routes>
+        {/* Public Marketing Homepage */}
+        <Route path="/" element={<LandingPage />} />
+
+        {/* Authentication & Onboarding */}
         <Route path="/login" element={authPage(<Login />)} />
         <Route path="/signup" element={authPage(<Login mode="signup" />)} />
-        <Route path="/onboarding" element={<Gate allow={!activePortal || activePortal.id === 'owner'}><Onboarding /></Gate>} />
+        <Route path="/onboarding" element={<Gate allow={true}><Onboarding /></Gate>} />
 
+        {/* Dedicated Owner Portal: /owner/* */}
         <Route
-          path="/app"
+          path="/owner"
           element={
-            <Gate allow={!!staff}>
+            <Gate allow={!!staff && (staff.role === 'owner' || !!access?.is_platform_admin)}>
               <BuildingProvider>
-                <StaffShell />
+                <OwnerShell />
               </BuildingProvider>
             </Gate>
           }
         >
-          <Route index element={<Dashboard />} />
-          <Route path="buildings" element={<Buildings />} />
-          <Route path="residents" element={<Residents />} />
-          <Route path="admissions" element={<Admissions />} />
-          <Route path="admissions/new" element={<NewAdmission />} />
-          <Route path="payments" element={<Payments />} />
-          <Route path="expenses" element={<Expenses />} />
-          <Route path="complaints" element={<Complaints />} />
-          <Route path="maintenance" element={<Maintenance />} />
-          <Route path="food" element={<Food />} />
-          <Route path="inventory" element={<Inventory />} />
-          <Route path="staff" element={<Staff />} />
-          <Route path="communication" element={<Communication />} />
-          <Route path="reports" element={<Reports />} />
-          <Route path="settings" element={staff?.role === 'owner' ? <Settings /> : <Navigate to="/app" replace />} />
+          {ownerRoutes}
         </Route>
 
+        {/* Tenant-prefixed Owner Portal: /:tenantSlug/owner/* */}
+        <Route
+          path="/:tenantSlug/owner"
+          element={
+            <Gate allow={!!staff && (staff.role === 'owner' || !!access?.is_platform_admin)}>
+              <BuildingProvider>
+                <OwnerShell />
+              </BuildingProvider>
+            </Gate>
+          }
+        >
+          {ownerRoutes}
+        </Route>
+
+        {/* Dedicated Manager Portal: /manager/* */}
+        <Route
+          path="/manager"
+          element={
+            <Gate allow={!!staff}>
+              <BuildingProvider>
+                <ManagerShell />
+              </BuildingProvider>
+            </Gate>
+          }
+        >
+          {managerRoutes}
+        </Route>
+
+        {/* Tenant-prefixed Manager Portal: /:tenantSlug/manager/* */}
+        <Route
+          path="/:tenantSlug/manager"
+          element={
+            <Gate allow={!!staff}>
+              <BuildingProvider>
+                <ManagerShell />
+              </BuildingProvider>
+            </Gate>
+          }
+        >
+          {managerRoutes}
+        </Route>
+
+        {/* Legacy /app route -> smart redirect to /owner or /manager based on role */}
+        <Route
+          path="/app/*"
+          element={
+            <Gate allow={!!staff}>
+              <Navigate to={staff?.role === 'owner' ? '/owner' : '/manager'} replace />
+            </Gate>
+          }
+        />
+
+        {/* Kitchen / Chef Portal */}
+        <Route
+          path="/chef/*"
+          element={
+            <Gate allow={!!chef || !!staff}>
+              <BuildingProvider>
+                <KitchenApp />
+              </BuildingProvider>
+            </Gate>
+          }
+        />
         <Route
           path="/kitchen/*"
           element={
@@ -114,6 +186,18 @@ export default function App() {
           }
         />
         <Route
+          path="/:tenantSlug/chef/*"
+          element={
+            <Gate allow={!!chef || !!staff}>
+              <BuildingProvider>
+                <KitchenApp />
+              </BuildingProvider>
+            </Gate>
+          }
+        />
+
+        {/* Resident Portal */}
+        <Route
           path="/resident/*"
           element={
             <Gate allow={!!resident || !!staff}>
@@ -123,8 +207,32 @@ export default function App() {
             </Gate>
           }
         />
+        <Route
+          path="/:tenantSlug/resident/*"
+          element={
+            <Gate allow={!!resident || !!staff}>
+              <BuildingProvider>
+                <ResidentApp />
+              </BuildingProvider>
+            </Gate>
+          }
+        />
+        <Route
+          path="/tenant/:residentId/*"
+          element={
+            <Gate allow={!!resident || !!staff}>
+              <BuildingProvider>
+                <ResidentApp />
+              </BuildingProvider>
+            </Gate>
+          }
+        />
+
+        {/* Platform Super Admin */}
         <Route path="/platform/*" element={<Gate allow={!!access?.is_platform_admin}><PlatformApp /></Gate>} />
-        <Route path="*" element={loading ? <FullLoading /> : <Navigate to={homePath} replace />} />
+
+        {/* Catch-all */}
+        <Route path="*" element={loading ? <FullLoading /> : <Navigate to={homePath || '/'} replace />} />
       </Routes>
     </Suspense>
   );

@@ -9,11 +9,18 @@ export interface AuthCtx {
   loading: boolean;
   refreshAccess: () => Promise<void>;
   signOut: () => Promise<void>;
+  /** Owner membership if any. */
+  owner: Membership | null;
+  /** Manager membership if any. */
+  manager: Membership | null;
   /** Owner membership if any, otherwise manager membership. */
   staff: Membership | null;
   chef: Membership | null;
   resident: Membership | null;
-  /** Where to send this user by default: /platform, /app, /kitchen, /resident or /onboarding. */
+  isOwner: boolean;
+  isManager: boolean;
+  tenantSlug: string;
+  /** Where to send this user by default: /platform, /owner, /manager, /chef, /resident or /onboarding. */
   homePath: string;
 }
 

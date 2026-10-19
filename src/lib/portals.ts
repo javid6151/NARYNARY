@@ -5,12 +5,11 @@
  */
 export type PortalId = 'platform' | 'owner' | 'manager' | 'kitchen' | 'resident';
 
-/** In start order. Owner and manager share the `/app` console; managers see only assigned buildings. */
 export const PORTALS: { id: PortalId; label: string; port: number; path: string }[] = [
   { id: 'platform', label: 'Platform admin', port: 1000, path: '/platform' },
-  { id: 'owner', label: 'Owner', port: 2000, path: '/app' },
-  { id: 'manager', label: 'Manager', port: 3000, path: '/app' },
-  { id: 'kitchen', label: 'Kitchen', port: 4000, path: '/kitchen' },
+  { id: 'owner', label: 'Owner', port: 2000, path: '/owner' },
+  { id: 'manager', label: 'Manager', port: 3000, path: '/manager' },
+  { id: 'kitchen', label: 'Kitchen', port: 4000, path: '/chef' },
   { id: 'resident', label: 'Resident', port: 5000, path: '/resident' },
 ];
 

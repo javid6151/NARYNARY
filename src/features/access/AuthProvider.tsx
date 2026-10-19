@@ -10,8 +10,6 @@ import { BUILDING_STORAGE_KEY } from './useBuilding';
 import { AuthContext, type AuthCtx } from './useAuth';
 import type { Access } from './types';
 
-import { CURRENT_PORTAL, getActivePortal } from '../../lib/portals';
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [access, setAccess] = useState<Access | null>(null);
@@ -56,35 +54,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthCtx>(() => {
     const ms = access?.memberships ?? [];
-    const staff = ms.find((m) => m.role === 'owner') ?? ms.find((m) => m.role === 'manager') ?? null;
+    const owner = ms.find((m) => m.role === 'owner') ?? null;
+    const manager = ms.find((m) => m.role === 'manager') ?? null;
+    const staff = owner ?? manager;
     const chef = ms.find((m) => m.role === 'chef') ?? null;
     const resident = ms.find((m) => m.role === 'resident') ?? null;
-    // Platform admin wins, then staff, chef, resident; a user with no membership goes to onboarding.
-    const defaultHome = !session ? '/login'
+
+    const activeMembership = owner ?? manager ?? chef ?? resident;
+    const tenantSlug = activeMembership?.tenant_name
+      ? activeMembership.tenant_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+      : '';
+
+    // Separate clean routing: Owner -> /owner, Manager -> /manager, Chef -> /chef, Resident -> /resident
+    let homePath = !session ? '/login'
       : access?.is_platform_admin ? '/platform'
-      : staff ? '/app'
-      : chef ? '/kitchen'
-      : resident ? '/resident'
+      : owner ? (tenantSlug ? `/${tenantSlug}/owner` : '/owner')
+      : manager ? (tenantSlug ? `/${tenantSlug}/manager` : '/manager')
+      : chef ? (tenantSlug ? `/${tenantSlug}/chef` : '/chef')
+      : resident ? (tenantSlug ? `/${tenantSlug}/resident` : '/resident')
       : '/onboarding';
 
-    // On a dedicated portal port, navigate to that portal's path only if permitted
-    const portal = CURRENT_PORTAL ?? getActivePortal();
-    let homePath = defaultHome;
-    if (session && portal) {
-      if (portal.id === 'platform' && access?.is_platform_admin) {
-        homePath = '/platform';
-      } else if (portal.id === 'owner' && (staff?.role === 'owner' || (!staff && !chef && !resident && !access?.is_platform_admin))) {
-        homePath = (staff?.role === 'owner' || access?.owned_tenant?.status === 'active') ? '/app' : '/onboarding';
-      } else if (portal.id === 'manager' && (staff?.role === 'manager' || staff?.role === 'owner')) {
-        homePath = '/app';
-      } else if (portal.id === 'kitchen' && (chef || staff)) {
-        homePath = '/kitchen';
-      } else if (portal.id === 'resident' && (resident || staff)) {
-        homePath = '/resident';
-      }
-    }
     return {
-      session, access, loading, refreshAccess, staff, chef, resident, homePath,
+      session,
+      access,
+      loading,
+      refreshAccess,
+      owner,
+      manager,
+      staff,
+      chef,
+      resident,
+      isOwner: !!owner,
+      isManager: !!manager,
+      tenantSlug,
+      homePath,
       signOut: async () => {
         await supabase.auth.signOut();
         localStorage.removeItem(BUILDING_STORAGE_KEY);

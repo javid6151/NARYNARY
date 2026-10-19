@@ -219,5 +219,5 @@ function authApiPlugin() {
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), authApiPlugin()],
-  server: { port: 5173, strictPort: true },
+  server: { port: 3000, host: true },
 });
