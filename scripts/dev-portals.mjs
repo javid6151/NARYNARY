@@ -10,11 +10,11 @@ const killTree = (c) => {
 };
 
 const PORTALS = [
-  ['platform', 1000, '/platform'],
-  ['owner', 2000, '/owner'],
-  ['manager', 3000, '/manager'],
-  ['kitchen', 4000, '/chef'],
-  ['resident', 5000, '/resident'],
+  ['Super admin', 'platform', 1000, '/platformadmin'],
+  ['Owner',       'owner',    2000, '/owner'],
+  ['Manager',     'manager',  3000, '/manager'],
+  ['Chef',        'kitchen',  4000, '/chef'],
+  ['Resident',    'resident', 5000, '/'],
 ];
 
 const children = [];
@@ -36,7 +36,7 @@ async function waitUntilUp(port, child) {
   return false;
 }
 
-for (const [id, port, path] of PORTALS) {
+for (const [label, id, port, path] of PORTALS) {
   const child = spawn(`npx vite --port ${port} --strictPort`, {
     env: { ...process.env, VITE_PORTAL: id },
     stdio: ['ignore', 'ignore', 'inherit'],
@@ -44,10 +44,10 @@ for (const [id, port, path] of PORTALS) {
   });
   children.push(child);
   if (!(await waitUntilUp(port, child))) {
-    console.error(`${id} portal did not start on port ${port} — another program is probably using that port.`);
+    console.error(`${label} (${id}) portal did not start on port ${port} — another program is probably using that port.`);
     failed.push(port);
     continue;
   }
-  console.log(`${id.padEnd(9)} http://localhost:${port}${path}`);
+  console.log(`${label.padEnd(13)} http://localhost:${port}${path} (Port ${port})`);
 }
 console.log(failed.length ? `Running, except port(s) ${failed.join(', ')}. Press Ctrl+C to stop.` : 'All portals running. Press Ctrl+C to stop.');

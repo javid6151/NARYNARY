@@ -84,34 +84,34 @@ export function SuperAdminPasswordModal({ open, onClose, onPasswordChanged }: Su
         aria-modal="true"
         className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 border border-line animate-in fade-in zoom-in-95 duration-200"
       >
-        <div className="flex items-center justify-between pb-3 border-b border-line">
+        <div className="flex items-center justify-between pb-3 border-b border-[#DED6CB]">
           <div className="flex items-center gap-2.5">
-            <div className="size-9 rounded-lg bg-brand-100 text-brand-700 grid place-items-center">
+            <div className="size-9 rounded-xl bg-[#EBF0E6] text-[#343B2B] grid place-items-center">
               <KeyRound className="size-5" />
             </div>
             <div>
-              <h2 className="font-semibold text-base text-ink">Super Admin Password</h2>
-              <p className="text-[12px] text-muted">Account: zipco@gmail.com</p>
+              <h2 className="font-semibold text-base text-[#30271F]">Super Admin Password</h2>
+              <p className="text-[12px] text-[#77736B]">Account: zipco@gmail.com</p>
             </div>
           </div>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="p-1.5 rounded-lg text-muted hover:bg-subtle hover:text-ink cursor-pointer"
+            className="p-1.5 rounded-lg text-[#77736B] hover:bg-[#ECE5DA] hover:text-[#30271F] cursor-pointer"
           >
             <X className="size-5" />
           </button>
         </div>
 
         {/* Tab switch */}
-        <div className="grid grid-cols-2 gap-1 bg-subtle p-1 rounded-xl mt-4 mb-4 text-[13px] font-medium">
+        <div className="grid grid-cols-2 gap-1 bg-[#ECE5DA] p-1 rounded-xl mt-4 mb-4 text-[13px] font-medium">
           <button
             type="button"
             onClick={() => { setTab('previous'); setError(null); setSuccess(null); }}
             className={`py-2 rounded-lg transition-all cursor-pointer ${
               tab === 'previous'
-                ? 'bg-white text-ink shadow-xs font-semibold'
-                : 'text-muted hover:text-ink'
+                ? 'bg-[#FFFEFC] text-[#30271F] shadow-2xs font-semibold'
+                : 'text-[#77736B] hover:text-[#30271F]'
             }`}
           >
             Use Previous Password
@@ -121,8 +121,8 @@ export function SuperAdminPasswordModal({ open, onClose, onPasswordChanged }: Su
             onClick={() => { setTab('email'); setError(null); setSuccess(null); }}
             className={`py-2 rounded-lg transition-all cursor-pointer ${
               tab === 'email'
-                ? 'bg-white text-ink shadow-xs font-semibold'
-                : 'text-muted hover:text-ink'
+                ? 'bg-[#FFFEFC] text-[#30271F] shadow-2xs font-semibold'
+                : 'text-[#77736B] hover:text-[#30271F]'
             }`}
           >
             Send Email
@@ -132,15 +132,15 @@ export function SuperAdminPasswordModal({ open, onClose, onPasswordChanged }: Su
         <ErrorBanner error={error} />
 
         {success && (
-          <div role="status" className="mb-4 rounded-xl bg-ok-bg text-ok text-[13px] px-3.5 py-3 border border-ok/20">
+          <div role="status" className="mb-4 rounded-xl bg-[#EBF0E6] text-[#2F5233] text-[13px] px-3.5 py-3 border border-[#CAD7BF]">
             {success}
             {recoveryLink && (
-              <div className="mt-2 pt-2 border-t border-ok/20">
+              <div className="mt-2 pt-2 border-t border-[#CAD7BF]">
                 <a
                   href={recoveryLink}
                   target="_blank"
                   rel="noreferrer"
-                  className="font-semibold underline hover:brightness-110"
+                  className="font-semibold underline hover:brightness-110 text-[#2F5233]"
                 >
                   Click here to complete password reset ↗
                 </a>
@@ -204,15 +204,15 @@ export function SuperAdminPasswordModal({ open, onClose, onPasswordChanged }: Su
           </form>
         ) : (
           <div className="space-y-4">
-            <div className="rounded-xl bg-brand-50 border border-brand-200 p-4 text-[13px] text-ink">
+            <div className="rounded-xl bg-[#F5F0E8] border border-[#DED6CB] p-4 text-[13px] text-[#30271F]">
               <div className="flex items-start gap-2.5">
-                <Mail className="size-5 text-brand-700 shrink-0 mt-0.5" />
+                <Mail className="size-5 text-[#343B2B] shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-semibold text-brand-900">Registered Super Admin Recovery Email</p>
-                  <p className="text-brand-800 font-mono text-[13px] mt-1 bg-white/80 px-2.5 py-1 rounded-md inline-block border border-brand-200">
+                  <p className="font-semibold text-[#30271F]">Registered Super Admin Recovery Email</p>
+                  <p className="text-[#343B2B] font-mono text-[13px] mt-1 bg-[#FFFEFC] px-2.5 py-1 rounded-md inline-block border border-[#DED6CB]">
                     shaikjavid6151@gmail.com
                   </p>
-                  <p className="text-[12px] text-muted mt-2">
+                  <p className="text-[12px] text-[#77736B] mt-2">
                     A secure password reset authorization link will be generated and dispatched to this address.
                   </p>
                 </div>
@@ -223,7 +223,7 @@ export function SuperAdminPasswordModal({ open, onClose, onPasswordChanged }: Su
               <Button type="button" variant="secondary" onClick={onClose}>
                 Cancel
               </Button>
-              <Button type="button" busy={busy} onClick={handleSendEmail} className="bg-brand-600">
+              <Button type="button" busy={busy} onClick={handleSendEmail}>
                 Send Reset Link
               </Button>
             </div>

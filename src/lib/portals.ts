@@ -6,11 +6,11 @@
 export type PortalId = 'platform' | 'owner' | 'manager' | 'kitchen' | 'resident';
 
 export const PORTALS: { id: PortalId; label: string; port: number; path: string }[] = [
-  { id: 'platform', label: 'Platform admin', port: 1000, path: '/platform' },
+  { id: 'platform', label: 'Super Admin', port: 1000, path: '/platformadmin' },
   { id: 'owner', label: 'Owner', port: 2000, path: '/owner' },
   { id: 'manager', label: 'Manager', port: 3000, path: '/manager' },
-  { id: 'kitchen', label: 'Kitchen', port: 4000, path: '/chef' },
-  { id: 'resident', label: 'Resident', port: 5000, path: '/resident' },
+  { id: 'kitchen', label: 'Chef', port: 4000, path: '/chef' },
+  { id: 'resident', label: 'Resident', port: 5000, path: '/' },
 ];
 
 /** The portal this server was started for, detected via VITE_PORTAL or window.location.port. */

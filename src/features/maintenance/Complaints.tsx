@@ -1,10 +1,12 @@
 /** Complaints page: issues raised by residents, filterable by active / resolved. */
 import { useState } from 'react';
+import { ListFilter, MessageSquareWarning } from 'lucide-react';
 import { useAsync } from '../../lib/hooks';
 import { fmtDateTime, label } from '../../lib/format';
 import { useBuilding } from '../access/useBuilding';
 import { Async, Badge, Button, Card, Empty, PageHeader, Table, Tabs, Td, Toast } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
+import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import { listComplaints } from './api';
 import { ComplaintDrawer } from './components/ComplaintDrawer';
 import type { Complaint } from './types';
@@ -28,6 +30,24 @@ export default function Complaints() {
         title="Complaints"
         subtitle="Issues raised by residents. Convert to a maintenance request when work is needed."
         actions={<BuildingPicker />}
+      />
+
+      <SectionPromoBanner
+        eyebrow="FACILITY CARE"
+        title="Prompt Resolution, Maintained Standards."
+        subtitle="Track resident tickets, assign technicians, and convert issues to tracked maintenance requests."
+        imageSrc="/owner-assets/lounge-promo.jpg"
+        statsBadge={`${rows.length} Issues`}
+        primaryAction={{
+          label: tab === 'active' ? 'Active Issues' : 'Show Active',
+          onClick: () => setTab('active'),
+          icon: MessageSquareWarning,
+        }}
+        secondaryAction={{
+          label: 'All Tickets',
+          onClick: () => setTab('all'),
+          icon: ListFilter,
+        }}
       />
       <Card>
         <Tabs

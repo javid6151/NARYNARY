@@ -20,6 +20,7 @@ export interface AuthCtx {
   isOwner: boolean;
   isManager: boolean;
   tenantSlug: string;
+  isSuspended: boolean;
   /** Where to send this user by default: /platform, /owner, /manager, /chef, /resident or /onboarding. */
   homePath: string;
 }

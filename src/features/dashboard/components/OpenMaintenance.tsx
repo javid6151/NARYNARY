@@ -9,7 +9,7 @@ export function OpenMaintenance({ state }: { state: AsyncState<OpenMaintenanceIt
   return (
     <Card
       title="Maintenance requiring attention"
-      action={<Button variant="ghost" size="sm" onClick={() => nav('/app/maintenance')}>View all</Button>}
+      action={<Button variant="ghost" size="sm" onClick={() => nav('maintenance')}>View all</Button>}
     >
       <Async state={state}>
         {(rows) =>

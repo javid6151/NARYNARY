@@ -10,23 +10,24 @@
  * - `/platform/*`     ZIPCO Platform Admin
  * - `/onboarding`     New PG Owner application
  */
-import { lazy, Suspense, type ReactElement } from 'react';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { configError } from '../lib/supabase';
 import { useAuth } from '../features/access/useAuth';
 import { BuildingProvider } from '../features/access/BuildingProvider';
-import Login from '../features/auth/Login';
 import Onboarding from '../features/onboarding/Onboarding';
 import LandingPage from '../features/marketing/LandingPage';
 import { FullLoading, Gate } from './Gate';
 import { OwnerShell } from './OwnerShell';
 import { ManagerShell } from './ManagerShell';
+import { ResidentLogin } from '../features/resident-portal/ResidentLogin';
+import { AccountSuspended } from '../components/AccountSuspended';
 
 const Dashboard = lazy(() => import('../features/dashboard/Dashboard'));
 const Buildings = lazy(() => import('../features/property/Buildings'));
 const Residents = lazy(() => import('../features/residents/Residents'));
-const Admissions = lazy(() => import('../features/residents/Admissions'));
 const NewAdmission = lazy(() => import('../features/residents/NewAdmission'));
+const ResidentPortalServer = lazy(() => import('../features/residents/ResidentPortalServer'));
 const Payments = lazy(() => import('../features/billing/Payments'));
 const Expenses = lazy(() => import('../features/expenses/Expenses'));
 const Complaints = lazy(() => import('../features/maintenance/Complaints'));
@@ -41,20 +42,38 @@ const KitchenApp = lazy(() => import('../features/kitchen/chef/KitchenApp'));
 const ResidentApp = lazy(() => import('../features/resident-portal/ResidentApp'));
 const PlatformApp = lazy(() => import('../features/platform/PlatformApp'));
 
-export default function App() {
-  const { session, loading, homePath, staff, chef, resident, access } = useAuth();
-  if (configError) return <div className="p-8 text-bad">{configError}</div>;
+function AppRedirect({ homePath }: { homePath: string }) {
+  const loc = useLocation();
+  const sub = loc.pathname.replace(/^\/app\/?/, '');
+  const target = sub ? `${homePath.replace(/\/$/, '')}/${sub}` : homePath;
+  return <Navigate to={target + loc.search} replace />;
+}
 
-  // Signed-in users opening login/signup go straight to their portal.
-  const authPage = (page: ReactElement) => (loading ? <FullLoading /> : session ? <Navigate to={homePath} replace /> : page);
+export default function App() {
+  const { loading, homePath, staff, chef, resident, access, isSuspended } = useAuth();
+  if (configError) return <div className="p-8 text-bad">{configError}</div>;
+  if (loading) return <FullLoading />;
+  if (isSuspended) return <AccountSuspended />;
+
+  const isPlatformAdmin = !!access?.is_platform_admin;
+  const isOwnerActive = !!staff && staff.role === 'owner' && staff.tenant_status === 'active';
+  const isManagerActive = !!staff && staff.role === 'manager' && staff.tenant_status === 'active';
+  const isStaffActive = !!staff && staff.tenant_status === 'active';
+  const isChefActive = !!chef && chef.tenant_status === 'active';
+  const isResidentActive = !!resident && resident.tenant_status === 'active';
+  const currentPortNum = typeof window !== 'undefined' && window.location.port ? Number(window.location.port) : null;
+  const portalEnv = import.meta.env.VITE_PORTAL as string | undefined;
+  const isResidentPort = typeof window !== 'undefined' && (window.location.port === '5000' || portalEnv === 'resident');
 
   const ownerRoutes = (
     <>
       <Route index element={<Dashboard />} />
       <Route path="buildings" element={<Buildings />} />
       <Route path="residents" element={<Residents />} />
-      <Route path="admissions" element={<Admissions />} />
+      <Route path="residents/new" element={<NewAdmission />} />
+      <Route path="admissions" element={<Navigate to="../residents" replace />} />
       <Route path="admissions/new" element={<NewAdmission />} />
+      <Route path="resident-portal-server" element={<ResidentPortalServer />} />
       <Route path="payments" element={<Payments />} />
       <Route path="expenses" element={<Expenses />} />
       <Route path="complaints" element={<Complaints />} />
@@ -73,7 +92,8 @@ export default function App() {
       <Route index element={<Dashboard />} />
       <Route path="buildings" element={<Buildings />} />
       <Route path="residents" element={<Residents />} />
-      <Route path="admissions" element={<Admissions />} />
+      <Route path="residents/new" element={<NewAdmission />} />
+      <Route path="admissions" element={<Navigate to="../residents" replace />} />
       <Route path="admissions/new" element={<NewAdmission />} />
       <Route path="payments" element={<Payments />} />
       <Route path="expenses" element={<Expenses />} />
@@ -90,19 +110,63 @@ export default function App() {
   return (
     <Suspense fallback={<FullLoading />}>
       <Routes>
-        {/* Public Marketing Homepage */}
-        <Route path="/" element={<LandingPage />} />
+        {/* Port 5000 is dedicated exclusively to the Resident Portal */}
+        {isResidentPort ? (
+          <>
+            <Route
+              path="/"
+              element={
+                isResidentActive || (resident && resident.tenant_status === 'active') || isStaffActive || isPlatformAdmin ? (
+                  <BuildingProvider>
+                    <ResidentApp />
+                  </BuildingProvider>
+                ) : (
+                  <ResidentLogin />
+                )
+              }
+            />
+            <Route path="/login" element={<ResidentLogin />} />
+            <Route path="/signup" element={<ResidentLogin />} />
+          </>
+        ) : (
+          <>
+            {/* Direct Portal / Landing for role ports 1000, 2000, 3000, 4000 */}
+            <Route
+              path="/"
+              element={
+                (currentPortNum === 1000 || portalEnv === 'platform') && isPlatformAdmin ? (
+                  <Navigate to="/platformadmin" replace />
+                ) : (currentPortNum === 2000 || portalEnv === 'owner') && isOwnerActive ? (
+                  <Navigate to="/owner" replace />
+                ) : (currentPortNum === 3000 || portalEnv === 'manager') && isManagerActive ? (
+                  <Navigate to="/manager" replace />
+                ) : (currentPortNum === 4000 || portalEnv === 'kitchen') && isChefActive ? (
+                  <Navigate to="/chef" replace />
+                ) : isPlatformAdmin ? (
+                  <Navigate to="/platformadmin" replace />
+                ) : isOwnerActive ? (
+                  <Navigate to="/owner" replace />
+                ) : isManagerActive ? (
+                  <Navigate to="/manager" replace />
+                ) : isChefActive ? (
+                  <Navigate to="/chef" replace />
+                ) : (
+                  <LandingPage />
+                )
+              }
+            />
+            <Route path="/login" element={<Navigate to="/" replace />} />
+            <Route path="/signup" element={<Navigate to="/?mode=signup" replace />} />
+          </>
+        )}
 
-        {/* Authentication & Onboarding */}
-        <Route path="/login" element={authPage(<Login />)} />
-        <Route path="/signup" element={authPage(<Login mode="signup" />)} />
         <Route path="/onboarding" element={<Gate allow={true}><Onboarding /></Gate>} />
 
-        {/* Dedicated Owner Portal: /owner/* */}
+        {/* Dedicated & Parameterized Owner Portals: /:tenantSlug/:pgSlug/owner/* */}
         <Route
-          path="/owner"
+          path="/:tenantSlug/:pgSlug/owner"
           element={
-            <Gate allow={!!staff && (staff.role === 'owner' || !!access?.is_platform_admin)}>
+            <Gate allow={isPlatformAdmin || isOwnerActive}>
               <BuildingProvider>
                 <OwnerShell />
               </BuildingProvider>
@@ -112,11 +176,10 @@ export default function App() {
           {ownerRoutes}
         </Route>
 
-        {/* Tenant-prefixed Owner Portal: /:tenantSlug/owner/* */}
         <Route
           path="/:tenantSlug/owner"
           element={
-            <Gate allow={!!staff && (staff.role === 'owner' || !!access?.is_platform_admin)}>
+            <Gate allow={isPlatformAdmin || isOwnerActive}>
               <BuildingProvider>
                 <OwnerShell />
               </BuildingProvider>
@@ -126,11 +189,24 @@ export default function App() {
           {ownerRoutes}
         </Route>
 
-        {/* Dedicated Manager Portal: /manager/* */}
         <Route
-          path="/manager"
+          path="/owner"
           element={
-            <Gate allow={!!staff}>
+            <Gate allow={isPlatformAdmin || isOwnerActive}>
+              <BuildingProvider>
+                <OwnerShell />
+              </BuildingProvider>
+            </Gate>
+          }
+        >
+          {ownerRoutes}
+        </Route>
+
+        {/* Dedicated & Parameterized Manager Portals: /:tenantSlug/:pgSlug/manager/* */}
+        <Route
+          path="/:tenantSlug/:pgSlug/manager"
+          element={
+            <Gate allow={isPlatformAdmin || isManagerActive}>
               <BuildingProvider>
                 <ManagerShell />
               </BuildingProvider>
@@ -140,11 +216,23 @@ export default function App() {
           {managerRoutes}
         </Route>
 
-        {/* Tenant-prefixed Manager Portal: /:tenantSlug/manager/* */}
         <Route
           path="/:tenantSlug/manager"
           element={
-            <Gate allow={!!staff}>
+            <Gate allow={isPlatformAdmin || isManagerActive}>
+              <BuildingProvider>
+                <ManagerShell />
+              </BuildingProvider>
+            </Gate>
+          }
+        >
+          {managerRoutes}
+        </Route>
+
+        <Route
+          path="/manager"
+          element={
+            <Gate allow={isPlatformAdmin || isManagerActive}>
               <BuildingProvider>
                 <ManagerShell />
               </BuildingProvider>
@@ -158,27 +246,17 @@ export default function App() {
         <Route
           path="/app/*"
           element={
-            <Gate allow={!!staff}>
-              <Navigate to={staff?.role === 'owner' ? '/owner' : '/manager'} replace />
+            <Gate allow={isPlatformAdmin || isStaffActive}>
+              <AppRedirect homePath={homePath} />
             </Gate>
           }
         />
 
         {/* Kitchen / Chef Portal */}
         <Route
-          path="/chef/*"
+          path="/:tenantSlug/:pgSlug/chef/*"
           element={
-            <Gate allow={!!chef || !!staff}>
-              <BuildingProvider>
-                <KitchenApp />
-              </BuildingProvider>
-            </Gate>
-          }
-        />
-        <Route
-          path="/kitchen/*"
-          element={
-            <Gate allow={!!chef || !!staff}>
+            <Gate allow={isPlatformAdmin || isChefActive || isStaffActive}>
               <BuildingProvider>
                 <KitchenApp />
               </BuildingProvider>
@@ -188,7 +266,27 @@ export default function App() {
         <Route
           path="/:tenantSlug/chef/*"
           element={
-            <Gate allow={!!chef || !!staff}>
+            <Gate allow={isPlatformAdmin || isChefActive || isStaffActive}>
+              <BuildingProvider>
+                <KitchenApp />
+              </BuildingProvider>
+            </Gate>
+          }
+        />
+        <Route
+          path="/chef/*"
+          element={
+            <Gate allow={isPlatformAdmin || isChefActive || isStaffActive}>
+              <BuildingProvider>
+                <KitchenApp />
+              </BuildingProvider>
+            </Gate>
+          }
+        />
+        <Route
+          path="/kitchen/*"
+          element={
+            <Gate allow={isPlatformAdmin || isChefActive || isStaffActive}>
               <BuildingProvider>
                 <KitchenApp />
               </BuildingProvider>
@@ -196,11 +294,51 @@ export default function App() {
           }
         />
 
-        {/* Resident Portal */}
+        {/* Resident / Tenant Portal */}
         <Route
-          path="/resident/*"
+          path="/:tenantSlug/:pgSlug/tentant/:uniqueId/*"
           element={
-            <Gate allow={!!resident || !!staff}>
+            <Gate allow={isPlatformAdmin || isResidentActive || isStaffActive}>
+              <BuildingProvider>
+                <ResidentApp />
+              </BuildingProvider>
+            </Gate>
+          }
+        />
+        <Route
+          path="/:tenantSlug/:pgSlug/tenant/:uniqueId/*"
+          element={
+            <Gate allow={isPlatformAdmin || isResidentActive || isStaffActive}>
+              <BuildingProvider>
+                <ResidentApp />
+              </BuildingProvider>
+            </Gate>
+          }
+        />
+        <Route
+          path="/:tenantSlug/:pgSlug/tentant/*"
+          element={
+            <Gate allow={isPlatformAdmin || isResidentActive || isStaffActive}>
+              <BuildingProvider>
+                <ResidentApp />
+              </BuildingProvider>
+            </Gate>
+          }
+        />
+        <Route
+          path="/:tenantSlug/:pgSlug/tenant/*"
+          element={
+            <Gate allow={isPlatformAdmin || isResidentActive || isStaffActive}>
+              <BuildingProvider>
+                <ResidentApp />
+              </BuildingProvider>
+            </Gate>
+          }
+        />
+        <Route
+          path="/:tenantSlug/:pgSlug/resident/*"
+          element={
+            <Gate allow={isPlatformAdmin || isResidentActive || isStaffActive}>
               <BuildingProvider>
                 <ResidentApp />
               </BuildingProvider>
@@ -210,7 +348,17 @@ export default function App() {
         <Route
           path="/:tenantSlug/resident/*"
           element={
-            <Gate allow={!!resident || !!staff}>
+            <Gate allow={isPlatformAdmin || isResidentActive || isStaffActive}>
+              <BuildingProvider>
+                <ResidentApp />
+              </BuildingProvider>
+            </Gate>
+          }
+        />
+        <Route
+          path="/resident/*"
+          element={
+            <Gate allow={isPlatformAdmin || isResidentActive || isStaffActive}>
               <BuildingProvider>
                 <ResidentApp />
               </BuildingProvider>
@@ -220,7 +368,7 @@ export default function App() {
         <Route
           path="/tenant/:residentId/*"
           element={
-            <Gate allow={!!resident || !!staff}>
+            <Gate allow={isPlatformAdmin || isResidentActive || isStaffActive}>
               <BuildingProvider>
                 <ResidentApp />
               </BuildingProvider>
@@ -229,7 +377,8 @@ export default function App() {
         />
 
         {/* Platform Super Admin */}
-        <Route path="/platform/*" element={<Gate allow={!!access?.is_platform_admin}><PlatformApp /></Gate>} />
+        <Route path="/platformadmin/*" element={<Gate allow={isPlatformAdmin}><PlatformApp /></Gate>} />
+        <Route path="/platform/*" element={<Navigate to="/platformadmin" replace />} />
 
         {/* Catch-all */}
         <Route path="*" element={loading ? <FullLoading /> : <Navigate to={homePath || '/'} replace />} />

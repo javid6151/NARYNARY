@@ -27,9 +27,12 @@ import { ResPayments } from './tabs/ResPayments';
 import { ResProfile } from './tabs/ResProfile';
 import { BottomNav } from './ui/BottomNav';
 import { BrandHeader } from './ui/Headers';
+import { AccountSuspended } from '../../components/AccountSuspended';
+import './resident-portal.css';
 
 export default function ResidentApp() {
-  const { staff } = useAuth();
+  const { staff, isSuspended } = useAuth();
+  if (isSuspended) return <AccountSuspended />;
   const { buildingId, building } = useBuilding();
   const [selectedResId, setSelectedResId] = useState<string>('');
 
@@ -81,18 +84,18 @@ export default function ResidentApp() {
   const effectiveProfile: ResidentProfile | null = (selectedResId && staffPreviewProfile) ? staffPreviewProfile : (p ?? staffPreviewProfile);
 
   return (
-    <div className="min-h-full bg-canvas">
-      <div className="max-w-md mx-auto min-h-full bg-canvas pb-28 px-4 relative">
+    <div className="resident-portal resident-shell min-h-full">
+      <div className="resident-shell__content min-h-full px-4 relative">
         {/* Staff View Switcher Banner */}
         {staff && (
-          <div className="mt-3 mb-2 bg-brand-50 border border-brand-200 rounded-xl p-3 text-[13px] space-y-2">
+          <div className="resident-staff-banner mt-3 mb-2 border rounded-xl p-3 text-[13px] space-y-2">
             <div className="flex items-center justify-between">
-              <span className="font-semibold text-brand-900">
+              <span className="font-semibold">
                 {staff.role === 'owner' ? 'Owner' : 'Manager'} Portal View
               </span>
               <a
                 href={staff.role === 'owner' ? 'http://localhost:2000/app' : 'http://localhost:3000/app'}
-                className="text-brand-700 font-medium hover:underline text-xs"
+                className="font-medium hover:underline text-xs"
               >
                 Staff Console →
               </a>
@@ -114,7 +117,7 @@ export default function ResidentApp() {
                 </select>
               </div>
             ) : (
-              <p className="text-xs text-brand-700">
+              <p className="text-xs">
                 You have staff access to the resident portal. Add residents in the staff console to preview specific stays.
               </p>
             )}
@@ -133,7 +136,7 @@ export default function ResidentApp() {
             </Card>
           </>
         ) : (
-          <main className="space-y-4">
+          <main className="resident-main space-y-4">
             <Routes>
               <Route index element={<ResHome p={effectiveProfile} />} />
               <Route path="payments" element={<ResPayments p={effectiveProfile} />} />

@@ -50,6 +50,17 @@ export function ExpenseDetail({ e, onClose, onChanged }: { e: ExpenseRow; onClos
           {e.expense_categories.name} · {fmtDate(e.expense_date)}
           {e.vendors ? ` · ${e.vendors.name}` : ''}
         </p>
+        {e.recorded_by && (
+          <p className="text-[12px] text-ink-2 mt-1.5 flex items-center gap-1.5">
+            <span className="text-muted">Recorded by:</span>
+            <span className="font-medium text-ink">{e.recorded_by.name}</span>
+            {e.recorded_by.role && (
+              <span className="text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded bg-subtle text-muted">
+                {e.recorded_by.role}
+              </span>
+            )}
+          </p>
+        )}
       </div>
       <div className="grid grid-cols-3 gap-2 text-[13px]">
         {totals.map(([k, v]) => (

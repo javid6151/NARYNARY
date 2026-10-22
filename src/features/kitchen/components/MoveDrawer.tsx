@@ -85,11 +85,14 @@ export function MoveDrawer({ items, initial, canAdjust, onClose, onDone, tone }:
         {(id) => (
           <Select id={id} value={itemId} onChange={(e) => setItemId(e.target.value)}>
             <option value="">Select item</option>
-            {items.map((i) => (
-              <option key={i.item_id} value={i.item_id}>
-                {i.name} (store {num(i.store_qty, 3)} · kitchen {num(i.kitchen_qty, 3)} {i.base_unit})
-              </option>
-            ))}
+            {items.map((i) => {
+              const expected = Number(i.expected_qty ?? (Number(i.store_qty ?? 0) + Number(i.kitchen_qty ?? 0)));
+              return (
+                <option key={i.item_id} value={i.item_id}>
+                  {i.name} (Current stock: {num(expected, 3)} {i.base_unit})
+                </option>
+              );
+            })}
           </Select>
         )}
       </Field>
@@ -102,10 +105,10 @@ export function MoveDrawer({ items, initial, canAdjust, onClose, onDone, tone }:
             {(id) => <Input id={id} type="number" min={0} step="0.01" value={cost} onChange={(e) => setCost(e.target.value)} />}
           </Field>
           {canAdjust && (
-            <Field label="Supplier">
+            <Field label="Supplier / Shop">
               {(id) => (
                 <Select id={id} value={vendor} onChange={(e) => setVendor(e.target.value)}>
-                  <option value="">—</option>
+                  <option value="">— Select supplier —</option>
                   {(vendors.data ?? []).map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
                 </Select>
               )}
@@ -115,16 +118,16 @@ export function MoveDrawer({ items, initial, canAdjust, onClose, onDone, tone }:
       )}
       {action === 'purchase' && Number(qty) > 0 && Number(cost) > 0 && (
         <p className="text-[13px]">
-          Purchase value: <b>{inr(Number(qty) * Number(cost), true)}</b>. Record the bill under Expenses to track payment.
+          Purchase value: <b>{inr(Number(qty) * Number(cost), true)}</b>. Recorded in inventory history and stock ledger.
         </p>
       )}
-      <Field label={action === 'wastage' ? 'Reason' : 'Notes'}>
+      <Field label={action.startsWith('adjust') ? 'Correction reason' : 'Notes / Invoice ref'}>
         {(id) => (
           <Input
             id={id}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
-            placeholder={action === 'wastage' ? 'e.g. Overripe / spoiled' : ''}
+            placeholder={action.startsWith('adjust') ? 'e.g. Physical stock count reconciliation correction' : 'e.g. Invoice #123, receipt ref'}
           />
         )}
       </Field>

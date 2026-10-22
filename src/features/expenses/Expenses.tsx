@@ -15,6 +15,7 @@ import { useExpenses } from './useExpenses';
 import { AddExpenseDrawer } from './components/AddExpenseDrawer';
 import { ExpenseDetail } from './components/ExpenseDetail';
 import { Vendors } from './components/Vendors';
+import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import type { ExpenseRow } from './types';
 
 export default function Expenses() {
@@ -54,6 +55,7 @@ export default function Expenses() {
       title: e.title,
       category: e.expense_categories.name,
       vendor: e.vendors?.name ?? '',
+      recorded_by: e.recorded_by ? `${e.recorded_by.name}${e.recorded_by.role ? ` (${e.recorded_by.role})` : ''}` : '—',
       source: e.source_type,
       total: e.total_amount,
       paid: e.paid_amount,
@@ -75,6 +77,23 @@ export default function Expenses() {
             </Button>
           </>
         }
+      />
+      <SectionPromoBanner
+        eyebrow="OPERATIONAL EXPENSES"
+        title="Unified Ledgers, Zero Discrepancies."
+        subtitle="Manage utility bills, maintenance charges, staff payroll, and vendor disbursements with automated audit tracking."
+        imageSrc="/owner-assets/payments-hero.jpg"
+        statsBadge={rows.length > 0 ? `${inr(sum('total_amount'))} Total Incurred` : undefined}
+        primaryAction={{
+          label: 'Add Expense',
+          onClick: () => setAdd(true),
+          icon: Plus,
+        }}
+        secondaryAction={{
+          label: 'Export Ledger',
+          onClick: exportCsv,
+          icon: Download,
+        }}
       />
       <Tabs
         value={tab}
@@ -134,7 +153,7 @@ export default function Expenses() {
                 rows.length === 0 ? (
                   <Empty title="No expenses match" action={<Button onClick={() => setAdd(true)}>Add expense</Button>} />
                 ) : (
-                  <Table head={['Date', 'Expense', 'Category', 'Vendor', 'Total', 'Paid', 'Outstanding', 'Status', '']}>
+                  <Table head={['Date', 'Expense', 'Category', 'Vendor', 'Recorded by', 'Total', 'Paid', 'Outstanding', 'Status', '']}>
                     {rows.map((e) => (
                       <tr key={e.id} className="hover:bg-subtle/60">
                         <Td>{fmtDate(e.expense_date)}</Td>
@@ -144,6 +163,20 @@ export default function Expenses() {
                         </Td>
                         <Td>{e.expense_categories.name}</Td>
                         <Td>{e.vendors?.name ?? '—'}</Td>
+                        <Td>
+                          {e.recorded_by ? (
+                            <div>
+                              <p className="font-medium text-ink leading-tight">{e.recorded_by.name}</p>
+                              {e.recorded_by.role && (
+                                <span className="inline-block mt-0.5 text-[11px] px-1.5 py-0.5 text-muted bg-surface-subtle border border-line rounded">
+                                  {e.recorded_by.role}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted">—</span>
+                          )}
+                        </Td>
                         <Td className="tabular">{inr(e.total_amount)}</Td>
                         <Td className="tabular">{inr(e.paid_amount)}</Td>
                         <Td className="tabular">{Number(e.outstanding_amount) > 0 ? inr(e.outstanding_amount) : '—'}</Td>

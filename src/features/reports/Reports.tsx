@@ -10,6 +10,7 @@ import { useAuth } from '../access/useAuth';
 import { useBuilding } from '../access/useBuilding';
 import { Button, Card, ErrorBanner, Field, Input, PageHeader } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
+import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import { REPORTS, type ReportRow } from './definitions';
 import { ReportList } from './components/ReportList';
 import { ReportPreview } from './components/ReportPreview';
@@ -54,6 +55,19 @@ export default function Reports() {
         title="Reports"
         subtitle="Choose a report, apply filters, preview and export. Exports contain only data you’re allowed to see."
         actions={<BuildingPicker />}
+      />
+
+      <SectionPromoBanner
+        eyebrow="BUSINESS INTELLIGENCE"
+        title="Authoritative Reports, Permanent Audit History."
+        subtitle="Export comprehensive ledgers for revenue, resident check-ins, mess headcount, and property occupancy."
+        imageSrc="/owner-assets/payments-hero.jpg"
+        statsBadge={`${defs.length} Report Categories`}
+        primaryAction={{
+          label: `Generate ${sel.title}`,
+          onClick: run,
+          icon: FileBarChart,
+        }}
       />
       <div className="grid lg:grid-cols-[280px_1fr] gap-5">
         <ReportList

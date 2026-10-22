@@ -8,7 +8,7 @@ import type { RecentPayment } from '../types';
 export function RecentPayments({ state }: { state: AsyncState<RecentPayment[]> }) {
   const nav = useNavigate();
   return (
-    <Card title="Recent rent payments" action={<Button variant="ghost" size="sm" onClick={() => nav('/app/payments')}>View all</Button>}>
+    <Card title="Recent rent payments" action={<Button variant="ghost" size="sm" onClick={() => nav('payments')}>View all</Button>}>
       <Async state={state}>
         {(rows) =>
           rows.length === 0 ? (

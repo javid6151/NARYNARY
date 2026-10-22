@@ -1,14 +1,13 @@
-/** Admission requests page: list by status, with a drawer to review (owner approves/rejects). */
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle2, Eye, FileClock, Inbox, Plus, Search, XCircle } from 'lucide-react';
-import { useAsync } from '../../lib/hooks';
+import { Check, CheckCircle2, Copy, Eye, FileClock, Inbox, KeyRound, Plus, Search, Share2, X, XCircle } from 'lucide-react';
+import { useAsync, useMutation } from '../../lib/hooks';
 import { fmtDate, fmtDateTime, inr } from '../../lib/format';
 import { useAuth } from '../access/useAuth';
 import { useBuilding } from '../access/useBuilding';
-import { Async, Avatar, Badge, Button, Card, Empty, Input, PageHeader, StatCard, Table, Tabs, Td, Toast } from '../../components/ui';
+import { Async, Avatar, Badge, Button, Card, Empty, ErrorBanner, Field, Input, PageHeader, StatCard, Table, Tabs, Td, Toast } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
-import { listAdmissions } from './api';
+import { listAdmissions, setResidentPortalPassword } from './api';
 import { AdmissionDrawer } from './components/AdmissionDrawer';
 import type { AdmissionRow } from './types';
 
@@ -25,7 +24,38 @@ export default function Admissions() {
   const [search, setSearch] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+
+  // Portal access modal state
+  const [portalTarget, setPortalTarget] = useState<AdmissionRow | null>(null);
+  const [portalPassword, setPortalPassword] = useState('');
+  const [portalSuccess, setPortalSuccess] = useState<{
+    name: string;
+    phone: string;
+    password: string;
+    copied: boolean;
+  } | null>(null);
+
   const st = useAsync(() => (!buildingId ? Promise.resolve([] as AdmissionRow[]) : listAdmissions(buildingId)), [buildingId]);
+
+  const portalMutation = useMutation(async () => {
+    if (!portalTarget) return;
+    const pwd = portalPassword.trim() || `Pass${(portalTarget.residents.phone || '1234').replace(/\D/g, '').slice(-4)}!`;
+    await setResidentPortalPassword({
+      residentId: portalTarget.residents.id,
+      phone: portalTarget.residents.phone,
+      email: portalTarget.residents.email || undefined,
+      fullName: portalTarget.residents.full_name,
+      password: pwd,
+    });
+    setPortalSuccess({
+      name: portalTarget.residents.full_name,
+      phone: portalTarget.residents.phone,
+      password: pwd,
+      copied: false,
+    });
+    setToast('Resident portal access activated!');
+    st.reload();
+  });
 
   const rows = useMemo(() => st.data ?? [], [st.data]);
   const filtered = useMemo(
@@ -134,19 +164,59 @@ export default function Admissions() {
                     <Td>
                       {r.status === 'approved' ? (
                         r.residents.user_id ? (
-                          <Badge status="active">Access granted</Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge status="active">Access granted</Badge>
+                            <button
+                              onClick={() => {
+                                setPortalTarget(r);
+                                setPortalPassword(`Pass${(r.residents.phone || '1234').replace(/\D/g, '').slice(-4)}!`);
+                                setPortalSuccess(null);
+                              }}
+                              className="text-xs text-brand-600 hover:text-brand-800 font-medium cursor-pointer underline"
+                              title="Change resident password"
+                            >
+                              Password
+                            </button>
+                          </div>
                         ) : (
-                          <Badge status="invited">Not activated</Badge>
+                          <button
+                            onClick={() => {
+                              setPortalTarget(r);
+                              setPortalPassword(`Pass${(r.residents.phone || '1234').replace(/\D/g, '').slice(-4)}!`);
+                              setPortalSuccess(null);
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 shadow-xs cursor-pointer transition-colors"
+                          >
+                            <KeyRound className="size-3.5" />
+                            Grant Portal Access
+                          </button>
                         )
                       ) : (
                         <span className="text-muted">—</span>
                       )}
                     </Td>
                     <Td>
-                      <Button variant="ghost" size="sm" onClick={() => setOpenId(r.id)} aria-label={`View ${r.residents.full_name}`}>
-                        <Eye className="size-4" />
-                        View
-                      </Button>
+                      <div className="flex items-center gap-1.5">
+                        <Button variant="ghost" size="sm" onClick={() => setOpenId(r.id)} aria-label={`View ${r.residents.full_name}`}>
+                          <Eye className="size-4" />
+                          View
+                        </Button>
+                        {r.status === 'approved' && !r.residents.user_id && (
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => {
+                              setPortalTarget(r);
+                              setPortalPassword(`Pass${(r.residents.phone || '1234').replace(/\D/g, '').slice(-4)}!`);
+                              setPortalSuccess(null);
+                            }}
+                            className="h-8 text-xs font-medium text-brand-700 hover:bg-brand-50"
+                          >
+                            <KeyRound className="size-3.5" />
+                            Portal
+                          </Button>
+                        )}
+                      </div>
                     </Td>
                   </tr>
                 ))}
@@ -165,6 +235,138 @@ export default function Admissions() {
         }}
       />
       <Toast message={toast} onDone={() => setToast(null)} />
+
+      {/* PORTAL ACCESS MODAL */}
+      {portalTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-ink/40 backdrop-blur-xs" onClick={() => setPortalTarget(null)} aria-hidden />
+          <div role="dialog" aria-modal="true" className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl border border-line p-5">
+            <div className="flex items-center justify-between pb-3 mb-4 border-b border-line">
+              <h3 className="font-semibold text-base text-ink flex items-center gap-2">
+                <KeyRound className="size-4 text-brand-600" />
+                {portalSuccess ? 'Portal Credentials Saved' : `Grant Portal Access: ${portalTarget.residents.full_name}`}
+              </h3>
+              <button
+                onClick={() => setPortalTarget(null)}
+                className="p-1 rounded-lg hover:bg-subtle text-muted hover:text-ink transition-colors cursor-pointer"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+
+            {portalSuccess ? (
+              <div className="space-y-4">
+                <div className="p-3.5 rounded-xl bg-ok-bg/50 border border-ok/30 space-y-2.5">
+                  <div className="flex items-center gap-2 text-ok font-semibold text-xs">
+                    <CheckCircle2 className="size-4" />
+                    Authentication details live on Port 5000!
+                  </div>
+                  <div className="bg-white p-2.5 rounded-lg border border-line font-mono text-xs space-y-1">
+                    <div>Portal: <b>http://localhost:5000</b></div>
+                    <div>Mobile (Login ID): <b>{portalSuccess.phone}</b></div>
+                    <div>Password: <b className="text-brand-700">{portalSuccess.password}</b></div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    className="flex-1 bg-brand-600 hover:bg-brand-700 text-white"
+                    onClick={() => {
+                      navigator.clipboard.writeText(
+                        `Resident Portal Login: http://localhost:5000\nMobile: ${portalSuccess.phone}\nPassword: ${portalSuccess.password}`
+                      );
+                      setPortalSuccess({ ...portalSuccess, copied: true });
+                    }}
+                  >
+                    {portalSuccess.copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
+                    {portalSuccess.copied ? 'Copied Details!' : 'Copy Login Details'}
+                  </Button>
+
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(
+                      `Hello ${portalSuccess.name}! Your resident portal access has been granted.\n\nLogin URL: http://localhost:5000\nMobile: ${portalSuccess.phone}\nPassword: ${portalSuccess.password}`
+                    )}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                  >
+                    <Share2 className="size-4" />
+                    WhatsApp
+                  </a>
+                </div>
+
+                <div className="flex justify-end pt-2 border-t border-line">
+                  <Button variant="ghost" size="sm" onClick={() => setPortalTarget(null)}>
+                    Done
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  portalMutation.run();
+                }}
+                className="space-y-4 text-xs"
+              >
+                <div className="p-3 rounded-xl bg-canvas border border-line space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-muted">Resident:</span>
+                    <span className="font-semibold text-ink">{portalTarget.residents.full_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted">Mobile Login ID:</span>
+                    <span className="font-semibold text-ink">{portalTarget.residents.phone}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted">Room / Bed:</span>
+                    <span className="font-semibold text-ink">Room {portalTarget.rooms.room_number} ({portalTarget.beds.bed_label})</span>
+                  </div>
+                </div>
+
+                <Field label="Portal Login Password / PIN" required hint="Resident will sign in on Port 5000 using their mobile and this password">
+                  {() => (
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        value={portalPassword}
+                        onChange={(e) => setPortalPassword(e.target.value)}
+                        required
+                        className="h-9 font-mono text-sm"
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => {
+                          const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+                          let code = '';
+                          for (let i = 0; i < 6; i++) code += chars.charAt(Math.floor(Math.random() * chars.length));
+                          setPortalPassword(`Zip@${code}`);
+                        }}
+                      >
+                        Random
+                      </Button>
+                    </div>
+                  )}
+                </Field>
+
+                <ErrorBanner error={portalMutation.error} />
+
+                <div className="flex justify-end gap-2 pt-2 border-t border-line">
+                  <Button type="button" variant="ghost" onClick={() => setPortalTarget(null)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" busy={portalMutation.busy} className="bg-brand-600 hover:bg-brand-700 text-white">
+                    Save & Activate Portal
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </>
   );
 }

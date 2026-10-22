@@ -90,15 +90,19 @@ export function ResPayments({ p }: { p: ResidentProfile }) {
     <>
       <TopBar title="Payments" action={filterButton} />
 
-      <section className="bg-white rounded-2xl border border-line p-4 flex items-center justify-between gap-3">
+      <section className="resident-payments-hero">
+        <p className="resident-hero-eyebrow">Payments & receipts</p>
+        <div className="mt-2 flex items-end justify-between gap-3">
         <div>
-          <p className="text-[13px] text-ink-2">Total Outstanding</p>
-          <p className={cx('text-[26px] font-bold tabular', total > 0 ? 'text-bad' : 'text-ok')}>{inr(total, true)}</p>
+          <p className="text-[14px] text-white/72">Total outstanding</p>
+          <p className="text-[30px] font-semibold tabular tracking-tight">{inr(total, true)}</p>
         </div>
-        <Button onClick={() => setPay(true)}>Pay Now</Button>
+          <Button className="resident-primary-button" onClick={() => setPay(true)}>Pay now</Button>
+        </div>
+        <p className="mt-3 text-[12px] text-white/72">A clear record of every charge, payment and receipt.</p>
       </section>
 
-      <div role="tablist" className="flex border-b border-line">
+      <div role="tablist" className="resident-tablist flex overflow-x-auto border-b border-[var(--resident-line)]">
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -106,8 +110,8 @@ export function ResPayments({ p }: { p: ResidentProfile }) {
             aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
             className={cx(
-              'flex-1 px-1 py-2.5 text-[13px] whitespace-nowrap border-b-2 -mb-px cursor-pointer',
-              tab === t.id ? 'border-brand-600 text-brand-700 font-medium' : 'border-transparent text-ink-2',
+              'resident-tab flex-1 px-2 py-2.5 text-[13px] whitespace-nowrap border-b-2 -mb-px cursor-pointer',
+              tab === t.id ? 'resident-tab--active font-medium' : '',
             )}
           >
             {t.label}
@@ -117,7 +121,7 @@ export function ResPayments({ p }: { p: ResidentProfile }) {
       {period !== 'all' && (
         <p className="text-[12px] text-muted -mt-2">
           Showing {PERIODS.find((x) => x.id === period)!.label.toLowerCase()} ·{' '}
-          <button className="text-brand-600 cursor-pointer" onClick={() => setPeriod('all')}>Clear</button>
+                  <button className="resident-link cursor-pointer" onClick={() => setPeriod('all')}>Clear</button>
         </p>
       )}
 
@@ -131,10 +135,10 @@ export function ResPayments({ p }: { p: ResidentProfile }) {
                 <Tile title="Security Deposit" value={inr(p.security_deposit)} hint="Refundable" />
                 <Tile title="Advance Balance" value={inr(advance)} hint={advance > 0 ? 'Applied to your next dues' : 'No advance'} />
               </div>
-              <section className="bg-white rounded-2xl border border-line p-4">
+              <section className="resident-card rounded-2xl p-4">
                 <div className="flex items-center justify-between mb-1">
                   <h2 className="text-[15px] font-semibold">Recent Payments</h2>
-                  <button onClick={() => setTab('history')} className="text-[13px] text-brand-600 font-medium cursor-pointer">
+                  <button onClick={() => setTab('history')} className="resident-link text-[13px] font-medium cursor-pointer">
                     View all
                   </button>
                 </div>
@@ -144,7 +148,7 @@ export function ResPayments({ p }: { p: ResidentProfile }) {
                   <PaymentList rows={payments.slice(0, 4)} onOpen={setReceipt} />
                 )}
               </section>
-              <section className="bg-white rounded-2xl border border-line p-4">
+              <section className="resident-card rounded-2xl p-4">
                 <h2 className="text-[15px] font-semibold mb-1">Upcoming Payments</h2>
                 {upcoming.length === 0 ? (
                   <p className="text-[13px] text-muted py-2">Nothing due right now.</p>
@@ -164,7 +168,7 @@ export function ResPayments({ p }: { p: ResidentProfile }) {
             return rows.length === 0 ? (
               <Empty title={tab === 'rent' ? 'No rent charges' : 'No other charges'} />
             ) : (
-              <section className="bg-white rounded-2xl border border-line px-4">
+              <section className="resident-card rounded-2xl px-4">
                 <ChargeList rows={rows} showType={tab === 'other'} />
               </section>
             );
@@ -178,7 +182,7 @@ export function ResPayments({ p }: { p: ResidentProfile }) {
             payments.length === 0 ? (
               <Empty title="No payments yet" />
             ) : (
-              <section className="bg-white rounded-2xl border border-line px-4">
+              <section className="resident-card rounded-2xl px-4">
                 <PaymentList rows={payments} onOpen={setReceipt} />
               </section>
             )
@@ -194,7 +198,7 @@ export function ResPayments({ p }: { p: ResidentProfile }) {
 
 function Tile({ title, value, hint }: { title: string; value: string; hint: string }) {
   return (
-    <div className="bg-white rounded-2xl border border-line p-4">
+    <div className="resident-payment-tile p-4">
       <p className="text-[12.5px] text-ink-2">{title}</p>
       <p className="text-[20px] font-bold text-brand-600 tabular mt-1">{value}</p>
       <p className="text-[12px] text-muted mt-0.5">{hint}</p>

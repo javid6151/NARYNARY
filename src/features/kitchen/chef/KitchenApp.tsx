@@ -2,6 +2,7 @@
  * Chef portal shell (`/kitchen/*`), mobile-first with a bottom tab bar
  * (Home, Today's Cooking, Stock, History, Profile) and a side menu for the menu planner and owner console.
  * Chefs see only their assigned buildings; owners/managers can open it too.
+ * Fully styled with the ZIPNARY Enterprise design system (Warm Ivory, Porcelain White, Deep Olive).
  */
 import { Route, Routes } from 'react-router-dom';
 import { useAsync } from '../../../lib/hooks';
@@ -15,14 +16,16 @@ import { KitchenProfile } from './KitchenProfile';
 import { KitchenStock } from './KitchenStock';
 import { RecordMeal } from './record/RecordMeal';
 import { KitchenNav } from './ui/KitchenNav';
+import '../../owner/owner-portal.css';
 
 export default function KitchenApp() {
   const { session } = useAuth();
   const me = useAsync(() => (session ? getMyName(session.user.id) : Promise.resolve('')), [session?.user.id]);
   const name = me.data ?? '';
+
   return (
-    <div className="min-h-full bg-[#f6f8f6]">
-      <div className="max-w-lg mx-auto px-4 pb-28">
+    <div className="owner-portal chef-portal min-h-screen bg-[#F5F0E8] text-[#30271F]">
+      <div className="max-w-2xl mx-auto px-4 pb-28 pt-2">
         <main className="space-y-4">
           <Routes>
             <Route index element={<KitchenHome name={name} />} />

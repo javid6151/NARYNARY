@@ -5,7 +5,35 @@ import type { DashboardSummary, OpenMaintenanceItem, RecentPayment } from './typ
 
 /** Current-month KPIs for one building, or every accessible building when `buildingId` is null. */
 export async function getDashboardSummary(buildingId: string | null) {
-  return (await rpc('owner_dashboard_summary', { p_building: buildingId, p_month: null })) as unknown as DashboardSummary;
+  try {
+    return (await rpc('owner_dashboard_summary', { p_building: buildingId, p_month: null })) as unknown as DashboardSummary;
+  } catch (err: any) {
+    if (err?.message?.includes('no accessible buildings')) {
+      return {
+        period_start: new Date().toISOString().slice(0, 10),
+        beds_total: 0,
+        beds_occupied: 0,
+        rooms_total: 0,
+        residents_active: 0,
+        new_residents_month: 0,
+        collected_month: 0,
+        billed_month: 0,
+        outstanding_total: 0,
+        overdue_total: 0,
+        overdue_residents: 0,
+        expenses_month: 0,
+        expenses_by_category: [],
+        expenses_unpaid: 0,
+        daily_collection: [],
+        pending_admissions: 0,
+        open_complaints: 0,
+        open_maintenance: 0,
+        low_stock: [],
+        staff_on_duty: 0,
+      };
+    }
+    throw err;
+  }
 }
 
 /** Six most recent payments across the given buildings. */

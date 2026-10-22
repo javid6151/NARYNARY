@@ -82,17 +82,22 @@ export function listResidentComplaints(residentId: string): Promise<ResidentComp
 
 // ---------------------------------------------------------------- Admissions
 
-/** Latest 300 admissions of a building with resident, bed and location. */
-export function listAdmissions(buildingId: string): Promise<AdmissionRow[]> {
+/** Latest 300 admissions of a building (or all tenant buildings) with resident, bed and location. */
+export function listAdmissions(buildingId?: string | null): Promise<AdmissionRow[]> {
+  let query = supabase
+    .from('admissions')
+    .select(
+      'id,status,admission_date,monthly_rent,security_deposit,setup_fee,mess_included,source,review_notes,created_at,approved_at,' +
+        'residents(id,full_name,phone,email,user_id,occupation,id_number_last4,status),' +
+        'rooms(room_number),beds(bed_label),floors(name),buildings(name)',
+    );
+
+  if (buildingId) {
+    query = query.eq('building_id', buildingId);
+  }
+
   return q(
-    supabase
-      .from('admissions')
-      .select(
-        'id,status,admission_date,monthly_rent,security_deposit,setup_fee,mess_included,source,review_notes,created_at,approved_at,' +
-          'residents(id,full_name,phone,email,user_id,occupation,id_number_last4,status),' +
-          'rooms(room_number),beds(bed_label),floors(name),buildings(name)',
-      )
-      .eq('building_id', buildingId)
+    query
       .order('created_at', { ascending: false })
       .limit(300),
   ) as unknown as Promise<AdmissionRow[]>;
@@ -112,6 +117,37 @@ export function listAdmissionCharges(admissionId: string): Promise<AdmissionChar
 /** Owner approves (allocates bed, creates charges) or rejects (releases the held bed). */
 export function reviewAdmission(admissionId: string, decision: 'approve' | 'reject', notes: string | null) {
   return rpc('review_admission', { p_admission: admissionId, p_decision: decision, p_notes: notes });
+}
+
+export interface AdmissionPaymentOptions {
+  status: 'paid' | 'not_paid';
+  method?: 'upi' | 'cash';
+  reference?: string | null;
+  reminderDate?: string | null;
+  reminderNote?: string | null;
+}
+
+/** Auto-approves an admission immediately upon creation so bed is allocated and resident is active, and activates portal access. */
+export async function autoApproveAdmission(
+  admissionId: string,
+  password?: string,
+  payment?: AdmissionPaymentOptions,
+): Promise<void> {
+  const res = await fetch('/api/auth/approve-admission-portal', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      admissionId,
+      decision: 'approve',
+      notes: 'Direct admission auto-approved with instant portal activation',
+      password: password || undefined,
+      payment,
+    }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Failed to auto-approve admission and activate portal');
+  }
 }
 
 export interface CreateAdmissionInput {
@@ -147,4 +183,79 @@ export async function checkoutResident(c: { admissionId: string | null; date: st
     p_deposit_refund: c.depositRefund,
   });
   return result as unknown as { outstanding: number };
+}
+
+// ---------------------------------------------------------------- Resident Portal Server / Access Management
+
+export interface ResidentPortalAccount {
+  id: string;
+  tenant_id: string;
+  user_id: string | null;
+  full_name: string;
+  phone: string;
+  email: string | null;
+  resident_status: string;
+  portal_status: 'active' | 'suspended' | 'no_account' | string;
+  room_number: string;
+  bed_label: string;
+  building_name: string;
+  created_at: string;
+}
+
+export async function listResidentPortalAccounts(buildingId?: string | null): Promise<ResidentPortalAccount[]> {
+  const url = buildingId && buildingId !== 'all'
+    ? `/api/auth/list-resident-portal-accounts?buildingId=${encodeURIComponent(buildingId)}`
+    : '/api/auth/list-resident-portal-accounts';
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('Failed to load resident portal accounts');
+  return res.json();
+}
+
+export async function approveAdmissionWithPortal(params: {
+  admissionId: string;
+  decision: 'approve' | 'reject';
+  notes?: string;
+  password?: string;
+}) {
+  const res = await fetch('/api/auth/approve-admission-portal', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  const data = await res.json();
+  if (!res.ok || data.error) throw new Error(data.error || 'Failed to approve admission');
+  return data;
+}
+
+export async function setResidentPortalPassword(params: {
+  residentId: string;
+  phone?: string;
+  email?: string;
+  fullName?: string;
+  password: string;
+  tenantId?: string;
+}) {
+  const res = await fetch('/api/auth/set-resident-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  const data = await res.json();
+  if (!res.ok || data.error) throw new Error(data.error || 'Failed to save resident password');
+  return data;
+}
+
+export async function manageResidentPortalAccess(params: {
+  residentId: string;
+  action: 'suspend' | 'reactivate' | 'remove_access';
+  tenantId?: string;
+}) {
+  const res = await fetch('/api/auth/manage-resident-access', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  const data = await res.json();
+  if (!res.ok || data.error) throw new Error(data.error || 'Failed to update resident access');
+  return data;
 }

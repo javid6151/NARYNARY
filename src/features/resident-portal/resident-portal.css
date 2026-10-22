@@ -1,0 +1,334 @@
+/*
+ * Resident portal visual language. These styles are deliberately scoped so the
+ * owner, manager, chef and platform portals keep their existing design system.
+ */
+.resident-portal {
+  --resident-ink: #29231e;
+  --resident-ink-soft: #6f675f;
+  --resident-paper: #f7f3ed;
+  --resident-paper-deep: #ebe4d9;
+  --resident-line: rgba(71, 56, 43, 0.13);
+  --resident-clay: #a74e35;
+  --resident-clay-deep: #7e3322;
+  --resident-olive: #536143;
+  --resident-night: #28221f;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(206, 173, 124, 0.24), transparent 28rem),
+    #e9e2d8;
+  color: var(--resident-ink);
+}
+
+.resident-shell__content {
+  width: 100%;
+  max-width: 29rem;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--resident-paper);
+  box-shadow: 0 0 48px rgba(58, 42, 28, 0.09);
+}
+
+.resident-main {
+  padding-bottom: 7.75rem;
+}
+
+.resident-portal .resident-staff-banner {
+  background: #f1eadf;
+  border-color: #d8c6a9;
+  color: var(--resident-ink);
+}
+
+.resident-portal .resident-staff-banner a,
+.resident-portal .resident-link {
+  color: var(--resident-clay);
+}
+
+.resident-brand-header,
+.resident-subpage-header {
+  background: color-mix(in srgb, var(--resident-paper) 92%, transparent);
+  color: var(--resident-ink);
+}
+
+.resident-brand-header--overlay {
+  background: linear-gradient(180deg, rgba(24, 19, 16, 0.48), transparent);
+  color: #fff;
+}
+
+.resident-brand-header--overlay .resident-brand-name,
+.resident-brand-header--overlay .resident-brand-subtitle,
+.resident-brand-header--overlay button {
+  color: #fff;
+}
+
+.resident-brand-header--overlay button {
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+.resident-home-hero {
+  min-height: 25.5rem;
+  position: relative;
+  overflow: hidden;
+  background-color: #40322a;
+  background-image:
+    linear-gradient(180deg, rgba(21, 16, 13, 0.25) 0%, rgba(21, 16, 13, 0.04) 34%, rgba(21, 16, 13, 0.83) 100%),
+    url('/resident-assets/warm-residence-interior.png');
+  background-size: cover;
+  background-position: center;
+}
+
+.resident-home-hero__content {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 2rem 1rem 1.25rem;
+  color: #fff;
+}
+
+.resident-hero-eyebrow,
+.resident-section-eyebrow {
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.resident-hero-eyebrow { color: rgba(255, 255, 255, 0.72); }
+.resident-section-eyebrow { color: var(--resident-clay); }
+
+.resident-hero-stay {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 1rem;
+  padding: 0.75rem;
+  background: rgba(37, 27, 21, 0.35);
+  box-shadow: 0 10px 24px rgba(10, 7, 5, 0.16);
+  backdrop-filter: blur(14px);
+}
+
+.resident-status-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 99px;
+  background: #b9e477;
+  box-shadow: 0 0 0 4px rgba(185, 228, 119, 0.15);
+}
+
+.resident-card,
+.resident-portal .resident-payment-tile,
+.resident-portal .resident-profile-card,
+.resident-portal .resident-meal-card,
+.resident-portal .resident-notice-card {
+  border: 1px solid var(--resident-line);
+  background: rgba(255, 253, 249, 0.88);
+  box-shadow: 0 8px 24px rgba(68, 49, 32, 0.045);
+}
+
+.resident-due-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #e2d5c5;
+  background: #fffaf3;
+}
+
+.resident-due-card::after {
+  content: '';
+  position: absolute;
+  right: -1.75rem;
+  top: -2.75rem;
+  width: 9rem;
+  height: 9rem;
+  border-radius: 999px;
+  background: #ecd4bb;
+  opacity: 0.48;
+}
+
+.resident-due-card > * { position: relative; z-index: 1; }
+
+.resident-amount { color: var(--resident-clay-deep); }
+
+.resident-portal .resident-primary-button {
+  border: 0;
+  background: var(--resident-clay);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(167, 78, 53, 0.24);
+}
+
+.resident-portal .resident-primary-button:hover { background: var(--resident-clay-deep); }
+
+.resident-action {
+  min-height: 5.5rem;
+  border: 1px solid var(--resident-line);
+  border-radius: 1rem;
+  background: rgba(255, 253, 249, 0.76);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.resident-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 20px rgba(68, 49, 32, 0.08);
+}
+
+.resident-action__icon {
+  border-radius: 0.8rem;
+  background: #f0e6d8;
+  color: var(--resident-clay);
+}
+
+.resident-menu-teaser,
+.resident-menu-showcase {
+  background-color: #342820;
+  background-image:
+    linear-gradient(90deg, rgba(28, 21, 17, 0.9) 0%, rgba(28, 21, 17, 0.54) 48%, rgba(28, 21, 17, 0.08) 100%),
+    url('/resident-assets/today-menu-dinner.png');
+  background-size: cover;
+  background-position: center;
+  color: #fff;
+  box-shadow: 0 12px 26px rgba(74, 42, 26, 0.18);
+}
+
+.resident-menu-showcase {
+  min-height: 11rem;
+  display: flex;
+  align-items: end;
+  background-image:
+    linear-gradient(180deg, rgba(28, 21, 17, 0.08), rgba(28, 21, 17, 0.86)),
+    url('/resident-assets/today-menu-dinner.png');
+}
+
+.resident-notice-preview {
+  background: #f0eee6;
+  border: 1px solid #dfd8c8;
+}
+
+.resident-notice-preview-icon,
+.resident-notice-icon {
+  background: #e9dbc8;
+  color: var(--resident-clay);
+}
+
+.resident-payments-hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at 88% 4%, rgba(226, 175, 100, 0.32), transparent 28%),
+    linear-gradient(145deg, #2d2520, #514037);
+  color: #fff;
+  box-shadow: 0 14px 28px rgba(53, 42, 34, 0.19);
+}
+
+.resident-payments-hero .resident-primary-button {
+  background: #fff6eb;
+  color: var(--resident-clay-deep);
+  box-shadow: none;
+}
+
+.resident-tablist {
+  scrollbar-width: none;
+}
+
+.resident-tablist::-webkit-scrollbar { display: none; }
+
+.resident-tab {
+  border-bottom-color: transparent;
+  color: var(--resident-ink-soft);
+}
+
+.resident-tab--active {
+  border-bottom-color: var(--resident-clay);
+  color: var(--resident-clay-deep);
+}
+
+.resident-portal .resident-payment-tile { border-radius: 1rem; }
+.resident-portal .resident-payment-tile p:nth-child(2) { color: var(--resident-clay-deep); }
+
+.resident-menu-date--active {
+  border-color: var(--resident-clay);
+  background: #f7e9db;
+  color: var(--resident-clay-deep);
+}
+
+.resident-menu-date { border-color: var(--resident-line); background: rgba(255,253,249,0.85); }
+.resident-portal .resident-meal-card { border-radius: 1.15rem; }
+
+.resident-notice-intro {
+  border-radius: 1.2rem;
+  padding: 1rem;
+  background: #eae5da;
+  color: var(--resident-ink);
+}
+
+.resident-notice-filter--active {
+  border-color: var(--resident-clay);
+  background: #f8eadc;
+  color: var(--resident-clay-deep);
+}
+
+.resident-notice-filter { border-color: var(--resident-line); background: rgba(255,253,249,0.84); }
+.resident-portal .resident-notice-card { border-radius: 1.15rem; }
+
+.resident-profile-hero {
+  position: relative;
+  min-height: 13rem;
+  overflow: hidden;
+  display: flex;
+  align-items: end;
+  border-radius: 1.5rem;
+  padding: 1rem;
+  color: #fff;
+  background-color: #3b3029;
+  background-image:
+    linear-gradient(180deg, rgba(27, 21, 17, 0.08), rgba(27, 21, 17, 0.81)),
+    url('/resident-assets/warm-residence-interior.png');
+  background-size: cover;
+  background-position: center 59%;
+}
+
+.resident-profile-avatar {
+  border: 3px solid rgba(255, 255, 255, 0.88);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2);
+}
+
+.resident-portal .resident-profile-card { border-radius: 1.15rem; }
+
+.resident-profile-row + .resident-profile-row { border-top: 1px solid var(--resident-line); }
+
+.resident-portal .resident-logout {
+  border-color: #e1c8bf;
+  background: #fff8f6;
+  color: #9f3f29;
+}
+
+.resident-portal nav[aria-label='Resident'] > div {
+  border-color: rgba(71, 56, 43, 0.13);
+  background: rgba(255, 253, 249, 0.94);
+  backdrop-filter: blur(20px);
+}
+
+.resident-portal nav[aria-label='Resident'] a[aria-label='Community chat'] {
+  background: var(--resident-clay);
+  box-shadow: 0 10px 22px rgba(167, 78, 53, 0.3);
+}
+
+.resident-portal nav[aria-label='Resident'] a:not([aria-label='Community chat']) { color: var(--resident-ink-soft); }
+.resident-portal nav[aria-label='Resident'] a.active:not([aria-label='Community chat']) { color: var(--resident-clay); }
+
+@media (min-width: 768px) {
+  .resident-shell__content {
+    max-width: 72rem;
+    padding: 0 1.5rem;
+  }
+
+  .resident-main { max-width: 65rem; margin: 0 auto; }
+  .resident-home-hero, .resident-profile-hero { border-radius: 1.5rem; }
+  .resident-home-hero { min-height: 30rem; }
+  .resident-portal nav[aria-label='Resident'] > div { max-width: 38rem; border-radius: 1rem 1rem 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .resident-action { transition: none; }
+}

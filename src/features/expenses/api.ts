@@ -7,7 +7,7 @@ import { supabase } from '../../lib/supabase';
 import type { ExpenseCategory, ExpensePayment, ExpenseRow, Vendor, VendorOption } from './types';
 
 /** Approved expenses of a building (latest 500), optionally only one source type (e.g. 'maintenance'). */
-export function listExpenses(buildingId: string, source?: string): Promise<ExpenseRow[]> {
+export async function listExpenses(buildingId: string, source?: string): Promise<ExpenseRow[]> {
   let qb = supabase
     .from('expense_balances')
     .select('*,expense_categories(name),vendors(name)')
@@ -17,7 +17,38 @@ export function listExpenses(buildingId: string, source?: string): Promise<Expen
     .limit(500);
   if (source) qb = qb.eq('source_type', source);
   // Views report every column as nullable; the view only returns real expenses, so the row shape is asserted here.
-  return q(qb) as unknown as Promise<ExpenseRow[]>;
+  const rows = (await q(qb)) as unknown as ExpenseRow[];
+  if (!rows || rows.length === 0) return [];
+
+  const creatorIds = [...new Set(rows.map((r) => r.created_by).filter(Boolean))] as string[];
+  if (creatorIds.length > 0) {
+    try {
+      const [profs, mems] = await Promise.all([
+        q(supabase.from('profiles').select('id,full_name,email').in('id', creatorIds)),
+        q(supabase.from('tenant_memberships').select('user_id,display_name,role').in('user_id', creatorIds)),
+      ]);
+      const profMap = new Map((profs as any[]).map((p) => [p.id, p]));
+      const memMap = new Map((mems as any[]).map((m) => [m.user_id, m]));
+
+      for (const r of rows) {
+        if (!r.created_by) continue;
+        const p = profMap.get(r.created_by);
+        const m = memMap.get(r.created_by);
+        const name = m?.display_name || p?.full_name || (p?.email ? p.email.split('@')[0] : 'Staff');
+        const role = m?.role ? (m.role.charAt(0).toUpperCase() + m.role.slice(1)) : null;
+        r.recorded_by = {
+          id: r.created_by,
+          name,
+          role,
+          email: p?.email ?? null,
+        };
+      }
+    } catch {
+      // Fallback gracefully without breaking expense list
+    }
+  }
+
+  return rows;
 }
 
 export function listExpenseCategories(): Promise<ExpenseCategory[]> {

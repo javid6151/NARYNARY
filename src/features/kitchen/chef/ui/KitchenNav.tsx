@@ -1,31 +1,42 @@
-/** Kitchen bottom navigation: Home, Today's Cooking, Stock, History, Profile. */
-import { NavLink } from 'react-router-dom';
+import { NavLink, useParams } from 'react-router-dom';
 import { ClipboardList, Home, Package, User, UtensilsCrossed } from 'lucide-react';
 import { cx } from '../../../../lib/cx';
 
-const TABS = [
-  { to: '/kitchen', label: 'Home', icon: Home, end: true },
-  { to: '/kitchen/cooking', label: 'Today’s Cooking', icon: UtensilsCrossed },
-  { to: '/kitchen/stock', label: 'Stock', icon: Package },
-  { to: '/kitchen/history', label: 'History', icon: ClipboardList },
-  { to: '/kitchen/profile', label: 'Profile', icon: User },
-];
-
 export function KitchenNav() {
+  const { tenantSlug, pgSlug } = useParams<{ tenantSlug?: string; pgSlug?: string }>();
+  const base = tenantSlug && pgSlug ? `/${tenantSlug}/${pgSlug}/chef` : tenantSlug ? `/${tenantSlug}/chef` : '/chef';
+
+  const tabs = [
+    { to: base, label: 'Home', icon: Home, end: true },
+    { to: `${base}/cooking`, label: 'Cooking', icon: UtensilsCrossed },
+    { to: `${base}/stock`, label: 'Stock', icon: Package },
+    { to: `${base}/history`, label: 'History', icon: ClipboardList },
+    { to: `${base}/profile`, label: 'Profile', icon: User },
+  ];
+
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-30" aria-label="Kitchen">
-      <div className="max-w-lg mx-auto bg-white border-t border-line grid grid-cols-5">
-        {TABS.map(({ to, label, icon: Icon, end }) => (
+    <nav className="fixed bottom-0 inset-x-0 z-40 bg-[#FFFEFC]/95 backdrop-blur-md border-t border-[#DED6CB] shadow-lg" aria-label="Kitchen Navigation">
+      <div className="max-w-2xl mx-auto grid grid-cols-5 p-2 gap-1">
+        {tabs.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
             end={end}
             className={({ isActive }) =>
-              cx('flex flex-col items-center gap-1 pt-2.5 pb-2 text-[11px] leading-tight text-center', isActive ? 'text-kitchen font-semibold' : 'text-muted')
+              cx(
+                'flex flex-col items-center justify-center gap-1 py-1.5 px-1 text-[11px] font-medium rounded-xl transition-all',
+                isActive
+                  ? 'bg-[#EBF0E6] text-[#343B2B] font-bold shadow-2xs'
+                  : 'text-[#77736B] hover:text-[#30271F] hover:bg-[#F5F0E8]',
+              )
             }
           >
-            <Icon className="size-[22px]" aria-hidden />
-            {label}
+            {({ isActive }) => (
+              <>
+                <Icon className={cx('size-5', isActive ? 'text-[#343B2B] stroke-[2.25]' : 'text-[#77736B]')} aria-hidden />
+                <span className="truncate">{label}</span>
+              </>
+            )}
           </NavLink>
         ))}
       </div>

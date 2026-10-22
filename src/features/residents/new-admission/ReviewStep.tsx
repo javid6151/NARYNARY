@@ -22,6 +22,14 @@ export function ReviewStep({ res, terms, location, docCount, error }: {
     ['Security deposit', inr(terms.security_deposit)],
     ['Setup fee', inr(terms.setup_fee)],
     ['Mess', terms.mess_included ? 'Included' : 'Not included'],
+    [
+      'Admission fee payment',
+      terms.payment_status === 'paid'
+        ? (terms.payment_method === 'upi'
+            ? `Paid via UPI (UTR: ${terms.payment_reference || '—'})`
+            : `Paid in Cash${terms.payment_reference ? ` (Receipt: ${terms.payment_reference})` : ''}`)
+        : `Not Paid (Reminder: ${terms.reminder_date || 'Not set'})`,
+    ],
     ['Portal Password', res.portal_password || '—'],
     ['Documents', docCount ? `${docCount} file(s)` : 'None'],
   ];
@@ -35,9 +43,8 @@ export function ReviewStep({ res, terms, location, docCount, error }: {
           </div>
         ))}
       </dl>
-      <p className="rounded-lg bg-info-bg text-info px-3 py-2">
-        The request goes to the owner for approval. The bed is held for this admission and allocated on approval, when first-month
-        charges are created.
+      <p className="rounded-lg bg-ok-bg text-ok px-3 py-2">
+        Direct admission: bed is allocated immediately and resident portal access is activated.
       </p>
       <ErrorBanner error={error} />
     </div>

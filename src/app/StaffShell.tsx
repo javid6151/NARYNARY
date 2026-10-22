@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, Building2, Users, UserPlus, Wallet, Receipt, MessageSquareWarning, Wrench, UtensilsCrossed,
+  LayoutDashboard, BedDouble, Users, Wallet, Receipt, MessageSquareWarning, Wrench, UtensilsCrossed,
   Package, UserCog, Megaphone, FileBarChart, Settings, LogOut, Menu, X, ChefHat, Home,
 } from 'lucide-react';
 import { useAuth } from '../features/access/useAuth';
@@ -17,9 +17,8 @@ import { Logo } from '../components/Logo';
 
 const NAV = [
   { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/app/buildings', label: 'Buildings & Rooms', icon: Building2 },
+  { to: '/app/buildings', label: 'Rooms', icon: BedDouble },
   { to: '/app/residents', label: 'PG Members', icon: Users },
-  { to: '/app/admissions', label: 'Admissions', icon: UserPlus },
   { to: '/app/payments', label: 'Payments', icon: Wallet },
   { to: '/app/expenses', label: 'Expenses', icon: Receipt },
   { to: '/app/complaints', label: 'Complaints', icon: MessageSquareWarning },
@@ -93,7 +92,7 @@ export function StaffShell() {
         <button
           onClick={async () => {
             await signOut();
-            nav('/login');
+            nav('/');
           }}
           aria-label="Sign out"
           title="Sign out"

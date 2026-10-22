@@ -3,9 +3,11 @@
  * (suggestions, feedback, lost & found, marketplace) and visitor passes.
  */
 import { useState } from 'react';
+import { Megaphone, MessageSquare } from 'lucide-react';
 import { useBuilding } from '../access/useBuilding';
 import { PageHeader, Tabs, Toast } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
+import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import { Chat } from './components/Chat';
 import { Notices } from './components/Notices';
 import { PollsAdmin } from './components/PollsAdmin';
@@ -24,6 +26,22 @@ export default function Communication() {
         title="Communication"
         subtitle="Chats, notices, polls, resident posts and visitor passes for the selected building."
         actions={<BuildingPicker />}
+      />
+      <SectionPromoBanner
+        eyebrow="COMMUNITY BROADCAST"
+        title="Connected Residents, Clear Announcements."
+        subtitle="Publish official hostel notices, manage community discussions, conduct polls, and review visitor requests."
+        imageSrc="/owner-assets/lounge-promo.jpg"
+        primaryAction={{
+          label: 'Post Notice',
+          onClick: () => setTab('notices'),
+          icon: Megaphone,
+        }}
+        secondaryAction={{
+          label: 'Resident Chats',
+          onClick: () => setTab('chat'),
+          icon: MessageSquare,
+        }}
       />
       <Tabs<Tab>
         value={tab}

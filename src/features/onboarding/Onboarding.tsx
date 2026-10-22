@@ -27,6 +27,10 @@ export default function Onboarding() {
 
   const status = access?.owned_tenant?.status;
   const [editing, setEditing] = useState(false);
+  const isPending =
+    (status === 'pending' || req.data?.status === 'submitted' || req.data?.status === 'under_review') &&
+    status !== 'active' &&
+    !editing;
 
   return (
     <div className="min-h-full bg-canvas">
@@ -37,7 +41,7 @@ export default function Onboarding() {
           size="sm"
           onClick={async () => {
             await signOut();
-            nav('/login');
+            nav('/');
           }}
         >
           <LogOut className="size-4" />
@@ -49,8 +53,15 @@ export default function Onboarding() {
           <Loading />
         ) : (
           <>
-            {status === 'pending' && !editing && req.data && (
-              <PendingReview req={req.data} tenantCode={access?.owned_tenant?.tenant_code} onRefresh={refreshAccess} />
+            {isPending && req.data && (
+              <PendingReview
+                req={req.data}
+                tenantCode={access?.owned_tenant?.tenant_code}
+                onRefresh={async () => {
+                  await refreshAccess();
+                  req.reload();
+                }}
+              />
             )}
             {status === 'rejected' && (
               <Card>

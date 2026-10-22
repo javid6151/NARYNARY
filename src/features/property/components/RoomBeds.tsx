@@ -46,11 +46,11 @@ export function RoomBeds({ room, onEdit, onClose, onCheckout }: {
                 </Button>
               </div>
             ) : b.pending_admission ? (
-              <Button variant="secondary" size="sm" className="w-full mt-4" onClick={() => nav('/app/admissions')}>
-                Review admission
+              <Button variant="secondary" size="sm" className="w-full mt-4" onClick={() => nav('../residents')}>
+                View resident
               </Button>
             ) : (
-              <Button size="sm" className="w-full mt-4" onClick={() => nav(`/app/admissions/new?bed=${b.bed_id}`)}>
+              <Button size="sm" className="w-full mt-4" onClick={() => nav(`../residents/new?bed=${b.bed_id}`)}>
                 <UserPlus className="size-4" />
                 Admit resident
               </Button>

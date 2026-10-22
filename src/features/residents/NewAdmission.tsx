@@ -7,19 +7,19 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ApiError, newKey } from '../../lib/api';
 import { useAsync, useMutation } from '../../lib/hooks';
 import { isoDate } from '../../lib/format';
 import { useBuilding } from '../access/useBuilding';
 import { Async, Button, Card, PageHeader } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
+import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import { uploadFile } from '../files/api';
 import { fileError } from '../files/rules';
 import { getBuildingLayout } from '../property/api';
 import type { LayoutFloor } from '../property/types';
-import { createAdmission, getAdmissionResidentId } from './api';
-import { setResidentPassword } from '../auth/api';
+import { autoApproveAdmission, createAdmission, getAdmissionResidentId } from './api';
 import type { PendingDoc, ResidentForm, TermsForm } from './types';
 import { EMAIL_RE, ID_LAST4_RE, PHONE_RE } from '../../lib/validation';
 import { BedStep } from './new-admission/BedStep';
@@ -64,6 +64,11 @@ export default function NewAdmission() {
     setup_fee: '0',
     mess_included: true,
     source: '',
+    payment_status: 'paid',
+    payment_method: 'upi',
+    payment_reference: '',
+    reminder_date: '',
+    reminder_note: '',
   });
   const [errs, setErrs] = useState<Record<string, string>>({});
   const [idemKey] = useState(newKey);
@@ -107,20 +112,6 @@ export default function NewAdmission() {
       },
       idempotencyKey: idemKey,
     });
-    if (res.portal_password) {
-      try {
-        const residentId = await getAdmissionResidentId(admissionId);
-        await setResidentPassword({
-          residentId,
-          phone: res.phone,
-          email: res.email || undefined,
-          fullName: res.full_name,
-          password: res.portal_password,
-        });
-      } catch (e) {
-        console.warn('Failed to set initial resident portal password:', e);
-      }
-    }
     const pending = docs.filter((d) => !uploaded.current.has(d.file));
     if (pending.length) {
       const residentId = await getAdmissionResidentId(admissionId);
@@ -164,6 +155,14 @@ export default function NewAdmission() {
     if (s === 3) {
       if (!terms.admission_date) e.admission_date = 'Required';
       if (terms.monthly_rent === '' || Number(terms.monthly_rent) < 0) e.monthly_rent = 'Enter the monthly rent';
+      if (terms.payment_status === 'paid' && terms.payment_method === 'upi') {
+        const utr = (terms.payment_reference || '').trim();
+        if (!utr) {
+          e.payment_reference = 'Please enter the UPI transaction / UTR reference number';
+        } else if (utr.length < 6) {
+          e.payment_reference = 'Enter a valid UPI UTR reference number (at least 6 digits)';
+        }
+      }
     }
     setErrs(e);
     return Object.keys(e).length === 0;
@@ -180,12 +179,40 @@ export default function NewAdmission() {
       }
     }
     const id = await m.run();
-    if (id) nav('/app/admissions', { replace: true });
+    if (id) {
+      try {
+        await autoApproveAdmission(id, res.portal_password, {
+          status: terms.payment_status,
+          method: terms.payment_method,
+          reference: terms.payment_reference?.trim() || null,
+          reminderDate: terms.reminder_date || null,
+          reminderNote: terms.reminder_note?.trim() || null,
+        });
+      } catch (e) {
+        console.warn('Auto-approval error:', e);
+      }
+      nav('../residents', { replace: true });
+    }
   };
 
   return (
     <>
-      <PageHeader title="New admission" subtitle={building?.name} crumbs="Admissions / New" actions={<BuildingPicker />} />
+      <PageHeader title="New admission" subtitle={building?.name} crumbs="PG Members / New Admission" actions={<BuildingPicker />} />
+      <SectionPromoBanner
+        eyebrow="RESIDENT ONBOARDING"
+        title="New Admission & Bed Allocation."
+        subtitle={
+          building
+            ? `Onboarding resident for ${building.name} with instant KYC and portal access credentials.`
+            : 'Onboard new residents with bed allocation and instant login credentials.'
+        }
+        imageSrc="/owner-assets/residents-hero.jpg"
+        primaryAction={{
+          label: 'Back to Residents',
+          onClick: () => nav('../residents'),
+          icon: ArrowLeft,
+        }}
+      />
       <StepIndicator steps={STEPS} current={step} />
 
       <Card className="max-w-3xl">
@@ -240,7 +267,7 @@ export default function NewAdmission() {
                 />
               )}
               <div className="flex justify-between pt-2">
-                <Button variant="secondary" onClick={() => (step ? setStep(step - 1) : nav('/app/admissions'))}>
+                <Button variant="secondary" onClick={() => (step ? setStep(step - 1) : nav('../residents'))}>
                   <ChevronLeft className="size-4" />
                   {step ? 'Back' : 'Cancel'}
                 </Button>
@@ -250,7 +277,7 @@ export default function NewAdmission() {
                     <ChevronRight className="size-4" />
                   </Button>
                 ) : (
-                  <Button busy={m.busy} onClick={submit}>Submit for approval</Button>
+                  <Button busy={m.busy} onClick={submit}>Complete Admission</Button>
                 )}
               </div>
             </div>

@@ -1,5 +1,5 @@
 /** Edit a room's sharing (bed count) and rent. Capacity can't go below occupied beds. */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation } from '../../../lib/hooks';
 import { Button, Drawer, ErrorBanner, Field, Input } from '../../../components/ui';
 import { updateRoomCapacity } from '../api';
@@ -13,6 +13,14 @@ export function EditRoomDrawer({ open, room, onClose, onSaved }: {
 }) {
   const [cap, setCap] = useState(String(room.capacity));
   const [rent, setRent] = useState(String(room.rent));
+
+  useEffect(() => {
+    if (open) {
+      setCap(String(room.capacity));
+      setRent(String(room.rent));
+    }
+  }, [room.room_id, room.capacity, room.rent, open]);
+
   const m = useMutation(() => updateRoomCapacity(room.room_id, Number(cap), Number(rent)));
   const occ = room.beds.filter((b) => b.resident_id).length;
 

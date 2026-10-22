@@ -1,101 +1,224 @@
 /**
- * Owner/manager dashboard for the current month: KPI tiles, collections vs expenses chart,
- * today's to-dos, recent payments, open maintenance, expense split, low stock and (owner) activity.
- * Works for one building or "All buildings".
+ * ZIPNARY Owner Dashboard — Premium Enterprise Redesign.
+ * Reconstructed with inspiration from the reference layout and resident portal visual language:
+ * - Photographic Welcome Hero with embedded building picker & date selector
+ * - 5 Headline Business KPI cards with circular progress donut
+ * - Revenue Overview bar chart with interactive tooltip
+ * - Occupancy by Building donut meter & breakdown
+ * - Recent Activities feed with categorical action icons
+ * - Pending Admissions card with quick Approve / Reject actions
+ * - Recent Complaints card with priority tags
+ * - "Better Managed Spaces" operational promo card
+ * - Quick Actions bar for mobile and desktop
  */
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserPlus } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { useAsync } from '../../lib/hooks';
 import { useAuth } from '../access/useAuth';
 import { useBuilding } from '../access/useBuilding';
-import { Async, Button, Card, Empty, PageHeader } from '../../components/ui';
+import { Async, Button, Card, Empty, Toast } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
-import { DailyBars, HBars } from '../../components/Charts';
 import { listRecentActivity } from '../audit/api';
-import { getDashboardSummary, listOpenMaintenance, listRecentPayments } from './api';
+import { getDashboardSummary } from './api';
+import { listAdmissions } from '../residents/api';
+import { listComplaints } from '../maintenance/api';
+import { getBuildingLayout } from '../property/api';
 import { KpiTiles } from './components/KpiTiles';
-import { LowStockAlerts } from './components/LowStockAlerts';
-import { OpenMaintenance } from './components/OpenMaintenance';
+import { RevenueOverviewChart } from './components/RevenueOverviewChart';
+import { OccupancyByBuilding } from './components/OccupancyByBuilding';
 import { RecentActivity } from './components/RecentActivity';
-import { RecentPayments } from './components/RecentPayments';
-import { TodaySummary } from './components/TodaySummary';
+import { RecentAdmissionsCard } from './components/RecentAdmissionsCard';
+import { RecentComplaintsCard } from './components/RecentComplaintsCard';
+import { PromoCard } from './components/PromoCard';
+import { QuickActions } from './components/QuickActions';
+import { LowStockAlerts } from './components/LowStockAlerts';
+import { VacantRoomsModal } from '../property/components/VacantRoomsModal';
+import { HBars } from '../../components/Charts';
+import type { Complaint } from '../maintenance/types';
 
 export default function Dashboard() {
-  const { staff } = useAuth();
+  const { staff, access } = useAuth();
   const { selected, buildings } = useBuilding();
+  const [vacantModalOpen, setVacantModalOpen] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
   const nav = useNavigate();
+
   const bid = selected === 'all' ? null : selected;
+  const targetBuildingId = bid || buildings[0]?.id || null;
+
+  // Main Summary RPC
   const sum = useAsync(() => getDashboardSummary(bid), [bid]);
-  const ids = bid ? [bid] : buildings.map((b) => b.id);
-  // Side lists load in parallel with the summary.
-  const payments = useAsync(() => listRecentPayments(ids), [ids.join()]);
-  const maint = useAsync(() => listOpenMaintenance(ids), [ids.join()]);
+
+  // Vacant Rooms Count across selected building or all buildings
+  const vacantRooms = useAsync(async () => {
+    const bIds = selected === 'all' ? buildings.map((b) => b.id) : targetBuildingId ? [targetBuildingId] : [];
+    if (bIds.length === 0) return 0;
+    let count = 0;
+    for (const bId of bIds) {
+      try {
+        const layout = await getBuildingLayout(bId);
+        for (const f of layout || []) {
+          for (const r of f.rooms || []) {
+            if (r.beds.some((b) => !b.resident_id && !b.pending_admission && b.status === 'active')) {
+              count++;
+            }
+          }
+        }
+      } catch {}
+    }
+    return count;
+  }, [selected, targetBuildingId, buildings]);
+
   const activity = useAsync(
     () => (staff?.role === 'owner' ? listRecentActivity(7) : Promise.resolve([])),
     [staff?.role],
   );
 
+  // Admissions and Complaints for the Lower Section
+  const admissions = useAsync(
+    () => listAdmissions(bid),
+    [bid],
+  );
+  const complaints = useAsync(
+    () => (targetBuildingId ? listComplaints(targetBuildingId) : Promise.resolve([] as Complaint[])),
+    [targetBuildingId],
+  );
+
   const hour = new Date().getHours();
-  const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const ownerName =
+    staff?.tenant_name || access?.owned_tenant?.business_name || (access?.is_platform_admin ? 'ZIPCO Admin' : 'Owner');
+
+  const currentMonthName = new Date().toLocaleDateString('en-IN', {
+    month: 'short',
+    year: 'numeric',
+  });
 
   return (
-    <>
-      <PageHeader
-        title={`${greet}!`}
-        subtitle={`Here’s what’s happening at ${staff?.tenant_name} this month.`}
-        actions={
-          <>
+    <div className="space-y-6">
+      {/* 1. HERO WELCOME SECTION (Photo Background + Gradient Overlay) */}
+      <div className="owner-hero-banner p-6 sm:p-8 rounded-3xl text-white relative flex flex-col justify-between min-h-[170px] shadow-md border border-[#DED6CB]/30">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 z-10">
+          <div>
+            <span className="text-xs sm:text-sm font-medium tracking-wide text-white/80 block">
+              {greeting},
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mt-0.5 leading-tight">
+              {ownerName}
+            </h1>
+            <p className="text-xs sm:text-sm text-white/75 mt-1 font-normal">
+              Manage your PG business with ease.
+            </p>
+          </div>
+
+          {/* Embedded Hero Controls (Building Selector + Date Pill) */}
+          <div className="flex flex-wrap items-center gap-2.5 z-30 relative self-start md:self-auto">
             <BuildingPicker allowAll />
-            <Button onClick={() => nav('/app/admissions/new')}>
-              <UserPlus className="size-4" />
-              New admission
-            </Button>
-          </>
-        }
-      />
+
+            <div className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full bg-[#FFFEFC] hover:bg-[#ECE5DA] text-[#30271F] font-semibold text-xs border border-[#DED6CB] shadow-2xs transition-colors">
+              <Calendar className="size-3.5 text-[#343B2B]" />
+              <span>{currentMonthName}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. QUICK ACTIONS BAR (Mobile & Tablet Priority) */}
+      <div className="block lg:hidden">
+        <QuickActions onRoomStatus={() => setVacantModalOpen(true)} />
+      </div>
+
+      {/* 3. BUSINESS KPI CARDS (4 Cards) */}
       <Async state={sum} rows={6}>
         {(s) => (
-          <div className="space-y-5">
-            <KpiTiles s={s} />
+          <div className="space-y-6">
+            <KpiTiles
+              s={s}
+              vacantRoomsCount={vacantRooms.data}
+              onVacantRooms={() => setVacantModalOpen(true)}
+            />
 
-            <div className="grid xl:grid-cols-3 gap-5">
+            {/* 4. MIDDLE ROW: Revenue Overview + Occupancy + Recent Activity */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              <div className="lg:col-span-1">
+                <RevenueOverviewChart dailyCollection={s.daily_collection} periodStart={s.period_start} />
+              </div>
+
+              <div className="lg:col-span-1">
+                <OccupancyByBuilding
+                  buildings={buildings}
+                  totalBeds={s.beds_total}
+                  occupiedBeds={s.beds_occupied}
+                />
+              </div>
+
+              <div className="lg:col-span-1">
+                <RecentActivity state={activity} />
+              </div>
+            </div>
+
+            {/* 5. LOWER ROW: Pending Admissions + Recent Complaints + Promo Banner */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              <div className="lg:col-span-1">
+                <RecentAdmissionsCard
+                  admissions={admissions.data ?? []}
+                  onActionComplete={(msg) => {
+                    setToast(msg);
+                    admissions.reload();
+                    sum.reload();
+                  }}
+                />
+              </div>
+
+              <div className="lg:col-span-1">
+                <RecentComplaintsCard
+                  complaints={complaints.data ?? []}
+                  onSelectComplaint={() => nav('complaints')}
+                />
+              </div>
+
+              <div className="lg:col-span-1">
+                <PromoCard />
+              </div>
+            </div>
+
+            {/* 6. OPERATIONAL DETAILS (Low Stock Alerts & Expense Distribution) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-1">
+              <LowStockAlerts items={s.low_stock} />
+
               <Card
-                title="Collections vs expenses"
-                className="xl:col-span-2"
+                title="Expenses by Category"
                 action={
-                  <span className="text-[12px] text-muted">
-                    {new Date(s.period_start + 'T00:00:00').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}
-                  </span>
+                  <Button variant="ghost" size="sm" onClick={() => nav('expenses')}>
+                    Manage expenses
+                  </Button>
                 }
               >
-                {s.daily_collection.some((d) => d.collected || d.spent) ? (
-                  <DailyBars data={s.daily_collection} a={{ key: 'collected', label: 'Collected' }} b={{ key: 'spent', label: 'Expenses' }} />
-                ) : (
-                  <Empty title="No payments or expenses yet this month" />
-                )}
-              </Card>
-              <TodaySummary s={s} />
-            </div>
-
-            <div className="grid xl:grid-cols-3 gap-5">
-              <RecentPayments state={payments} />
-              <OpenMaintenance state={maint} />
-              <Card title="Expenses by category">
                 {s.expenses_by_category.length === 0 ? (
-                  <Empty title="No expenses this month" />
+                  <Empty title="No expenses recorded this month" />
                 ) : (
-                  <HBars rows={s.expenses_by_category.slice(0, 6).map((e) => ({ name: e.name, value: Number(e.amount) }))} />
+                  <HBars
+                    rows={s.expenses_by_category.slice(0, 5).map((e) => ({
+                      name: e.name,
+                      value: Number(e.amount),
+                    }))}
+                  />
                 )}
               </Card>
-            </div>
-
-            <div className="grid xl:grid-cols-2 gap-5">
-              <LowStockAlerts items={s.low_stock} />
-              {staff?.role === 'owner' && <RecentActivity state={activity} />}
             </div>
           </div>
         )}
       </Async>
-    </>
+
+      {/* Vacant Rooms Modal */}
+      <VacantRoomsModal
+        open={vacantModalOpen}
+        onClose={() => setVacantModalOpen(false)}
+        defaultBuildingId={bid}
+      />
+
+      <Toast message={toast} onDone={() => setToast(null)} />
+    </div>
   );
 }

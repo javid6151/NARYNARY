@@ -60,6 +60,7 @@ export interface ResidentPayment {
   paid_at: string;
   amount: number;
   payment_method: string;
+  transaction_reference?: string | null;
   status: string;
   receipts: { receipt_number: string }[] | { receipt_number: string } | null;
 }
@@ -124,7 +125,6 @@ export interface ResidentForm {
   portal_password?: string;
 }
 
-/** New admission wizard: charges step fields (amounts as typed strings). */
 export interface TermsForm {
   admission_date: string;
   monthly_rent: string;
@@ -132,6 +132,11 @@ export interface TermsForm {
   setup_fee: string;
   mess_included: boolean;
   source: string;
+  payment_status: 'paid' | 'not_paid';
+  payment_method: 'upi' | 'cash';
+  payment_reference: string;
+  reminder_date: string;
+  reminder_note: string;
 }
 
 /** A KYC file chosen in the wizard, uploaded after the admission is created. */

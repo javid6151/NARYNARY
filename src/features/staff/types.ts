@@ -11,6 +11,8 @@ export interface StaffMember {
   pay_day: number | null;
   /** active | on_leave | inactive */
   status: string;
+  aadhar_number?: string | null;
+  aadhar_image_url?: string | null;
 }
 
 export interface AttendanceMark {
@@ -23,6 +25,7 @@ export interface StaffDailyReport {
   id: string;
   report_date: string;
   work_summary: string;
+  status?: string;
   staff_members: { full_name: string; role: string };
 }
 

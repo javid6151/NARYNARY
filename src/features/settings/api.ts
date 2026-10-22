@@ -32,6 +32,56 @@ export function setMembershipStatus(membershipId: string, status: string) {
   return rpc('set_membership_status', { p_membership: membershipId, p_status: status });
 }
 
+/** Creates a manager/chef account directly with password and assigns buildings. */
+export async function createTeamMember(params: {
+  tenantId: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  role: string;
+  password: string;
+  buildingIds: string[];
+}) {
+  const res = await fetch('/api/auth/create-team-member', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+  const data = await res.json();
+  if (!res.ok || data.error) {
+    throw new Error(data.error || 'Failed to create team member');
+  }
+  return data;
+}
+
+/** Updates the password for a team member directly. */
+export async function changeTeamPassword(userId: string, password: string) {
+  const res = await fetch('/api/auth/change-team-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId, password }),
+  });
+  const data = await res.json();
+  if (!res.ok || data.error) {
+    throw new Error(data.error || 'Failed to update password');
+  }
+  return data;
+}
+
+/** Deletes a team member from memberships and auth. */
+export async function deleteTeamMember(membershipId: string, userId?: string | null) {
+  const res = await fetch('/api/auth/delete-team-member', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ membershipId, userId }),
+  });
+  const data = await res.json();
+  if (!res.ok || data.error) {
+    throw new Error(data.error || 'Failed to delete team member');
+  }
+  return data;
+}
+
 /** Creates an invitation; the person gets access after signing up with this email and verifying it. */
 export function inviteStaffAccount(i: { email: string; role: string; name: string | null; buildingIds: string[] }) {
   return rpc('invite_staff_account', { p_email: i.email, p_role: i.role, p_name: i.name, p_building_ids: i.buildingIds });

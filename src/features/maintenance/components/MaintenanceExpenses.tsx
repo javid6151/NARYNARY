@@ -28,13 +28,27 @@ export function MaintenanceExpenses({ state, rows, onAdd, onView }: {
           rows.length === 0 ? (
             <Empty title="No maintenance expenses" />
           ) : (
-            <Table head={['Date', 'Expense', 'Category', 'Vendor', 'Total', 'Paid', 'Outstanding', 'Status', '']}>
+            <Table head={['Date', 'Expense', 'Category', 'Vendor', 'Recorded by', 'Total', 'Paid', 'Outstanding', 'Status', '']}>
               {rows.map((e) => (
                 <tr key={e.id}>
                   <Td>{fmtDate(e.expense_date)}</Td>
                   <Td className="font-medium">{e.title}</Td>
                   <Td>{e.expense_categories.name}</Td>
                   <Td>{e.vendors?.name ?? '—'}</Td>
+                  <Td>
+                    {e.recorded_by ? (
+                      <div>
+                        <p className="font-medium text-ink leading-tight">{e.recorded_by.name}</p>
+                        {e.recorded_by.role && (
+                          <span className="inline-block mt-0.5 text-[11px] px-1.5 py-0.5 text-muted bg-surface-subtle border border-line rounded">
+                            {e.recorded_by.role}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </Td>
                   <Td className="tabular">{inr(e.total_amount)}</Td>
                   <Td className="tabular">{inr(e.paid_amount)}</Td>
                   <Td className="tabular">{inr(e.outstanding_amount)}</Td>

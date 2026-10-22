@@ -1,0 +1,322 @@
+/*
+ * ZIPNARY Owner Portal Design System
+ * Visual direction: Warm ivory, porcelain white, espresso, deep olive, muted sage, terracotta, warm stone.
+ * Inspired by the ZIPNARY reference layout and compatible with the Resident Portal aesthetic.
+ */
+
+:root {
+  --owner-ivory: #F5F0E8;
+  --owner-porcelain: #FFFEFC;
+  --owner-espresso: #30271F;
+  --owner-espresso-light: #52473D;
+  --owner-secondary: #77736B;
+  --owner-olive: #343B2B;
+  --owner-olive-hover: #262B1F;
+  --owner-olive-subtle: #EBF0E6;
+  --owner-sage: #A6B49A;
+  --owner-sage-light: #F2F5EF;
+  --owner-terracotta: #B9674B;
+  --owner-terracotta-hover: #9E533A;
+  --owner-terracotta-light: #FDF1EC;
+  --owner-stone: #DED6CB;
+  --owner-stone-light: #ECE5DA;
+  --owner-sand: #F8F4EE;
+}
+
+/* Scoped specifically to the Owner Portal */
+.owner-portal {
+  background-color: var(--owner-ivory);
+  color: var(--owner-espresso);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+}
+
+/* Surface and Border Overrides in Owner Portal */
+.owner-portal .bg-white {
+  background-color: var(--owner-porcelain) !important;
+}
+
+.owner-portal .border-line,
+.owner-portal .border-slate-200,
+.owner-portal .border-gray-200 {
+  border-color: var(--owner-stone) !important;
+}
+
+.owner-portal .bg-subtle,
+.owner-portal .bg-gray-50,
+.owner-portal .bg-slate-50 {
+  background-color: var(--owner-stone-light) !important;
+}
+
+.owner-portal .bg-canvas {
+  background-color: var(--owner-ivory) !important;
+}
+
+.owner-portal .text-ink {
+  color: var(--owner-espresso) !important;
+}
+
+.owner-portal .text-muted,
+.owner-portal .text-gray-500,
+.owner-portal .text-slate-500 {
+  color: var(--owner-secondary) !important;
+}
+
+/* Buttons in Owner Portal */
+.owner-portal .bg-brand-600,
+.owner-portal button.bg-brand-600,
+.owner-portal .owner-pill-btn {
+  background-color: var(--owner-olive) !important;
+  color: #ffffff !important;
+  border-radius: 1rem !important;
+  box-shadow: 0 4px 14px rgba(52, 59, 43, 0.18) !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  font-weight: 600 !important;
+}
+
+.owner-portal .bg-brand-600:hover,
+.owner-portal button.bg-brand-600:hover,
+.owner-portal .owner-pill-btn:hover {
+  background-color: var(--owner-olive-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(52, 59, 43, 0.28) !important;
+}
+
+.owner-portal .bg-brand-600:active,
+.owner-portal button.bg-brand-600:active,
+.owner-portal .owner-pill-btn:active {
+  transform: scale(0.98) !important;
+}
+
+.owner-portal button[class*="bg-white"],
+.owner-portal button[class*="border-line"] {
+  border-radius: 1rem !important;
+  border-color: var(--owner-stone) !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  font-weight: 500 !important;
+}
+
+.owner-portal button[class*="bg-white"]:hover,
+.owner-portal button[class*="border-line"]:hover {
+  background-color: var(--owner-stone-light) !important;
+  transform: translateY(-1px);
+  border-color: #C5BCB0 !important;
+}
+
+.owner-portal button[class*="bg-white"]:active,
+.owner-portal button[class*="border-line"]:active {
+  transform: scale(0.98) !important;
+}
+
+.owner-portal .text-brand-600,
+.owner-portal .text-brand-700 {
+  color: var(--owner-olive) !important;
+}
+
+.owner-portal .text-brand-600:hover,
+.owner-portal .text-brand-700:hover {
+  color: var(--owner-olive-hover) !important;
+}
+
+.owner-portal .bg-brand-50,
+.owner-portal .bg-purple-50 {
+  background-color: var(--owner-olive-subtle) !important;
+  color: var(--owner-olive) !important;
+}
+
+.owner-portal .bg-brand-100 {
+  background-color: #E2EAD9 !important;
+  color: var(--owner-olive) !important;
+}
+
+.owner-portal .border-brand-200 {
+  border-color: #CAD7BF !important;
+}
+
+/* Focus states */
+.owner-portal :focus-visible,
+.owner-portal input:focus,
+.owner-portal select:focus,
+.owner-portal textarea:focus {
+  outline-color: var(--owner-olive) !important;
+  border-color: var(--owner-olive) !important;
+  box-shadow: 0 0 0 2px rgba(52, 59, 43, 0.15) !important;
+}
+
+/* Tabs in Owner Portal */
+.owner-portal [role="tab"][aria-selected="true"] {
+  border-bottom-color: var(--owner-olive) !important;
+  color: var(--owner-olive) !important;
+  font-weight: 600;
+}
+
+/* Tables in Owner Portal */
+.owner-portal table thead tr {
+  background-color: var(--owner-stone-light) !important;
+  color: var(--owner-secondary) !important;
+  border-bottom: 1px solid var(--owner-stone);
+}
+
+.owner-portal table tbody tr {
+  border-bottom: 1px solid var(--owner-stone);
+}
+
+.owner-portal table tbody tr:hover {
+  background-color: rgba(236, 229, 218, 0.45) !important;
+}
+
+/* Cards & Containers */
+.owner-card {
+  background-color: var(--owner-porcelain);
+  border: 1px solid var(--owner-stone);
+  border-radius: 1rem;
+  box-shadow: 0 4px 18px rgba(48, 39, 31, 0.035);
+  transition: all 0.2s ease;
+}
+
+.owner-card:hover {
+  box-shadow: 0 8px 24px rgba(48, 39, 31, 0.06);
+}
+
+/* Specific Badge colors */
+.owner-portal .bg-ok-bg {
+  background-color: #EAF3E4 !important;
+  color: #2F6B27 !important;
+}
+
+.owner-portal .bg-warn-bg {
+  background-color: #FDF4E3 !important;
+  color: #94600C !important;
+}
+
+.owner-portal .bg-bad-bg {
+  background-color: var(--owner-terracotta-light) !important;
+  color: var(--owner-terracotta) !important;
+}
+
+.owner-portal .bg-info-bg {
+  background-color: #EBF3F5 !important;
+  color: #265561 !important;
+}
+
+/* Custom hero styling */
+.owner-hero-banner {
+  position: relative;
+  /* overflow: visible so building picker and action dropdowns are never clipped */
+  border-radius: 1.5rem;
+  background-color: #30271F;
+  background-image:
+    linear-gradient(180deg, rgba(30, 24, 19, 0.45) 0%, rgba(30, 24, 19, 0.78) 100%),
+    url('/owner-assets/hero-interior.jpg');
+  background-size: cover;
+  background-position: center 38%;
+  box-shadow: 0 10px 30px rgba(48, 39, 31, 0.12);
+}
+
+.owner-promo-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  background-color: #30271F;
+  background-image:
+    linear-gradient(180deg, rgba(28, 22, 17, 0.25) 0%, rgba(28, 22, 17, 0.88) 100%),
+    url('/owner-assets/lounge-promo.jpg');
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 8px 24px rgba(48, 39, 31, 0.1);
+}
+
+/* Sidebar styling */
+.owner-sidebar {
+  background-color: var(--owner-ivory);
+  border-right: 1px solid var(--owner-stone);
+}
+
+.owner-nav-item {
+  color: var(--owner-espresso);
+  border-radius: 0.65rem;
+  transition: all 0.15s ease;
+  font-weight: 500;
+}
+
+.owner-nav-item:hover {
+  background-color: var(--owner-stone-light);
+  color: var(--owner-espresso);
+}
+
+.owner-nav-item.active {
+  background-color: var(--owner-olive) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px rgba(52, 59, 43, 0.25);
+}
+
+.owner-nav-item.active svg {
+  color: #ffffff !important;
+}
+
+/* Bottom Nav on Mobile */
+.owner-mobile-bar {
+  background: rgba(255, 254, 252, 0.94);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid var(--owner-stone);
+  box-shadow: 0 -4px 20px rgba(48, 39, 31, 0.05);
+}
+
+/* Smooth custom scrollbars for owner dashboard lists */
+.owner-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.owner-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.owner-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--owner-stone);
+  border-radius: 4px;
+}
+.owner-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--owner-secondary);
+}
+
+/* Chef & Kitchen Portal overrides */
+.chef-portal .bg-kitchen,
+.chef-portal button.bg-kitchen,
+.owner-portal .bg-kitchen {
+  background-color: var(--owner-olive) !important;
+  color: #ffffff !important;
+  border-radius: 1rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 14px rgba(52, 59, 43, 0.18) !important;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.chef-portal .bg-kitchen:hover,
+.chef-portal button.bg-kitchen:hover,
+.owner-portal .bg-kitchen:hover {
+  background-color: var(--owner-olive-hover) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(52, 59, 43, 0.28) !important;
+}
+
+.chef-portal .bg-kitchen:active,
+.chef-portal button.bg-kitchen:active,
+.owner-portal .bg-kitchen:active {
+  transform: scale(0.98) !important;
+}
+
+.chef-portal .text-kitchen,
+.owner-portal .text-kitchen {
+  color: var(--owner-olive) !important;
+}
+
+.chef-portal .bg-kitchen-50,
+.owner-portal .bg-kitchen-50 {
+  background-color: var(--owner-olive-subtle) !important;
+  color: var(--owner-olive) !important;
+}
+
+.chef-portal .border-kitchen,
+.owner-portal .border-kitchen {
+  border-color: #CAD7BF !important;
+}
+

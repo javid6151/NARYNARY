@@ -4,14 +4,35 @@
  */
 import { supabase } from '../../lib/supabase';
 
-/** Creates an email/password account. Returns `needsVerification` when email confirmation is on. */
+/** Creates and saves an email/password account. Ensures email is confirmed and user is logged in. */
 export async function signUpWithPassword(email: string, password: string, fullName: string) {
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin },
-  });
-  return { error: error?.message ?? null, needsVerification: !error && !data.session };
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, fullName }),
+    });
+    const data = await res.json();
+    if (!res.ok || data.error) {
+      return { error: data.error || 'Failed to create account. Please try again.', needsVerification: false };
+    }
+
+    // Automatically sign in with the saved credentials so the session is immediately active
+    const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+    if (signInErr) {
+      return { error: signInErr.message, needsVerification: false };
+    }
+
+    return { error: null, needsVerification: false };
+  } catch {
+    // Fallback to client signup if local proxy isn't reached
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin },
+    });
+    return { error: error?.message ?? null, needsVerification: !error && !data.session };
+  }
 }
 
 /** Signs in with either email or mobile number (User ID). */
@@ -27,18 +48,29 @@ export async function signInWithPassword(identifier: string, password: string) {
         body: JSON.stringify({ identifier: email }),
       });
       const data = await res.json();
-      if (!res.ok || data.error) {
-        return data.error || 'No registered account found with this mobile number.';
+      if (!res.ok || data.error || !data.email) {
+        return data.error || 'Invalid Login ID or Password. Please check and try again.';
       }
       email = data.email;
     } catch {
-      return 'Could not verify mobile number. Please check your connection or use email.';
+      return 'Invalid Login ID or Password. Please check and try again.';
     }
   }
 
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (!error) return null;
-  return error.message === 'Invalid login credentials' ? 'Mobile number / Email or password is incorrect.' : error.message;
+
+  if (error.message?.toLowerCase().includes('banned') || error.code === 'user_banned') {
+    return 'Your portal access has been suspended by management. Please contact your PG manager or owner.';
+  }
+  if (error.message?.toLowerCase().includes('rate limit')) {
+    return 'Too many login attempts. Please wait a moment and try again.';
+  }
+  if (error.message?.toLowerCase().includes('email not confirmed')) {
+    return 'Email not confirmed. Please check your inbox or verify your account.';
+  }
+
+  return 'Invalid Login ID or Password. Please check and try again.';
 }
 
 /** Provisions or updates a unique password for a resident account. */

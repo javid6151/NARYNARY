@@ -1,6 +1,5 @@
-/** Slide-in menu opened from the Home header: every resident screen plus sign out. */
 import { useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   Home, LogOut, Megaphone, MessageSquareText, MessageSquareWarning, Ticket, User, UtensilsCrossed, Vote, Wallet, X,
 } from 'lucide-react';
@@ -9,21 +8,32 @@ import { useAuth } from '../../access/useAuth';
 import { Avatar } from '../../../components/ui';
 import type { ResidentProfile } from '../types';
 
-const LINKS = [
-  { to: '/resident', label: 'Home', icon: Home, end: true },
-  { to: '/resident/payments', label: 'Payments & receipts', icon: Wallet },
-  { to: '/resident/meals', label: 'Meals', icon: UtensilsCrossed },
-  { to: '/resident/complaints', label: 'Complaints', icon: MessageSquareWarning },
-  { to: '/resident/visitors', label: 'Visitor passes', icon: Ticket },
-  { to: '/resident/community', label: 'Community', icon: MessageSquareText },
-  { to: '/resident/community/polls', label: 'Polls', icon: Vote },
-  { to: '/resident/notices', label: 'Notices', icon: Megaphone },
-  { to: '/resident/profile', label: 'Profile', icon: User },
-];
-
 export function SideMenu({ p, open, onClose }: { p: ResidentProfile; open: boolean; onClose: () => void }) {
   const { signOut } = useAuth();
   const nav = useNavigate();
+  const { tenantSlug, pgSlug, uniqueId } = useParams<{ tenantSlug?: string; pgSlug?: string; uniqueId?: string }>();
+  const loc = useLocation();
+  const tentantWord = loc.pathname.includes('/tentant/') ? 'tentant' : 'tenant';
+
+  const base = tenantSlug && pgSlug && uniqueId
+    ? `/${tenantSlug}/${pgSlug}/${tentantWord}/${uniqueId}`
+    : tenantSlug && pgSlug
+    ? `/${tenantSlug}/${pgSlug}/tentant/me`
+    : tenantSlug
+    ? `/${tenantSlug}/resident`
+    : '/resident';
+
+  const links = [
+    { to: base, label: 'Home', icon: Home, end: true },
+    { to: `${base}/payments`, label: 'Payments & receipts', icon: Wallet },
+    { to: `${base}/meals`, label: 'Meals', icon: UtensilsCrossed },
+    { to: `${base}/complaints`, label: 'Complaints', icon: MessageSquareWarning },
+    { to: `${base}/visitors`, label: 'Visitor passes', icon: Ticket },
+    { to: `${base}/community`, label: 'Community', icon: MessageSquareText },
+    { to: `${base}/community/polls`, label: 'Polls', icon: Vote },
+    { to: `${base}/notices`, label: 'Notices', icon: Megaphone },
+    { to: `${base}/profile`, label: 'Profile', icon: User },
+  ];
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -48,7 +58,7 @@ export function SideMenu({ p, open, onClose }: { p: ResidentProfile; open: boole
           </button>
         </div>
         <ul className="flex-1 overflow-y-auto p-2">
-          {LINKS.map(({ to, label, icon: Icon, end }) => (
+          {links.map(({ to, label, icon: Icon, end }) => (
             <li key={to}>
               <NavLink
                 to={to}
@@ -67,7 +77,7 @@ export function SideMenu({ p, open, onClose }: { p: ResidentProfile; open: boole
         <button
           onClick={async () => {
             await signOut();
-            nav('/login');
+            nav('/');
           }}
           className="m-3 flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] text-bad hover:bg-bad-bg cursor-pointer"
         >

@@ -1,6 +1,6 @@
 /** "Today’s summary" card: pending work counts with links, plus the occupancy meter. */
 import { useNavigate } from 'react-router-dom';
-import { MessageSquareWarning, Receipt, UserCheck, UserPlus, Wallet, type LucideIcon } from 'lucide-react';
+import { MessageSquareWarning, Receipt, UserCheck, Wallet, type LucideIcon } from 'lucide-react';
 import { inr } from '../../../lib/format';
 import { Card } from '../../../components/ui';
 import { Meter } from '../../../components/Charts';
@@ -9,11 +9,10 @@ import type { DashboardSummary } from '../types';
 export function TodaySummary({ s }: { s: DashboardSummary }) {
   const nav = useNavigate();
   const items: { icon: LucideIcon; label: string; value: string | number; to: string }[] = [
-    { icon: UserPlus, label: 'Admissions awaiting approval', value: s.pending_admissions, to: '/app/admissions' },
-    { icon: MessageSquareWarning, label: 'Open complaints', value: s.open_complaints, to: '/app/complaints' },
-    { icon: UserCheck, label: 'Staff on duty today', value: s.staff_on_duty, to: '/app/staff' },
-    { icon: Receipt, label: 'Unpaid expenses', value: inr(s.expenses_unpaid), to: '/app/expenses' },
-    { icon: Wallet, label: 'Expenses this month', value: inr(s.expenses_month), to: '/app/expenses' },
+    { icon: MessageSquareWarning, label: 'Open complaints', value: s.open_complaints, to: 'complaints' },
+    { icon: UserCheck, label: 'Staff on duty today', value: s.staff_on_duty, to: 'staff' },
+    { icon: Receipt, label: 'Unpaid expenses', value: inr(s.expenses_unpaid), to: 'expenses' },
+    { icon: Wallet, label: 'Expenses this month', value: inr(s.expenses_month), to: 'expenses' },
   ];
   return (
     <Card title="Today’s summary">

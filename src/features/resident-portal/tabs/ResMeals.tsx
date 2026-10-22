@@ -29,8 +29,15 @@ export function ResMeals({ p }: { p: ResidentProfile }) {
 
   return (
     <>
-      <TopBar title="Meals" />
-      <p className="text-[13px] text-muted -mt-2">
+      <TopBar title="Today's menu" />
+      <section className="resident-menu-showcase -mt-2 rounded-2xl p-4">
+        <div>
+          <p className="resident-hero-eyebrow">Prepared for you</p>
+          <h2 className="text-[23px] font-semibold mt-1">A thoughtful table,<br />every day.</h2>
+          <p className="text-[12px] text-white/75 mt-2">Check the day’s meals or let the kitchen know you won’t be joining.</p>
+        </div>
+      </section>
+      <p className="text-[13px] text-muted -mt-1">
         Only mark a meal if you <b>won’t</b> be eating — everyone else is counted automatically.
       </p>
       <div className="flex gap-2 overflow-x-auto -mx-1 px-1 pb-1">
@@ -40,7 +47,7 @@ export function ResMeals({ p }: { p: ResidentProfile }) {
             onClick={() => setDate(d)}
             className={cx(
               'shrink-0 rounded-xl border px-3 py-2 text-[12.5px] text-center cursor-pointer',
-              d === date ? 'border-brand-500 bg-brand-50 text-brand-700 font-medium' : 'border-line bg-white',
+              d === date ? 'resident-menu-date--active font-medium' : 'resident-menu-date',
             )}
           >
             {d === isoDate() ? 'Today' : new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'short' })}
@@ -61,7 +68,7 @@ export function ResMeals({ p }: { p: ResidentProfile }) {
               const served = new Date(`${date}T${menu?.serving_end ?? meal.end}`) < now;
               const myReview = (reviews.data ?? []).find((r) => r.meal_menu_id === menu?.id);
               return (
-                <div key={meal.id} className="bg-white border border-line rounded-xl p-4">
+                <div key={meal.id} className="resident-meal-card p-4">
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 font-semibold">
                       <meal.icon className="size-5 text-warn" aria-hidden />

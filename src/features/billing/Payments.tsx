@@ -10,14 +10,16 @@ import { useAuth } from '../access/useAuth';
 import { useBuilding } from '../access/useBuilding';
 import { Async, Button, Card, Empty, Input, PageHeader, StatCard, Tabs, Toast } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
+import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import { listOpenCharges, listPayments } from './api';
-import { groupDuesByResident } from './dues';
+import { groupDuesByResident, type ResidentDues } from './dues';
 import { receiptNo } from './receipt';
 import type { OpenCharge, Payment } from './types';
 import { AddChargeDrawer } from './components/AddChargeDrawer';
 import { DuesTable } from './components/DuesTable';
 import { GenerateDialog } from './components/GenerateDialog';
 import { PaymentHistoryTable } from './components/PaymentHistoryTable';
+import { PaymentReminderModal } from './components/PaymentReminderModal';
 import { ReceiptView } from './components/ReceiptView';
 import { RecordPaymentDrawer } from './components/RecordPaymentDrawer';
 import { ReverseDialog } from './components/ReverseDialog';
@@ -29,6 +31,7 @@ export default function Payments() {
   const [search, setSearch] = useState('');
   /** 'pick' = open the drawer with a resident picker. */
   const [record, setRecord] = useState<{ id: string; full_name: string } | null | 'pick'>(null);
+  const [remindTarget, setRemindTarget] = useState<ResidentDues | null>(null);
   const [gen, setGen] = useState(false);
   const [charge, setCharge] = useState(false);
   const [reverse, setReverse] = useState<Payment | null>(null);
@@ -89,6 +92,40 @@ export default function Payments() {
           </>
         }
       />
+      <SectionPromoBanner
+        eyebrow="FINANCIAL HEALTH"
+        title="Authoritative Collections, Transparent Cashflow."
+        subtitle="Track rent dues, generate automated monthly charges, and record instant verified receipts."
+        imageSrc="/owner-assets/payments-hero.jpg"
+        statsBadge={`${inr(collected)} Collected`}
+        primaryAction={{
+          label: 'Record Payment',
+          onClick: () => setRecord('pick'),
+          icon: Wallet,
+        }}
+        secondaryAction={{
+          label: 'Generate Rent',
+          onClick: () => setGen(true),
+          icon: CalendarPlus,
+        }}
+      />
+      <div className="bg-[#FFFEFC] border border-[#DED6CB] rounded-2xl p-4 sm:p-5 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+        <div>
+          <span className="text-xs font-semibold uppercase tracking-wider text-[#77736B]">Total Collection</span>
+          <div className="flex items-baseline gap-3 mt-1">
+            <span className="text-2xl sm:text-3xl font-bold text-[#30271F] tabular">{inr(collected)}</span>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#EAF3E4] text-[#2F6B27] border border-[#CAD7BF]">
+              ↑ {confirmed.length} Receipts
+            </span>
+          </div>
+        </div>
+        <div className="text-xs text-[#77736B] self-start sm:self-auto flex items-center gap-2">
+          <span className="px-3 py-1.5 rounded-xl bg-[#F5F0E8] border border-[#DED6CB] font-semibold text-[#30271F]">
+            {new Date().toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+          </span>
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
         <StatCard icon={<Wallet className="size-5" />} tone="ok" label="Collected this month" value={inr(collected)} />
         <StatCard
@@ -113,8 +150,8 @@ export default function Payments() {
             value={tab}
             onChange={setTab}
             tabs={[
-              { id: 'dues', label: 'Pending dues' },
-              { id: 'history', label: 'Payment history' },
+              { id: 'dues', label: 'Due Payments' },
+              { id: 'history', label: 'Receipts & History' },
             ]}
           />
           <div className="flex gap-2 mb-4">
@@ -137,7 +174,11 @@ export default function Payments() {
               byResident.length === 0 ? (
                 <Empty title="No pending dues">Everyone is paid up.</Empty>
               ) : (
-                <DuesTable rows={byResident} onCollect={(r) => setRecord({ id: r.id, full_name: r.name })} />
+                <DuesTable
+                  rows={byResident}
+                  onCollect={(r) => setRecord({ id: r.id, full_name: r.name })}
+                  onRemind={(r) => setRemindTarget(r)}
+                />
               )
             }
           </Async>
@@ -192,6 +233,20 @@ export default function Payments() {
       />
       {receipt && (
         <ReceiptView p={receipt} building={building?.name ?? ''} tenant={staff?.tenant_name ?? ''} onClose={() => setReceipt(null)} />
+      )}
+      {remindTarget && (
+        <PaymentReminderModal
+          target={{
+            name: remindTarget.name,
+            phone: remindTarget.phone,
+            totalDue: remindTarget.total,
+            overdue: remindTarget.overdue,
+            oldestDue: remindTarget.oldest,
+          }}
+          buildingName={building?.name}
+          onClose={() => setRemindTarget(null)}
+          onSent={(m) => setToast(m)}
+        />
       )}
       <Toast message={toast} onDone={() => setToast(null)} />
     </>

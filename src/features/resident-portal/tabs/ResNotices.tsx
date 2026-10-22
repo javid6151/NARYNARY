@@ -33,6 +33,10 @@ export function ResNotices() {
   return (
     <>
       <TopBar title={category === 'event' ? 'Events' : 'Notices'} />
+      <section className="resident-notice-intro -mt-2">
+        <p className="resident-section-eyebrow">Stay in the loop</p>
+        <p className="text-[16px] font-semibold mt-1">Updates from your residence, in one calm place.</p>
+      </section>
       <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1">
         {FILTERS.map((f) => (
           <button
@@ -40,7 +44,7 @@ export function ResNotices() {
             onClick={() => setParams(f.id ? { category: f.id } : {}, { replace: true })}
             className={cx(
               'shrink-0 rounded-full border px-3 py-1.5 text-[12.5px] cursor-pointer',
-              category === f.id ? 'border-brand-500 bg-brand-50 text-brand-700 font-medium' : 'border-line bg-white text-ink-2',
+              category === f.id ? 'resident-notice-filter--active font-medium' : 'resident-notice-filter text-ink-2',
             )}
           >
             {f.label}
@@ -54,11 +58,11 @@ export function ResNotices() {
           ) : (
             <ul className="space-y-3">
               {rows.map((n) => (
-                <li key={n.id} className="bg-white border border-line rounded-2xl p-4 text-[13.5px] flex gap-3">
+                <li key={n.id} className="resident-notice-card p-4 text-[13.5px] flex gap-3">
                   <span
                     className={cx(
                       'size-10 rounded-xl grid place-items-center shrink-0',
-                      n.category === 'important' ? 'bg-info-bg text-info' : 'bg-brand-50 text-brand-600',
+                      n.category === 'important' ? 'bg-info-bg text-info' : 'resident-notice-icon',
                     )}
                   >
                     <Megaphone className="size-5" aria-hidden />

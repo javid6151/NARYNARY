@@ -68,37 +68,119 @@ export function listMealReviews(buildingId: string, from: string): Promise<MealR
 
 // ---------------------------------------------------------------- Inventory
 
-/** Active items with store/kitchen quantities for a building (view rows are asserted). */
-export function listStock(buildingId: string): Promise<StockRow[]> {
-  return q(
+/** Active items with unified expected and last actual stock for a building. */
+export async function listStock(buildingId: string): Promise<StockRow[]> {
+  const rows = await q<any[]>(
     supabase
       .from('inventory_stock')
       .select('item_id,name,category,base_unit,reorder_level,store_qty,kitchen_qty,last_unit_cost,is_active')
       .eq('building_id', buildingId)
       .eq('is_active', true)
       .order('name'),
-  ) as Promise<StockRow[]>;
+  );
+
+  let latestRecMap = new Map<string, { actual_qty: number; verified_at: string }>();
+  try {
+    const { data: recs } = await (supabase.from as any)('inventory_reconciliations')
+      .select('id,verified_at,inventory_reconciliation_lines(item_id,actual_qty)')
+      .eq('building_id', buildingId)
+      .order('verified_at', { ascending: false })
+      .limit(10);
+
+    if (recs?.length) {
+      for (const rec of recs) {
+        for (const line of (rec as any).inventory_reconciliation_lines ?? []) {
+          if (!latestRecMap.has(line.item_id)) {
+            latestRecMap.set(line.item_id, {
+              actual_qty: Number(line.actual_qty),
+              verified_at: rec.verified_at,
+            });
+          }
+        }
+      }
+    }
+  } catch {
+    try {
+      const { data: logs } = await supabase
+        .from('audit_logs')
+        .select('created_at,after_data')
+        .eq('action', 'inventory.reconciliation')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      for (const l of logs ?? []) {
+        const after = l.after_data as any;
+        if (after?.building_id === buildingId && Array.isArray(after.lines)) {
+          for (const line of after.lines) {
+            if (!latestRecMap.has(line.itemId)) {
+              latestRecMap.set(line.itemId, {
+                actual_qty: Number(line.actualQty),
+                verified_at: l.created_at,
+              });
+            }
+          }
+        }
+      }
+    } catch {
+      // Ignored
+    }
+  }
+
+  return rows.map((r) => {
+    const expected = Number(r.expected_qty ?? (Number(r.store_qty ?? 0) + Number(r.kitchen_qty ?? 0)));
+    const rec = latestRecMap.get(r.item_id);
+
+    return {
+      ...r,
+      expected_qty: expected,
+      current_qty: expected,
+      store_qty: 0,
+      kitchen_qty: expected,
+      last_actual_qty: rec ? rec.actual_qty : (r.last_actual_qty ?? null),
+      last_verified_at: rec ? rec.verified_at : (r.last_verified_at ?? null),
+    };
+  });
 }
 
-/** Latest 300 ledger rows for a building, optionally for one item. */
-export function listStockMovements(buildingId: string, itemId?: string): Promise<StockMovement[]> {
+export interface StockMovementFilter {
+  buildingId: string;
+  itemId?: string;
+  type?: string;
+  fromDate?: string;
+  toDate?: string;
+}
+
+/** Filterable ledger rows for a building, with optional item, transaction type, or date range. */
+export function listStockMovements(
+  buildingIdOrFilter: string | StockMovementFilter,
+  legacyItemId?: string,
+): Promise<StockMovement[]> {
+  const f: StockMovementFilter =
+    typeof buildingIdOrFilter === 'string'
+      ? { buildingId: buildingIdOrFilter, itemId: legacyItemId }
+      : buildingIdOrFilter;
+
   let b = supabase
     .from('inventory_transactions')
     .select(
       'id,transaction_type,quantity,unit_cost,occurred_at,notes,reference_type,' +
         'inventory_items(name,base_unit),inventory_locations(kind),vendors(name)',
     )
-    .eq('building_id', buildingId)
+    .eq('building_id', f.buildingId)
     .order('occurred_at', { ascending: false })
-    .limit(300);
-  if (itemId) b = b.eq('item_id', itemId);
+    .limit(400);
+
+  if (f.itemId) b = b.eq('item_id', f.itemId);
+  if (f.type) b = b.eq('transaction_type', f.type);
+  if (f.fromDate) b = b.gte('occurred_at', `${f.fromDate}T00:00:00`);
+  if (f.toDate) b = b.lte('occurred_at', `${f.toDate}T23:59:59`);
+
   return q(b) as unknown as Promise<StockMovement[]>;
 }
 
 export interface MoveInput {
   buildingId: string | null;
   itemId: string;
-  /** purchase | issue | return | wastage | adjust_in | adjust_out */
+  /** purchase | adjust_in | adjust_out */
   action: string;
   quantity: number;
   unitCost: number | null;
@@ -107,7 +189,7 @@ export interface MoveInput {
   idempotencyKey: string;
 }
 
-/** Posts one stock movement (two ledger rows for store↔kitchen moves). */
+/** Posts one stock movement (purchase or adjustment). */
 export function inventoryMove(m: MoveInput) {
   return rpc('inventory_move', {
     p_building: m.buildingId,
@@ -132,6 +214,127 @@ export async function addInventoryItem(i: { tenantId: string | null; name: strin
       .single(),
   );
   return true;
+}
+
+// ---------------------------------------------------------------- Stock Reconciliation
+
+export async function submitStockReconciliation(
+  buildingId: string,
+  lines: { itemId: string; expectedQty: number; actualQty: number; notes?: string | null }[],
+  notes?: string | null,
+  periodStart?: string | null,
+  periodEnd?: string | null,
+): Promise<string> {
+  const recData = {
+    building_id: buildingId,
+    period_start: periodStart || null,
+    period_end: periodEnd || null,
+    notes: notes || null,
+  };
+
+  try {
+    const { data: rec, error: recErr } = await (supabase.from as any)('inventory_reconciliations')
+      .insert(recData)
+      .select('id')
+      .single();
+
+    if (recErr) throw recErr;
+
+    if (lines.length > 0) {
+      const lineInserts = lines.map((l) => ({
+        reconciliation_id: rec.id,
+        item_id: l.itemId,
+        expected_qty: l.expectedQty,
+        actual_qty: l.actualQty,
+        discrepancy: l.actualQty - l.expectedQty,
+        notes: l.notes || null,
+      }));
+      await (supabase.from as any)('inventory_reconciliation_lines').insert(lineInserts);
+    }
+    return rec.id;
+  } catch {
+    // Resilient fallback to audit_logs if table not yet active
+    const { data: bRow } = await supabase.from('buildings').select('tenant_id').eq('id', buildingId).maybeSingle();
+    const id = crypto.randomUUID();
+    const tenantId = (bRow as any)?.tenant_id;
+    if (tenantId) {
+      await supabase.from('audit_logs').insert({
+        tenant_id: tenantId,
+        actor_type: 'tenant_user',
+        action: 'inventory.reconciliation',
+        entity_type: 'inventory_reconciliation',
+        entity_id: id,
+        after_data: {
+          ...recData,
+          lines,
+        },
+      });
+    }
+    return id;
+  }
+}
+
+export async function listReconciliations(buildingId: string): Promise<any[]> {
+  try {
+    const recs = await q<any[]>(
+      (supabase.from as any)('inventory_reconciliations')
+        .select(
+          'id,building_id,verified_by,verified_at,period_start,period_end,notes,' +
+            'inventory_reconciliation_lines(id,item_id,expected_qty,actual_qty,discrepancy,notes,inventory_items(name,base_unit)),' +
+            'profiles:verified_by(full_name)',
+        )
+        .eq('building_id', buildingId)
+        .order('verified_at', { ascending: false })
+        .limit(50),
+    );
+    return recs.map((r) => ({
+      id: r.id,
+      building_id: r.building_id,
+      verified_by: r.verified_by,
+      verified_at: r.verified_at,
+      period_start: r.period_start,
+      period_end: r.period_end,
+      notes: r.notes,
+      verifier_name: r.profiles?.full_name ?? 'Staff',
+      lines: (r.inventory_reconciliation_lines ?? []).map((l: any) => ({
+        id: l.id,
+        item_id: l.item_id,
+        item_name: l.inventory_items?.name,
+        base_unit: l.inventory_items?.base_unit,
+        expected_qty: Number(l.expected_qty),
+        actual_qty: Number(l.actual_qty),
+        discrepancy: Number(l.discrepancy),
+        notes: l.notes,
+      })),
+    }));
+  } catch {
+    // Fallback: check audit_logs
+    try {
+      const logs = await q<any[]>(
+        supabase
+          .from('audit_logs')
+          .select('id,created_at,actor_user_id,after_data,profiles:actor_user_id(full_name)')
+          .eq('action', 'inventory.reconciliation')
+          .order('created_at', { ascending: false })
+          .limit(50),
+      );
+      return logs
+        .filter((l) => l.after_data?.building_id === buildingId)
+        .map((l) => ({
+          id: l.id,
+          building_id: l.after_data.building_id,
+          verified_by: l.actor_user_id,
+          verified_at: l.created_at,
+          period_start: l.after_data.period_start ?? null,
+          period_end: l.after_data.period_end ?? null,
+          notes: l.after_data.notes ?? null,
+          verifier_name: l.profiles?.full_name ?? 'Staff',
+          lines: l.after_data.lines ?? [],
+        }));
+    } catch {
+      return [];
+    }
+  }
 }
 
 // ---------------------------------------------------------------- Kitchen reports

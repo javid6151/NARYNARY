@@ -18,6 +18,7 @@ import { ACTIVE_STATUSES, isOverdue, PRIORITY_ORDER } from './status';
 import { CreateRequestDrawer } from './components/CreateRequestDrawer';
 import { MaintenanceExpenses } from './components/MaintenanceExpenses';
 import { RequestDetail } from './components/RequestDetail';
+import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import type { MaintenanceRequest } from './types';
 
 type Tab = 'all' | 'open' | 'assigned' | 'in_progress' | 'on_hold' | 'completed' | 'cancelled';
@@ -90,6 +91,23 @@ export default function Maintenance() {
             </Button>
           </>
         }
+      />
+      <SectionPromoBanner
+        eyebrow="FACILITY OPERATIONS"
+        title="Flawless Spaces, Prompt Resolutions."
+        subtitle="Coordinate repairs, assign technicians, track work orders, and maintain unified service expense ledgers."
+        imageSrc="/owner-assets/lounge-promo.jpg"
+        statsBadge={`${count('open') + count('assigned')} Active Requests`}
+        primaryAction={{
+          label: 'New Work Order',
+          onClick: () => setCreate(true),
+          icon: Wrench,
+        }}
+        secondaryAction={{
+          label: 'Maintenance Spend',
+          onClick: () => setView('expenses'),
+          icon: Receipt,
+        }}
       />
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-5">
         <StatCard

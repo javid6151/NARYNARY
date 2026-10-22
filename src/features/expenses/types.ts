@@ -1,5 +1,12 @@
 /** Row shapes for the expense ledger, categories, vendors and expense payments. */
 
+export interface ExpenseRecordedBy {
+  id: string;
+  name: string;
+  role: string | null;
+  email: string | null;
+}
+
 /** One row of the `expense_balances` view: an approved expense with paid/outstanding derived from payments. */
 export interface ExpenseRow {
   id: string;
@@ -16,8 +23,11 @@ export interface ExpenseRow {
   status: string;
   category_id: string;
   vendor_id: string | null;
+  created_by?: string;
+  created_at?: string;
   expense_categories: { name: string };
   vendors: { name: string } | null;
+  recorded_by?: ExpenseRecordedBy | null;
 }
 
 export interface ExpenseCategory {

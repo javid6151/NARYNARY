@@ -33,7 +33,7 @@ export class ErrorBoundary extends Component<Props, State> {
               variant="secondary"
               onClick={() => {
                 localStorage.clear();
-                window.location.href = '/login';
+                window.location.href = '/';
               }}
             >
               Sign out & Re-login

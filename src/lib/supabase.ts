@@ -9,6 +9,12 @@ export const configError = !url || !anonKey
   : null;
 
 // Public anon key only. Authorization is enforced by RLS and security-definer RPCs.
+// Each local port (1000, 2000, 3000, 4000, 5000) has a completely isolated origin storage in the browser.
 export const supabase = createClient<Database>(url ?? 'http://localhost', anonKey ?? 'missing', {
-  auth: { persistSession: true, autoRefreshToken: true },
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  },
 });
+

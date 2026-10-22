@@ -103,13 +103,14 @@ export function ResidentDrawer({ r, onClose, onChanged }: { r: ResidentRow; onCl
             ps.length === 0 ? (
               <Empty title="No payments yet" />
             ) : (
-              <Table head={['Date', 'Amount', 'Method', 'Receipt', 'Status']}>
+              <Table head={['Date', 'Amount', 'Method', 'UTR / Ref', 'Receipt', 'Status']}>
                 {ps.map((p) => (
                   <tr key={p.id}>
                     <Td>{fmtDate(p.paid_at)}</Td>
-                    <Td className="tabular">{inr(p.amount)}</Td>
+                    <Td className="tabular font-medium">{inr(p.amount)}</Td>
                     <Td>{label(p.payment_method)}</Td>
-                    <Td className="tabular">{receiptNo(p.receipts)}</Td>
+                    <Td className="tabular font-mono text-xs">{p.transaction_reference || '—'}</Td>
+                    <Td className="tabular font-mono text-xs">{receiptNo(p.receipts)}</Td>
                     <Td><Badge status={p.status === 'confirmed' ? 'paid' : p.status} /></Td>
                   </tr>
                 ))}

@@ -1,6 +1,7 @@
-/** Owner-only Settings page: team access, subscription, meal rules and categories. */
 import { useState } from 'react';
+import { ShieldCheck, Sparkles } from 'lucide-react';
 import { PageHeader, Tabs, Toast } from '../../components/ui';
+import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import { Categories } from './components/Categories';
 import { MealRules } from './components/MealRules';
 import { Subscription } from './components/Subscription';
@@ -12,6 +13,22 @@ export default function Settings() {
   return (
     <>
       <PageHeader title="Settings" subtitle="Team access, plan, meal rules and categories." />
+      <SectionPromoBanner
+        eyebrow="ORGANIZATION & CONTROLS"
+        title="Enterprise Configuration, Ironclad Security."
+        subtitle="Manage team member roles, subscription billing, automated meal rules, and accounting expense categories."
+        imageSrc="/owner-assets/hero-interior.jpg"
+        primaryAction={{
+          label: 'Team & Access',
+          onClick: () => setTab('team'),
+          icon: ShieldCheck,
+        }}
+        secondaryAction={{
+          label: 'Subscription Plan',
+          onClick: () => setTab('subscription'),
+          icon: Sparkles,
+        }}
+      />
       <Tabs
         value={tab}
         onChange={setTab}

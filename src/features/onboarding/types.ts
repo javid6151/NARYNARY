@@ -11,6 +11,7 @@ export interface BuildingDraft {
 
 export interface OnboardingRequest {
   id: string;
+  tenant_id?: string;
   /** pending | approved | rejected | changes_requested */
   status: string;
   review_notes: string | null;

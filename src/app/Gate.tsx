@@ -6,13 +6,22 @@ import type { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../features/access/useAuth';
 import { Loading } from '../components/ui';
+import { AccountSuspended } from '../components/AccountSuspended';
+import { ResidentLogin } from '../features/resident-portal/ResidentLogin';
 
 /** Requires a session; when `allow` is false, sends the user to their own home portal. */
 export function Gate({ allow, children }: { allow: boolean; children: ReactNode }) {
-  const { session, loading, homePath } = useAuth();
+  const { session, loading, homePath, isSuspended } = useAuth();
   const loc = useLocation();
   if (loading) return <FullLoading />;
-  if (!session) return <Navigate to="/login" state={{ from: loc.pathname }} replace />;
+  if (isSuspended) return <AccountSuspended />;
+  if (!session) {
+    const isResidentPort = typeof window !== 'undefined' && (window.location.port === '5000' || import.meta.env.VITE_PORTAL === 'resident');
+    if (isResidentPort) {
+      return <ResidentLogin />;
+    }
+    return <Navigate to="/" state={{ from: loc.pathname }} replace />;
+  }
   if (!allow) {
     if (homePath === loc.pathname || loc.pathname.startsWith(homePath)) {
       return (
@@ -23,7 +32,7 @@ export function Gate({ allow, children }: { allow: boolean; children: ReactNode 
             <button
               onClick={() => {
                 localStorage.clear();
-                window.location.href = '/login';
+                window.location.href = '/';
               }}
               className="inline-flex items-center justify-center rounded-lg font-medium h-9 px-3 text-sm bg-brand-600 text-white cursor-pointer"
             >
