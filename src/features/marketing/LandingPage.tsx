@@ -86,9 +86,12 @@ export default function LandingPage() {
 
       const freshAccess = await getMyAccess();
       const { port: targetPort, path: targetPath } = await determinePortalRoute(freshAccess, true);
+      const isLocalhost =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
       const currentPort = typeof window !== 'undefined' && window.location.port ? Number(window.location.port) : 5000;
 
-      if (currentPort !== targetPort && targetPort) {
+      if (isLocalhost && currentPort !== targetPort && targetPort) {
         const s = (await supabase.auth.getSession()).data.session;
         const hash = s ? `#access_token=${s.access_token}&refresh_token=${s.refresh_token}&token_type=bearer` : '';
         window.location.href = `http://localhost:${targetPort}${targetPath}${hash}`;

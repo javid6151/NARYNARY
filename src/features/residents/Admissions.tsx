@@ -35,6 +35,9 @@ export default function Admissions() {
     copied: boolean;
   } | null>(null);
 
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const portalUrl = typeof window !== 'undefined' ? (isLocal ? 'http://localhost:5000' : window.location.origin) : 'http://localhost:5000';
+
   const st = useAsync(() => (!buildingId ? Promise.resolve([] as AdmissionRow[]) : listAdmissions(buildingId)), [buildingId]);
 
   const portalMutation = useMutation(async () => {
@@ -262,7 +265,7 @@ export default function Admissions() {
                     Authentication details live on Port 5000!
                   </div>
                   <div className="bg-white p-2.5 rounded-lg border border-line font-mono text-xs space-y-1">
-                    <div>Portal: <b>http://localhost:5000</b></div>
+                    <div>Portal: <b>{portalUrl}</b></div>
                     <div>Mobile (Login ID): <b>{portalSuccess.phone}</b></div>
                     <div>Password: <b className="text-brand-700">{portalSuccess.password}</b></div>
                   </div>
@@ -274,7 +277,7 @@ export default function Admissions() {
                     className="flex-1 bg-brand-600 hover:bg-brand-700 text-white"
                     onClick={() => {
                       navigator.clipboard.writeText(
-                        `Resident Portal Login: http://localhost:5000\nMobile: ${portalSuccess.phone}\nPassword: ${portalSuccess.password}`
+                        `Resident Portal Login: ${portalUrl}\nMobile: ${portalSuccess.phone}\nPassword: ${portalSuccess.password}`
                       );
                       setPortalSuccess({ ...portalSuccess, copied: true });
                     }}
@@ -285,7 +288,7 @@ export default function Admissions() {
 
                   <a
                     href={`https://wa.me/?text=${encodeURIComponent(
-                      `Hello ${portalSuccess.name}! Your resident portal access has been granted.\n\nLogin URL: http://localhost:5000\nMobile: ${portalSuccess.phone}\nPassword: ${portalSuccess.password}`
+                      `Hello ${portalSuccess.name}! Your resident portal access has been granted.\n\nLogin URL: ${portalUrl}\nMobile: ${portalSuccess.phone}\nPassword: ${portalSuccess.password}`
                     )}`}
                     target="_blank"
                     rel="noreferrer"

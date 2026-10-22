@@ -61,10 +61,13 @@ export function ResidentLogin() {
 
       const freshAccess = await getMyAccess();
       const { port: targetPort, path: targetPath } = await determinePortalRoute(freshAccess, true);
+      const isLocalhost =
+        typeof window !== 'undefined' &&
+        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
       const currentPort = typeof window !== 'undefined' && window.location.port ? Number(window.location.port) : 5000;
 
-      // If this user is an Owner, Manager, Chef, or Super Admin, route them to their dedicated port
-      if (targetPort && targetPort !== currentPort) {
+      // If this user is an Owner, Manager, Chef, or Super Admin on local dev, route to port
+      if (isLocalhost && targetPort && targetPort !== currentPort) {
         const s = (await supabase.auth.getSession()).data.session;
         const hash = s ? `#access_token=${s.access_token}&refresh_token=${s.refresh_token}&token_type=bearer` : '';
         window.location.href = `http://localhost:${targetPort}${targetPath}${hash}`;

@@ -79,6 +79,9 @@ export default function ResidentPortalServer() {
 
   const [copied, setCopied] = useState(false);
 
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const residentPortalUrl = typeof window !== 'undefined' ? (isLocal ? 'http://localhost:5000' : window.location.origin) : 'http://localhost:5000';
+
   // Data fetching
   const accounts = useAsync(() => listResidentPortalAccounts(bid), [bid]);
 
@@ -177,7 +180,7 @@ export default function ResidentPortalServer() {
 `*Zipnary Resident Portal Access*
 Hi ${c.fullName}! Your resident account has been granted access.
 
-🌐 *Login Portal:* http://localhost:5000
+🌐 *Login Portal:* ${residentPortalUrl}
 📱 *Mobile Number:* ${c.phone}
 🔑 *Portal Password:* ${c.password}
 
@@ -192,18 +195,18 @@ Please sign in to view your room allotment, rent payment receipts, mess meals, n
     <div className="space-y-6">
       <PageHeader
         title="Resident Portal Server & Access"
-        subtitle="Approve resident portal access, generate passwords, ban/suspend accounts, and control login permissions for Port 5000."
+        subtitle="Approve resident portal access, generate passwords, ban/suspend accounts, and control login permissions."
         actions={
           <div className="flex items-center gap-2">
             <BuildingPicker allowAll />
             <a
-              href="http://localhost:5000/"
+              href={residentPortalUrl}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200 hover:bg-brand-100 transition-colors"
             >
               <ExternalLink className="size-3.5" />
-              Open Port 5000
+              Open Resident Portal
             </a>
           </div>
         }
@@ -212,12 +215,12 @@ Please sign in to view your room allotment, rent payment receipts, mess meals, n
       <SectionPromoBanner
         eyebrow="PORTAL SECURITY & AUTH"
         title="Resident Portal Server & Access."
-        subtitle="Approve resident logins, issue encrypted passwords, monitor access permissions, and launch Port 5000."
+        subtitle="Approve resident logins, issue encrypted passwords, monitor access permissions, and launch Resident Portal."
         imageSrc="/owner-assets/residents-hero.jpg"
         statsBadge={`${activeCount} Active Accounts`}
         primaryAction={{
-          label: 'Launch Portal (Port 5000)',
-          onClick: () => window.open('http://localhost:5000', '_blank'),
+          label: 'Launch Resident Portal',
+          onClick: () => window.open(residentPortalUrl, '_blank'),
           icon: ExternalLink,
         }}
         secondaryAction={{
@@ -549,8 +552,8 @@ Please sign in to view your room allotment, rent payment receipts, mess meals, n
               </div>
               <p className="text-muted text-xs">
                 {createdCreds.fullName} can now sign in at{' '}
-                <a href="http://localhost:5000" target="_blank" rel="noreferrer" className="text-brand-700 font-semibold underline">
-                  http://localhost:5000
+                <a href={residentPortalUrl} target="_blank" rel="noreferrer" className="text-brand-700 font-semibold underline">
+                  {residentPortalUrl}
                 </a>{' '}
                 using these credentials:
               </p>
@@ -559,7 +562,7 @@ Please sign in to view your room allotment, rent payment receipts, mess meals, n
             <div className="bg-canvas p-4 rounded-xl border border-line font-mono text-xs space-y-2 text-ink">
               <div className="flex justify-between items-center py-1 border-b border-line/60">
                 <span className="text-muted">Login URL:</span>
-                <span className="font-semibold text-brand-700">http://localhost:5000</span>
+                <span className="font-semibold text-brand-700">{residentPortalUrl}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-line/60">
                 <span className="text-muted">Login ID (Mobile):</span>

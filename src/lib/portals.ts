@@ -28,5 +28,8 @@ export const CURRENT_PORTAL = getActivePortal();
 
 export const portalUrl = (id: PortalId) => {
   const p = PORTALS.find((x) => x.id === id)!;
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+    return `${window.location.origin}${p.path}`;
+  }
   return `http://localhost:${p.port}${p.path}`;
 };

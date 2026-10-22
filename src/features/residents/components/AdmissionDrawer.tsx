@@ -48,6 +48,8 @@ export function AdmissionDrawer({ row, canApprove, onClose, onDone }: {
   };
 
   const defaultPassword = `Pass${(r.phone || '1234').replace(/\D/g, '').slice(-4)}!`;
+  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+  const portalUrl = typeof window !== 'undefined' ? (isLocal ? 'http://localhost:5000' : window.location.origin) : 'http://localhost:5000';
 
   const footer = pending && canApprove ? (
     <>
@@ -149,7 +151,7 @@ export function AdmissionDrawer({ row, canApprove, onClose, onDone }: {
                   Portal Access Saved Live!
                 </div>
                 <div className="bg-white p-2.5 rounded-lg border border-line font-mono text-xs space-y-1">
-                  <div>Portal: <b>http://localhost:5000</b></div>
+                  <div>Portal: <b>{portalUrl}</b></div>
                   <div>Mobile (Login ID): <b>{r.phone}</b></div>
                   <div>Password: <b className="text-brand-700">{createdCreds.password}</b></div>
                 </div>
@@ -159,7 +161,7 @@ export function AdmissionDrawer({ row, canApprove, onClose, onDone }: {
                     className="flex-1 bg-brand-600 hover:bg-brand-700 text-white"
                     onClick={() => {
                       navigator.clipboard.writeText(
-                        `Resident Portal Login: http://localhost:5000\nMobile: ${r.phone}\nPassword: ${createdCreds.password}`
+                        `Resident Portal Login: ${portalUrl}\nMobile: ${r.phone}\nPassword: ${createdCreds.password}`
                       );
                       setCreatedCreds({ ...createdCreds, copied: true });
                     }}
@@ -172,7 +174,7 @@ export function AdmissionDrawer({ row, canApprove, onClose, onDone }: {
                     target="_blank"
                     rel="noopener noreferrer"
                     href={`https://wa.me/?text=${encodeURIComponent(
-                      `Hello ${r.full_name}! Your resident portal account is active.\n\nLogin URL: http://localhost:5000\nMobile: ${r.phone}\nPassword: ${createdCreds.password}`
+                      `Hello ${r.full_name}! Your resident portal account is active.\n\nLogin URL: ${portalUrl}\nMobile: ${r.phone}\nPassword: ${createdCreds.password}`
                     )}`}
                   >
                     <Share2 className="size-3.5" />
