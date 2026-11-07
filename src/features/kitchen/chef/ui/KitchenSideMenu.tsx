@@ -5,20 +5,22 @@ import { CalendarDays, ClipboardList, Headphones, Home, LayoutDashboard, LogOut,
 import { cx } from '../../../../lib/cx';
 import { useAuth } from '../../../access/useAuth';
 import { useBuilding } from '../../../access/useBuilding';
-
-const LINKS = [
-  { to: '/kitchen', label: 'Home', icon: Home, end: true },
-  { to: '/kitchen/cooking', label: 'Today’s cooking', icon: UtensilsCrossed },
-  { to: '/kitchen/menu', label: 'Menu planner', icon: CalendarDays },
-  { to: '/kitchen/stock', label: 'Stock', icon: Package },
-  { to: '/kitchen/history', label: 'Cooking history', icon: ClipboardList },
-  { to: '/kitchen/profile', label: 'Profile', icon: User },
-];
+import { useKitchenBase } from '../useKitchenBase';
 
 export function KitchenSideMenu({ name, open, onClose }: { name: string; open: boolean; onClose: () => void }) {
   const { staff, signOut } = useAuth();
   const { building } = useBuilding();
   const nav = useNavigate();
+  const base = useKitchenBase();
+
+  const links = [
+    { to: base, label: 'Home', icon: Home, end: true },
+    { to: `${base}/cooking`, label: 'Today’s cooking', icon: UtensilsCrossed },
+    { to: `${base}/menu`, label: 'Menu planner', icon: CalendarDays },
+    { to: `${base}/stock`, label: 'Stock', icon: Package },
+    { to: `${base}/history`, label: 'Cooking history', icon: ClipboardList },
+    { to: `${base}/profile`, label: 'Profile', icon: User },
+  ];
 
   useEffect(() => {
     if (!open) return;
@@ -49,7 +51,7 @@ export function KitchenSideMenu({ name, open, onClose }: { name: string; open: b
         </div>
 
         <ul className="flex-1 overflow-y-auto p-3 space-y-1">
-          {LINKS.map(({ to, label, icon: Icon, end }) => (
+          {links.map(({ to, label, icon: Icon, end }) => (
             <li key={to}>
               <NavLink
                 to={to}

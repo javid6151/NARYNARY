@@ -125,9 +125,7 @@ export default function App() {
               path="/"
               element={
                 isResidentActive || (resident && resident.tenant_status === 'active') || isStaffActive || isPlatformAdmin ? (
-                  <BuildingProvider>
-                    <ResidentApp />
-                  </BuildingProvider>
+                  <Navigate to={homePath || '/resident'} replace />
                 ) : (
                   <ResidentLogin />
                 )
@@ -154,7 +152,7 @@ export default function App() {
                   )
                 ) : isOwnerPort ? (
                   isOwnerActive || isPlatformAdmin ? (
-                    <Navigate to="/owner" replace />
+                    <Navigate to={homePath || '/owner'} replace />
                   ) : access ? (
                     <WrongPortal portal={isManagerActive ? 'manager' : isChefActive ? 'kitchen' : 'resident'} />
                   ) : (
@@ -162,7 +160,7 @@ export default function App() {
                   )
                 ) : isManagerPort ? (
                   isManagerActive || isPlatformAdmin ? (
-                    <Navigate to="/manager" replace />
+                    <Navigate to={homePath || '/manager'} replace />
                   ) : access ? (
                     <WrongPortal portal={isOwnerActive ? 'owner' : isChefActive ? 'kitchen' : 'resident'} />
                   ) : (
@@ -170,7 +168,7 @@ export default function App() {
                   )
                 ) : isChefPort ? (
                   isChefActive || isPlatformAdmin ? (
-                    <Navigate to="/chef" replace />
+                    <Navigate to={homePath || '/chef'} replace />
                   ) : access ? (
                     <WrongPortal portal={isOwnerActive ? 'owner' : isManagerActive ? 'manager' : 'resident'} />
                   ) : (
@@ -179,11 +177,11 @@ export default function App() {
                 ) : isPlatformAdmin ? (
                   <Navigate to="/platformadmin" replace />
                 ) : isOwnerActive ? (
-                  <Navigate to="/owner" replace />
+                  <Navigate to={homePath || '/owner'} replace />
                 ) : isManagerActive ? (
-                  <Navigate to="/manager" replace />
+                  <Navigate to={homePath || '/manager'} replace />
                 ) : isChefActive ? (
-                  <Navigate to="/chef" replace />
+                  <Navigate to={homePath || '/chef'} replace />
                 ) : isResidentActive ? (
                   <Navigate to={homePath || '/resident'} replace />
                 ) : (

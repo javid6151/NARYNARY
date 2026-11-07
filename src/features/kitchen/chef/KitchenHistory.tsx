@@ -14,12 +14,14 @@ import { SectionPromoBanner } from '../../../components/SectionPromoBanner';
 import { listKitchenReportLines, listKitchenReports } from '../api';
 import type { KitchenReport, KitchenReportLine } from '../types';
 import { KitchenTopBar } from './ui/KitchenHeaders';
+import { useKitchenBase } from './useKitchenBase';
 
 const LINE_VERB: Record<string, string> = { consumption: 'Used', wastage: 'Wasted' };
 
 export function KitchenHistory() {
   const { buildingId } = useBuilding();
   const nav = useNavigate();
+  const base = useKitchenBase();
   const st = useAsync(() => (!buildingId ? Promise.resolve([] as KitchenReport[]) : listKitchenReports(buildingId)), [buildingId]);
   const [open, setOpen] = useState<string | null>(null);
   const lines = useAsync(() => (open ? listKitchenReportLines(open) : Promise.resolve([] as KitchenReportLine[])), [open]);
@@ -36,7 +38,7 @@ export function KitchenHistory() {
         statsBadge={st.data?.length ? `${st.data.length} Recorded Reports` : undefined}
         primaryAction={{
           label: "Today's Cooking",
-          onClick: () => nav('/kitchen/cooking'),
+          onClick: () => nav(`${base}/cooking`),
           icon: UtensilsCrossed,
         }}
       />

@@ -20,6 +20,7 @@ import { useStock } from '../useStock';
 import { ItemAvatar } from './ui/ItemAvatar';
 import { KitchenBrandHeader } from './ui/KitchenHeaders';
 import { KitchenSideMenu } from './ui/KitchenSideMenu';
+import { useKitchenBase } from './useKitchenBase';
 
 const MEAL_TONE: Record<string, string> = {
   breakfast: 'bg-[#FEF6E9] text-[#B45309] border border-[#FDE68A]',
@@ -36,6 +37,7 @@ const longDate = (d: string) => {
 export function KitchenHome({ name }: { name: string }) {
   const { buildingId, building } = useBuilding();
   const nav = useNavigate();
+  const base = useKitchenBase();
   const [menuOpen, setMenuOpen] = useState(false);
   const [date, setDate] = useState(isoDate());
   const sum = useAsync(
@@ -66,12 +68,12 @@ export function KitchenHome({ name }: { name: string }) {
         statsBadge={sum.data?.total_residents ? `${sum.data.total_residents} Residents on Mess` : undefined}
         primaryAction={{
           label: "Today's Cooking",
-          onClick: () => nav('/kitchen/cooking'),
+          onClick: () => nav(`${base}/cooking`),
           icon: UtensilsCrossed,
         }}
         secondaryAction={{
           label: 'Weekly Menu',
-          onClick: () => nav('/kitchen/menu'),
+          onClick: () => nav(`${base}/menu`),
           icon: CalendarDays,
         }}
       />
@@ -120,7 +122,7 @@ export function KitchenHome({ name }: { name: string }) {
                     <p className="text-[12px] text-[#77736B]">Tap a meal to record consumed quantities</p>
                   </div>
                   <button
-                    onClick={() => nav('/kitchen/menu')}
+                    onClick={() => nav(`${base}/menu`)}
                     className="text-[13px] font-semibold text-[#343B2B] hover:underline cursor-pointer"
                   >
                     View Week →
@@ -135,7 +137,7 @@ export function KitchenHome({ name }: { name: string }) {
                     return (
                       <li key={m.meal_type}>
                         <button
-                          onClick={() => nav(recorded ? '/kitchen/history' : canRecord ? `/kitchen/record/${date}/${m.meal_type}` : '/kitchen/menu')}
+                          onClick={() => nav(recorded ? `${base}/history` : canRecord ? `${base}/record/${date}/${m.meal_type}` : `${base}/menu`)}
                           className="w-full text-left bg-[#FFFEFC] border border-[#DED6CB] hover:border-[#343B2B]/40 rounded-2xl p-4 flex items-center gap-3.5 cursor-pointer shadow-2xs transition-all hover:translate-y-[-1px] group"
                         >
                           <span className={cx('size-[64px] rounded-xl grid place-items-center shrink-0 shadow-2xs', MEAL_TONE[m.meal_type])}>
@@ -173,7 +175,7 @@ export function KitchenHome({ name }: { name: string }) {
             <p className="text-[12px] text-[#77736B]">Available pantry ingredients</p>
           </div>
           <button
-            onClick={() => nav('/kitchen/stock')}
+            onClick={() => nav(`${base}/stock`)}
             className="text-[13px] font-semibold text-[#343B2B] hover:underline cursor-pointer"
           >
             View All →

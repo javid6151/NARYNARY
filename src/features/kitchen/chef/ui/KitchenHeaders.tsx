@@ -4,9 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChefHat, Menu } from 'lucide-react';
 import { NotificationBell } from '../../../communication/components/NotificationBell';
 import { Avatar } from '../../../../components/ui';
+import { useKitchenBase } from '../useKitchenBase';
 
 export function KitchenBrandHeader({ name, onMenu }: { name: string; onMenu: () => void }) {
   const nav = useNavigate();
+  const base = useKitchenBase();
   return (
     <header className="sticky top-0 z-20 bg-[#FFFEFC]/92 backdrop-blur-md border-b border-[#DED6CB] -mx-4 px-4 h-16 flex items-center gap-3 shadow-2xs mb-4">
       <button
@@ -37,7 +39,7 @@ export function KitchenBrandHeader({ name, onMenu }: { name: string; onMenu: () 
       <NotificationBell />
 
       <button
-        onClick={() => nav('/kitchen/profile')}
+        onClick={() => nav(`${base}/profile`)}
         aria-label="Profile"
         className="cursor-pointer transition-transform hover:scale-105 active:scale-95"
       >
@@ -50,7 +52,7 @@ export function KitchenBrandHeader({ name, onMenu }: { name: string; onMenu: () 
 export function KitchenTopBar({
   title,
   subtitle,
-  back = '/kitchen',
+  back,
   action,
 }: {
   title: string;
@@ -59,11 +61,13 @@ export function KitchenTopBar({
   action?: ReactNode;
 }) {
   const nav = useNavigate();
+  const base = useKitchenBase();
+  const backTarget = back === undefined ? base : back;
   return (
     <header className="sticky top-0 z-20 bg-[#FFFEFC]/92 backdrop-blur-md border-b border-[#DED6CB] -mx-4 px-4 min-h-14 py-2.5 grid grid-cols-[40px_1fr_40px] items-center shadow-2xs mb-4">
-      {back ? (
+      {backTarget ? (
         <button
-          onClick={() => nav(back)}
+          onClick={() => nav(backTarget)}
           aria-label="Back"
           className="p-2 -ml-2 rounded-xl hover:bg-[#ECE5DA] text-[#30271F] cursor-pointer transition-colors"
         >

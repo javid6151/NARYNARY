@@ -4,41 +4,62 @@
  * expenses, complaints, maintenance, mess, and staff. Strictly NO Owner Settings.
  * Redesigned with the ZIPNARY Enterprise design system (Warm Ivory, Porcelain White, Deep Olive).
  */
-import { useState } from 'react';
-import { NavLink, Outlet, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   LayoutDashboard, BedDouble, Users, Wallet, Receipt, MessageSquareWarning, Wrench, UtensilsCrossed,
   Package, UserCog, Megaphone, FileBarChart, LogOut, Menu, X, ChefHat, Home, Briefcase,
   Headphones, ChevronRight, UserPlus, MoreHorizontal, KeyRound
 } from 'lucide-react';
 import { useAuth } from '../features/access/useAuth';
+import { useBuilding } from '../features/access/useBuilding';
+import { toSlug } from '../features/access/api';
 import { NotificationBell } from '../features/communication/components/NotificationBell';
 import { Avatar } from '../components/ui';
 import { cx } from '../lib/cx';
 import '../features/owner/owner-portal.css';
 
 export function ManagerShell() {
-  const { staff, chef, access, signOut, tenantSlug } = useAuth();
+  const { staff, chef, access, signOut } = useAuth();
   const { tenantSlug: paramSlug, pgSlug: paramPgSlug } = useParams();
+  const { building, buildings, loading: buildingLoading } = useBuilding();
   const [open, setOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const location = useLocation();
   const nav = useNavigate();
+
+  const activeBuilding = building || buildings[0];
+  const tName = staff?.tenant_name || access?.memberships?.[0]?.tenant_name || '';
+  const bName = activeBuilding?.name || '';
+  const tSlug = paramSlug || (tName ? toSlug(tName) : '') || 'pg';
+  const bSlug = (paramPgSlug && paramPgSlug !== 'main') ? paramPgSlug : (bName ? toSlug(bName) : '') || 'main';
 
   const base = paramSlug && paramPgSlug
     ? `/${paramSlug}/${paramPgSlug}/manager`
-    : paramSlug
-    ? `/${paramSlug}/manager`
-    : '/manager';
+    : `/${tSlug}/${bSlug}/manager`;
   const residentBase = paramSlug && paramPgSlug
     ? `/${paramSlug}/${paramPgSlug}/tentant/preview`
-    : paramSlug
-    ? `/${paramSlug}/resident`
-    : (tenantSlug ? `/${tenantSlug}/resident` : '/resident');
+    : `/${tSlug}/${bSlug}/tentant/preview`;
   const chefBase = paramSlug && paramPgSlug
     ? `/${paramSlug}/${paramPgSlug}/chef`
-    : paramSlug
-    ? `/${paramSlug}/chef`
-    : (tenantSlug ? `/${tenantSlug}/chef` : '/chef');
+    : `/${tSlug}/${bSlug}/chef`;
+
+  // Ensure manager URL always scopes with business name and building name
+  useEffect(() => {
+    if (buildingLoading) return;
+    const isUnscoped = !paramSlug || !paramPgSlug || (paramPgSlug === 'main' && buildings.length > 0 && !buildings.some((b) => toSlug(b.name) === 'main'));
+    if (isUnscoped) {
+      let subPath = '';
+      if (location.pathname.startsWith('/manager')) {
+        subPath = location.pathname.slice('/manager'.length);
+      } else if (paramSlug && location.pathname.startsWith(`/${paramSlug}/manager`)) {
+        subPath = location.pathname.slice(`/${paramSlug}/manager`.length);
+      } else if (paramSlug && paramPgSlug && location.pathname.startsWith(`/${paramSlug}/${paramPgSlug}/manager`)) {
+        subPath = location.pathname.slice(`/${paramSlug}/${paramPgSlug}/manager`.length);
+      }
+      nav(`/${tSlug}/${bSlug}/manager${subPath}${location.search}`, { replace: true });
+    }
+  }, [buildingLoading, paramSlug, paramPgSlug, buildings, tSlug, bSlug, location.pathname, location.search, nav]);
 
   const navItems = [
     { to: base, label: 'Dashboard', icon: LayoutDashboard, end: true },

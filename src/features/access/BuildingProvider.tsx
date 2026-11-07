@@ -54,8 +54,10 @@ export function BuildingProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<BuildingCtx>(() => {
     // If pgSlug is present in the route URL, match it directly against building names
-    const buildingBySlug = pgSlug ? buildings.find((b) => toSlug(b.name) === pgSlug) : null;
-    const valid = buildingBySlug
+    const buildingBySlug = pgSlug && pgSlug !== 'all' ? buildings.find((b) => toSlug(b.name) === pgSlug) : null;
+    const valid = pgSlug === 'all'
+      ? 'all'
+      : buildingBySlug
       ? buildingBySlug.id
       : selected === 'all' || buildings.some((b) => b.id === selected)
       ? selected

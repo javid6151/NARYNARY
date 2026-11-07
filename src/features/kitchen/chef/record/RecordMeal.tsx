@@ -21,6 +21,7 @@ import type { IngredientLine, KitchenReportLineInput, MealCount, Menu } from '..
 import { toBase } from '../../units';
 import { useStock } from '../../useStock';
 import { KitchenTopBar } from '../ui/KitchenHeaders';
+import { useKitchenBase } from '../useKitchenBase';
 import { clearDraft, loadDraft, saveDraft } from './draft';
 import { IngredientsTab } from './IngredientsTab';
 import { SummaryTab } from './SummaryTab';
@@ -31,6 +32,7 @@ export function RecordMeal() {
   const { date = isoDate(), meal = 'lunch' } = useParams();
   const { buildingId } = useBuilding();
   const nav = useNavigate();
+  const base = useKitchenBase();
   const meta = MEALS.find((m) => m.id === meal) ?? MEALS[1];
 
   const sum = useAsync(
@@ -114,7 +116,7 @@ export function RecordMeal() {
   const submit = async () => {
     if (await m.run()) {
       if (buildingId) clearDraft(buildingId, date, meal);
-      nav('/kitchen', { replace: true });
+      nav(base, { replace: true });
     }
   };
 
@@ -123,7 +125,7 @@ export function RecordMeal() {
       <KitchenTopBar
         title={`${meta.label} - ${fmtDate(date)}`}
         subtitle={`${fmtTime(menu?.serving_start ?? meta.start)} – ${fmtTime(menu?.serving_end ?? meta.end)}`}
-        back="/kitchen"
+        back={base}
       />
 
       {tab !== 'summary' && (

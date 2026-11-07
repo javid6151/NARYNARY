@@ -80,16 +80,22 @@ export function BuildingPicker({ allowAll = false }: { allowAll?: boolean }) {
   const handleSelect = (v: string) => {
     setOpen(false);
     setSelected(v);
-    if (paramSlug && paramPgSlug && v !== 'all') {
-      const chosen = buildings.find((b) => b.id === v);
-      if (chosen) {
-        const newPg = toSlug(chosen.name);
-        const loc = window.location.pathname;
-        const rolePart = loc.includes('/manager') ? 'manager' : 'owner';
-        const subPath = loc.replace(new RegExp(`^/${paramSlug}/${paramPgSlug}/${rolePart}`), '');
-        nav(`/${paramSlug}/${newPg}/${rolePart}${subPath}`);
-      }
-    }
+    const chosen = buildings.find((b) => b.id === v);
+    const newPg = chosen ? toSlug(chosen.name) : v === 'all' ? 'all' : 'main';
+    const loc = window.location.pathname;
+    const rolePart = loc.includes('/chef')
+      ? 'chef'
+      : loc.includes('/manager')
+      ? 'manager'
+      : 'owner';
+    const tSlug = paramSlug || (staff?.tenant_name ? toSlug(staff.tenant_name) : '') || 'pg';
+    const oldPrefix = paramSlug && paramPgSlug
+      ? `/${paramSlug}/${paramPgSlug}/${rolePart}`
+      : paramSlug
+      ? `/${paramSlug}/${rolePart}`
+      : `/${rolePart}`;
+    const subPath = loc.startsWith(oldPrefix) ? loc.slice(oldPrefix.length) : '';
+    nav(`/${tSlug}/${newPg}/${rolePart}${subPath}${window.location.search}`);
   };
 
   return (

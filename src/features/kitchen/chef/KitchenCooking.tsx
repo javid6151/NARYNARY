@@ -15,10 +15,12 @@ import { getMealCounts } from '../api';
 import { MEALS } from '../meals';
 import type { MealCount } from '../types';
 import { KitchenTopBar } from './ui/KitchenHeaders';
+import { useKitchenBase } from './useKitchenBase';
 
 export function KitchenCooking() {
   const { buildingId } = useBuilding();
   const nav = useNavigate();
+  const base = useKitchenBase();
   const [date, setDate] = useState(isoDate());
   const sum = useAsync(
     () => (buildingId ? getMealCounts(buildingId, date) : Promise.resolve(null as MealCount | null)),
@@ -37,7 +39,7 @@ export function KitchenCooking() {
         statsBadge={sum.data?.total_residents ? `${sum.data.total_residents} Residents` : undefined}
         primaryAction={{
           label: 'Weekly Menu Planner',
-          onClick: () => nav('/kitchen/menu'),
+          onClick: () => nav(`${base}/menu`),
           icon: CalendarDays,
         }}
       />
@@ -109,7 +111,7 @@ export function KitchenCooking() {
                     )}
                     {!m.report && date <= isoDate() && (
                       <button
-                        onClick={() => nav(`/kitchen/record/${date}/${m.meal_type}`)}
+                        onClick={() => nav(`${base}/record/${date}/${m.meal_type}`)}
                         className="w-full mt-4 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#343B2B] hover:bg-[#2A3022] text-white font-semibold text-sm transition-all hover:shadow-md cursor-pointer"
                       >
                         <span>Record Ingredient Usage</span>

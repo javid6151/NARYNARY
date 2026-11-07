@@ -1,10 +1,10 @@
-import { NavLink, useParams } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { ClipboardList, Home, Package, User, UtensilsCrossed } from 'lucide-react';
 import { cx } from '../../../../lib/cx';
+import { useKitchenBase } from '../useKitchenBase';
 
 export function KitchenNav() {
-  const { tenantSlug, pgSlug } = useParams<{ tenantSlug?: string; pgSlug?: string }>();
-  const base = tenantSlug && pgSlug ? `/${tenantSlug}/${pgSlug}/chef` : tenantSlug ? `/${tenantSlug}/chef` : '/chef';
+  const base = useKitchenBase();
 
   const tabs = [
     { to: base, label: 'Home', icon: Home, end: true },

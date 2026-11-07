@@ -3,36 +3,59 @@
  * Full business controls: all buildings, Settings, subscriptions, financial reports.
  * Redesigned with the ZIPNARY Enterprise design system (Warm Ivory, Porcelain White, Deep Olive).
  */
-import { useState } from 'react';
-import { NavLink, Outlet, useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   LayoutDashboard, BedDouble, Users, Wallet, Receipt, MessageSquareWarning, Wrench, UtensilsCrossed,
   Package, UserCog, Megaphone, FileBarChart, Settings, LogOut, Menu, X, ChefHat, KeyRound,
   Headphones, ChevronRight, UserPlus, MoreHorizontal
 } from 'lucide-react';
 import { useAuth } from '../features/access/useAuth';
+import { useBuilding } from '../features/access/useBuilding';
+import { toSlug } from '../features/access/api';
 import { NotificationBell } from '../features/communication/components/NotificationBell';
 import { Avatar } from '../components/ui';
 import { cx } from '../lib/cx';
 import '../features/owner/owner-portal.css';
 
 export function OwnerShell() {
-  const { staff, chef, access, signOut, tenantSlug, profile, session } = useAuth();
+  const { staff, chef, access, signOut, profile, session } = useAuth();
   const { tenantSlug: paramSlug, pgSlug: paramPgSlug } = useParams();
+  const { building, buildings, loading: buildingLoading } = useBuilding();
   const [open, setOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const location = useLocation();
   const nav = useNavigate();
+
+  const activeBuilding = building || buildings[0];
+  const tName = staff?.tenant_name || access?.owned_tenant?.business_name || access?.memberships?.[0]?.tenant_name || '';
+  const bName = activeBuilding?.name || '';
+  const tSlug = paramSlug || (tName ? toSlug(tName) : '') || 'pg';
+  const bSlug = (paramPgSlug && paramPgSlug !== 'main') ? paramPgSlug : (bName ? toSlug(bName) : '') || 'main';
 
   const base = paramSlug && paramPgSlug
     ? `/${paramSlug}/${paramPgSlug}/owner`
-    : paramSlug
-    ? `/${paramSlug}/owner`
-    : '/owner';
+    : `/${tSlug}/${bSlug}/owner`;
   const chefBase = paramSlug && paramPgSlug
     ? `/${paramSlug}/${paramPgSlug}/chef`
-    : paramSlug
-    ? `/${paramSlug}/chef`
-    : (tenantSlug ? `/${tenantSlug}/chef` : '/chef');
+    : `/${tSlug}/${bSlug}/chef`;
+
+  // Ensure owner URL always scopes with business name and building name
+  useEffect(() => {
+    if (buildingLoading) return;
+    const isUnscoped = !paramSlug || !paramPgSlug || (paramPgSlug === 'main' && buildings.length > 0 && !buildings.some((b) => toSlug(b.name) === 'main'));
+    if (isUnscoped) {
+      let subPath = '';
+      if (location.pathname.startsWith('/owner')) {
+        subPath = location.pathname.slice('/owner'.length);
+      } else if (paramSlug && location.pathname.startsWith(`/${paramSlug}/owner`)) {
+        subPath = location.pathname.slice(`/${paramSlug}/owner`.length);
+      } else if (paramSlug && paramPgSlug && location.pathname.startsWith(`/${paramSlug}/${paramPgSlug}/owner`)) {
+        subPath = location.pathname.slice(`/${paramSlug}/${paramPgSlug}/owner`.length);
+      }
+      nav(`/${tSlug}/${bSlug}/owner${subPath}${location.search}`, { replace: true });
+    }
+  }, [buildingLoading, paramSlug, paramPgSlug, buildings, tSlug, bSlug, location.pathname, location.search, nav]);
 
   const navItems = [
     { to: base, label: 'Dashboard', icon: LayoutDashboard, end: true },

@@ -16,10 +16,12 @@ import { MEALS } from '../meals';
 import type { MealType, Menu } from '../types';
 import { MenuDrawer } from '../components/MenuDrawer';
 import { KitchenTopBar } from './ui/KitchenHeaders';
+import { useKitchenBase } from './useKitchenBase';
 
 export function KitchenMenu() {
   const { buildingId } = useBuilding();
   const nav = useNavigate();
+  const base = useKitchenBase();
   const [start, setStart] = useState(isoDate());
   const days = Array.from({ length: 7 }, (_, i) => addDays(start, i));
   const st = useAsync(
@@ -40,7 +42,7 @@ export function KitchenMenu() {
         imageSrc="/owner-assets/food-hero.jpg"
         primaryAction={{
           label: "Today's Cooking",
-          onClick: () => nav('/kitchen/cooking'),
+          onClick: () => nav(`${base}/cooking`),
           icon: UtensilsCrossed,
         }}
       />
