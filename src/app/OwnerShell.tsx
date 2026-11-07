@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { NavLink, Outlet, useNavigate, useParams } from 'react-router-dom';
 import {
   LayoutDashboard, BedDouble, Users, Wallet, Receipt, MessageSquareWarning, Wrench, UtensilsCrossed,
-  Package, UserCog, Megaphone, FileBarChart, Settings, LogOut, Menu, X, ChefHat, Home, KeyRound,
+  Package, UserCog, Megaphone, FileBarChart, Settings, LogOut, Menu, X, ChefHat, KeyRound,
   Headphones, ChevronRight, UserPlus, MoreHorizontal
 } from 'lucide-react';
 import { useAuth } from '../features/access/useAuth';
@@ -28,11 +28,6 @@ export function OwnerShell() {
     : paramSlug
     ? `/${paramSlug}/owner`
     : '/owner';
-  const residentBase = paramSlug && paramPgSlug
-    ? `/${paramSlug}/${paramPgSlug}/tentant/preview`
-    : paramSlug
-    ? `/${paramSlug}/resident`
-    : (tenantSlug ? `/${tenantSlug}/resident` : '/resident');
   const chefBase = paramSlug && paramPgSlug
     ? `/${paramSlug}/${paramPgSlug}/chef`
     : paramSlug
@@ -113,19 +108,8 @@ export function OwnerShell() {
       </ul>
 
       {/* Portal Cross-Links */}
-      <div className="px-3 pb-2 space-y-1 border-t border-[#DED6CB] pt-2.5">
-        <NavLink
-          to={residentBase}
-          className="flex items-center justify-between rounded-xl px-3 py-2 text-[13px] text-[#343B2B] bg-[#EBF0E6]/60 hover:bg-[#EBF0E6] transition-colors font-medium"
-          onClick={() => setOpen(false)}
-        >
-          <span className="flex items-center gap-2.5">
-            <Home className="size-4 text-[#343B2B]" />
-            Resident portal
-          </span>
-          <ChevronRight className="size-3.5 text-[#77736B]" />
-        </NavLink>
-        {chef && (
+      {chef && (
+        <div className="px-3 pb-2 space-y-1 border-t border-[#DED6CB] pt-2.5">
           <NavLink
             to={chefBase}
             className="flex items-center justify-between rounded-xl px-3 py-2 text-[13px] text-[#30271F] hover:bg-[#ECE5DA] transition-colors"
@@ -137,8 +121,8 @@ export function OwnerShell() {
             </span>
             <ChevronRight className="size-3.5 text-[#77736B]" />
           </NavLink>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Need Help Card */}
       <div className="mx-3 my-2 p-3 rounded-2xl bg-[#ECE5DA]/70 border border-[#DED6CB] flex items-center justify-between gap-3">
@@ -238,15 +222,6 @@ export function OwnerShell() {
               ← Super Admin
             </NavLink>
           )}
-
-          <NavLink
-            to={residentBase}
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-[#30271F] bg-[#FFFEFC] hover:bg-[#ECE5DA] border border-[#DED6CB] rounded-xl px-3 py-1.5 transition-colors cursor-pointer shadow-2xs"
-            title="Open Resident Portal"
-          >
-            <Home className="size-3.5 text-[#343B2B]" />
-            Resident Portal
-          </NavLink>
 
           <NotificationBell />
 
