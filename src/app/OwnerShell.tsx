@@ -17,7 +17,7 @@ import { cx } from '../lib/cx';
 import '../features/owner/owner-portal.css';
 
 export function OwnerShell() {
-  const { staff, chef, access, signOut, tenantSlug } = useAuth();
+  const { staff, chef, access, signOut, tenantSlug, profile, session } = useAuth();
   const { tenantSlug: paramSlug, pgSlug: paramPgSlug } = useParams();
   const [open, setOpen] = useState(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
@@ -57,8 +57,14 @@ export function OwnerShell() {
     { to: `${base}/settings`, label: 'Settings', icon: Settings },
   ];
 
-  const ownerDisplayName =
-    staff?.tenant_name || access?.owned_tenant?.business_name || (access?.is_platform_admin ? 'ZIPCO Admin' : 'Owner');
+  const userPersonName =
+    profile?.full_name ||
+    session?.user?.user_metadata?.full_name ||
+    session?.user?.user_metadata?.name ||
+    (access?.is_platform_admin ? 'ZIPCO Admin' : 'Owner');
+
+  const tenantBusinessName =
+    staff?.tenant_name || access?.owned_tenant?.business_name || 'ZIPNARY';
 
   const sidebar = (
     <nav aria-label="Owner Main Navigation" className="flex flex-col h-full bg-[#F5F0E8] text-[#30271F] border-r border-[#DED6CB] select-none">
@@ -156,9 +162,9 @@ export function OwnerShell() {
 
       {/* Profile & Signout footer */}
       <div className="m-3 mt-1 p-2.5 rounded-2xl bg-[#FFFEFC] flex items-center gap-3 border border-[#DED6CB] shadow-xs">
-        <Avatar name={ownerDisplayName} size={36} />
+        <Avatar name={userPersonName} size={36} />
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] text-[#30271F] font-semibold truncate leading-tight">{ownerDisplayName}</p>
+          <p className="text-[13px] text-[#30271F] font-semibold truncate leading-tight">{userPersonName}</p>
           <span className="inline-block text-[10.5px] font-medium text-[#77736B]">
             Owner
           </span>
@@ -217,7 +223,7 @@ export function OwnerShell() {
 
           <div className="hidden sm:flex items-center gap-2">
             <span className="text-xs font-medium text-[#77736B] hidden md:inline">
-              {ownerDisplayName}
+              {tenantBusinessName}
               {staff?.tenant_code && <span className="tabular"> · {staff.tenant_code}</span>}
             </span>
           </div>
@@ -245,10 +251,10 @@ export function OwnerShell() {
           <NotificationBell />
 
           <div className="flex items-center gap-2 pl-1 border-l border-[#DED6CB]">
-            <Avatar name={ownerDisplayName} size={34} />
+            <Avatar name={userPersonName} size={34} />
             <div className="hidden md:block text-left">
               <p className="text-[12.5px] font-semibold text-[#30271F] leading-tight truncate max-w-28">
-                {ownerDisplayName}
+                {userPersonName}
               </p>
               <p className="text-[10.5px] text-[#77736B]">Owner</p>
             </div>
@@ -382,8 +388,8 @@ export function OwnerShell() {
 
               <div className="pt-3 border-t border-[#DED6CB] flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Avatar name={ownerDisplayName} size={32} />
-                  <span className="text-xs font-semibold text-[#30271F]">{ownerDisplayName}</span>
+                  <Avatar name={userPersonName} size={32} />
+                  <span className="text-xs font-semibold text-[#30271F]">{userPersonName}</span>
                 </div>
                 <button
                   onClick={async () => {

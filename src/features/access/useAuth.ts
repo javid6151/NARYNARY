@@ -3,11 +3,21 @@ import { createContext, useContext } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import type { Access, Membership } from './types';
 
+export interface UserProfile {
+  id: string;
+  full_name: string | null;
+  phone: string | null;
+  email: string | null;
+  avatar_path?: string | null;
+}
+
 export interface AuthCtx {
   session: Session | null;
   access: Access | null;
+  profile: UserProfile | null;
   loading: boolean;
   refreshAccess: () => Promise<void>;
+  updateProfile: (updates: { full_name?: string; phone?: string }) => Promise<void>;
   signOut: () => Promise<void>;
   /** Owner membership if any. */
   owner: Membership | null;

@@ -240,6 +240,50 @@ function authApiPlugin() {
             return json({ ok: true, email: cleanEmail, userId: user.id });
           }
 
+          if (req.method === 'POST' && req.url === '/api/auth/update-profile') {
+            const { userId, fullName, phone } = await readBody();
+            if (!userId) {
+              return json({ error: 'User ID is required' }, 400);
+            }
+
+            const cleanName = fullName !== undefined ? String(fullName).trim() : undefined;
+            const cleanPhone = phone !== undefined ? String(phone).trim() : undefined;
+
+            // 1. Update public.profiles
+            const profileUpdates: any = { updated_at: new Date().toISOString() };
+            if (cleanName !== undefined) profileUpdates.full_name = cleanName;
+            if (cleanPhone !== undefined) profileUpdates.phone = cleanPhone;
+
+            await supabaseAdmin.from('profiles').update(profileUpdates).eq('id', userId);
+
+            // 2. Update auth.users metadata
+            try {
+              const metaUpdates: any = {};
+              if (cleanName !== undefined) {
+                metaUpdates.full_name = cleanName;
+                metaUpdates.name = cleanName;
+              }
+              if (cleanPhone !== undefined) {
+                metaUpdates.phone = cleanPhone;
+              }
+              await supabaseAdmin.auth.admin.updateUserById(userId, {
+                user_metadata: metaUpdates,
+              });
+            } catch (err: any) {
+              console.warn('Admin updateUserById error:', err);
+            }
+
+            // 3. Update tenant_memberships display_name
+            if (cleanName !== undefined) {
+              await supabaseAdmin
+                .from('tenant_memberships')
+                .update({ display_name: cleanName })
+                .eq('user_id', userId);
+            }
+
+            return json({ ok: true, fullName: cleanName, phone: cleanPhone });
+          }
+
           if (req.method === 'POST' && req.url === '/api/auth/set-resident-password') {
             const { residentId, phone, email, fullName, password, tenantId } = await readBody();
             if (!password || password.length < 6) {

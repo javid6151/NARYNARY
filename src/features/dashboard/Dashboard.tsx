@@ -38,7 +38,7 @@ import { HBars } from '../../components/Charts';
 import type { Complaint } from '../maintenance/types';
 
 export default function Dashboard() {
-  const { staff, access } = useAuth();
+  const { staff, access, profile, session } = useAuth();
   const { selected, buildings } = useBuilding();
   const [vacantModalOpen, setVacantModalOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -87,8 +87,11 @@ export default function Dashboard() {
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const ownerName =
-    staff?.tenant_name || access?.owned_tenant?.business_name || (access?.is_platform_admin ? 'ZIPCO Admin' : 'Owner');
+  const ownerGreetingName =
+    profile?.full_name ||
+    session?.user?.user_metadata?.full_name ||
+    session?.user?.user_metadata?.name ||
+    (access?.is_platform_admin ? 'ZIPCO Admin' : 'Owner');
 
   const currentMonthName = new Date().toLocaleDateString('en-IN', {
     month: 'short',
@@ -105,7 +108,7 @@ export default function Dashboard() {
               {greeting},
             </span>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mt-0.5 leading-tight">
-              {ownerName}
+              {ownerGreetingName}
             </h1>
             <p className="text-xs sm:text-sm text-white/75 mt-1 font-normal">
               Manage your PG business with ease.

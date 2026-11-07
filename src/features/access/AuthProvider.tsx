@@ -7,7 +7,7 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 import { claimPendingAccess, determinePortalPath, getMyAccess, toSlug } from './api';
 import { BUILDING_STORAGE_KEY } from './useBuilding';
-import { AuthContext, type AuthCtx } from './useAuth';
+import { AuthContext, type AuthCtx, type UserProfile } from './useAuth';
 import type { Access } from './types';
 
 /** Safe timeout wrapper to prevent hanging promises on network failures or paused Supabase projects */
@@ -21,9 +21,38 @@ function withTimeout<T>(promise: PromiseLike<T>, ms: number, fallback: T): Promi
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [access, setAccess] = useState<Access | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [homePath, setHomePath] = useState<string>('/');
   const [isSuspended, setIsSuspended] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const fetchProfile = useCallback(async (uid: string, meta?: any, email?: string) => {
+    try {
+      const { data: p } = await withTimeout(
+        supabase
+          .from('profiles')
+          .select('id, full_name, phone, email, avatar_path')
+          .eq('id', uid)
+          .maybeSingle(),
+        2500,
+        { data: null } as any
+      );
+      if (p) {
+        setProfile(p);
+        return p;
+      }
+    } catch (e) {
+      console.warn('fetchProfile non-fatal:', e);
+    }
+    const fallback: UserProfile = {
+      id: uid,
+      full_name: meta?.full_name || meta?.name || (email ? email.split('@')[0] : 'Owner'),
+      phone: meta?.phone || null,
+      email: email || null,
+    };
+    setProfile(fallback);
+    return fallback;
+  }, []);
 
   const refreshAccess = useCallback(async () => {
     try {
@@ -79,6 +108,69 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const updateProfile = useCallback(
+    async (updates: { full_name?: string; phone?: string }) => {
+      const curUid = session?.user?.id;
+      if (!curUid) throw new Error('Not authenticated');
+
+      const cleanName = updates.full_name !== undefined ? updates.full_name.trim() : undefined;
+      const cleanPhone = updates.phone !== undefined ? updates.phone.trim() : undefined;
+
+      // 1. Direct update on profiles table
+      const profileUpdates: any = { updated_at: new Date().toISOString() };
+      if (cleanName !== undefined) profileUpdates.full_name = cleanName;
+      if (cleanPhone !== undefined) profileUpdates.phone = cleanPhone;
+
+      const { error: pErr } = await supabase
+        .from('profiles')
+        .update(profileUpdates)
+        .eq('id', curUid);
+
+      if (pErr) {
+        console.warn('Direct profile update warning:', pErr);
+      }
+
+      // 2. Update Supabase Auth user metadata
+      try {
+        const metaUpdates: any = {};
+        if (cleanName !== undefined) {
+          metaUpdates.full_name = cleanName;
+          metaUpdates.name = cleanName;
+        }
+        if (cleanPhone !== undefined) {
+          metaUpdates.phone = cleanPhone;
+        }
+        await supabase.auth.updateUser({ data: metaUpdates });
+      } catch (e) {
+        console.warn('updateUser metadata warning:', e);
+      }
+
+      // 3. Call backend endpoint to update tenant_memberships and synchronize
+      try {
+        await fetch('/api/auth/update-profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: curUid, fullName: cleanName, phone: cleanPhone }),
+        });
+      } catch (e) {
+        console.warn('Backend update-profile endpoint warning:', e);
+      }
+
+      // 4. Update local profile state immediately
+      setProfile((prev) => ({
+        id: curUid,
+        full_name: cleanName !== undefined ? cleanName : (prev?.full_name ?? null),
+        phone: cleanPhone !== undefined ? cleanPhone : (prev?.phone ?? null),
+        email: prev?.email ?? session?.user?.email ?? null,
+        avatar_path: prev?.avatar_path ?? null,
+      }));
+
+      // 5. Refresh access
+      await refreshAccess();
+    },
+    [session, refreshAccess]
+  );
+
   useEffect(() => {
     let active = true;
 
@@ -106,6 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (!sRes.error && sRes.data.session) {
               if (!active) return;
               setSession(sRes.data.session);
+              fetchProfile(sRes.data.session.user.id, sRes.data.session.user.user_metadata, sRes.data.session.user.email);
               await withTimeout(refreshAccess(), 3500, undefined);
               setLoading(false);
               return;
@@ -126,6 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!active) return;
         setSession(sessionRes.data.session);
         if (sessionRes.data.session) {
+          fetchProfile(sessionRes.data.session.user.id, sessionRes.data.session.user.user_metadata, sessionRes.data.session.user.email);
           await withTimeout(refreshAccess(), 3500, undefined);
         } else {
           setHomePath('/');
@@ -142,12 +236,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
-      if (event === 'SIGNED_IN') {
+      if (event === 'SIGNED_IN' && s) {
         setLoading(true);
+        fetchProfile(s.user.id, s.user.user_metadata, s.user.email);
         withTimeout(refreshAccess(), 3500, undefined).finally(() => setLoading(false));
       }
       if (event === 'SIGNED_OUT') {
         setAccess(null);
+        setProfile(null);
         setHomePath('/');
         setIsSuspended(false);
       }
@@ -156,7 +252,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       active = false;
       sub.subscription.unsubscribe();
     };
-  }, [refreshAccess]);
+  }, [refreshAccess, fetchProfile]);
 
   const value = useMemo<AuthCtx>(() => {
     const ms = access?.memberships ?? [];
@@ -172,8 +268,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return {
       session,
       access,
+      profile,
       loading,
       refreshAccess,
+      updateProfile,
       owner,
       manager,
       staff,
@@ -189,13 +287,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await withTimeout(supabase.auth.signOut(), 2000, undefined);
         } catch {}
         setSession(null);
+        setProfile(null);
         setHomePath('/');
         setAccess(null);
         setIsSuspended(false);
         localStorage.removeItem(BUILDING_STORAGE_KEY);
       },
     };
-  }, [session, access, loading, refreshAccess, homePath, isSuspended]);
+  }, [session, access, profile, loading, refreshAccess, updateProfile, homePath, isSuspended]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

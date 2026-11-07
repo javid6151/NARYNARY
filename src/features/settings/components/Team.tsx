@@ -1,6 +1,6 @@
 /** Team members (owner, managers, chefs) with direct account creation, password management, and deletion. */
 import { useState } from 'react';
-import { KeyRound, Trash2, UserPlus } from 'lucide-react';
+import { KeyRound, Trash2, User, UserPlus } from 'lucide-react';
 import { useAsync, useMutation } from '../../../lib/hooks';
 import { label } from '../../../lib/format';
 import { Async, Badge, Button, Card, Confirm, ErrorBanner, Field, Input, Table, Td } from '../../../components/ui';
@@ -14,7 +14,7 @@ const CONFIRM_BODY: Record<string, string> = {
   active: 'They regain access to assigned buildings.',
 };
 
-export function Team({ onToast }: { onToast: (m: string) => void }) {
+export function Team({ onToast, onEditProfile }: { onToast: (m: string) => void; onEditProfile?: () => void }) {
   const st = useAsync(() => listTeam(), []);
   const sub = useAsync(() => getStaffLimits(), []);
   const [invite, setInvite] = useState(false);
@@ -82,7 +82,17 @@ export function Team({ onToast }: { onToast: (m: string) => void }) {
                 <Td>{m.role === 'owner' ? 'All Buildings' : m.building_memberships.map((b) => b.buildings.name).join(', ') || 'None'}</Td>
                 <Td><Badge status={m.status}>{m.status === 'invited' ? 'Pending' : undefined}</Badge></Td>
                 <Td>
-                  {m.role !== 'owner' && (
+                  {m.role === 'owner' ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => onEditProfile?.()}
+                      className="text-xs h-7 px-2.5"
+                    >
+                      <User className="size-3.5" />
+                      Edit Profile
+                    </Button>
+                  ) : (
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {m.user_id && (
                         <Button
