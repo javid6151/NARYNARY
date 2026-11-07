@@ -1,5 +1,5 @@
 /**
- * Dedicated Resident Portal Login for Port 5000.
+ * Dedicated Resident Portal Login.
  * Completely scoped to residents — redesigned with the ZIPNARY Enterprise Design System.
  */
 import { useState, type FormEvent } from 'react';
@@ -8,7 +8,6 @@ import { ErrorBanner, Field, Input } from '../../components/ui';
 import { useAuth } from '../access/useAuth';
 import { claimPendingAccess, determinePortalRoute, getMyAccess } from '../access/api';
 import { signInWithPassword } from '../auth/api';
-import { supabase } from '../../lib/supabase';
 import '../owner/owner-portal.css';
 
 export function ResidentLogin() {
@@ -60,22 +59,10 @@ export function ResidentLogin() {
       await refreshAccess();
 
       const freshAccess = await getMyAccess();
-      const { port: targetPort, path: targetPath } = await determinePortalRoute(freshAccess, true);
-      const isLocalhost =
-        typeof window !== 'undefined' &&
-        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-      const currentPort = typeof window !== 'undefined' && window.location.port ? Number(window.location.port) : 5000;
+      const { path: targetPath } = await determinePortalRoute(freshAccess, true);
 
-      // If this user is an Owner, Manager, Chef, or Super Admin on local dev, route to port
-      if (isLocalhost && targetPort && targetPort !== currentPort) {
-        const s = (await supabase.auth.getSession()).data.session;
-        const hash = s ? `#access_token=${s.access_token}&refresh_token=${s.refresh_token}&token_type=bearer` : '';
-        window.location.href = `http://localhost:${targetPort}${targetPath}${hash}`;
-        return;
-      }
-
-      // If resident on port 5000, reload window or navigate to resident route
-      window.location.href = targetPath || '/';
+      // Navigate dynamically on the current origin/domain
+      window.location.href = targetPath || '/resident';
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Invalid Login ID or Password. Please check and try again.');
     } finally {
@@ -192,7 +179,7 @@ export function ResidentLogin() {
 
         {/* Quick Footer */}
         <p className="text-center text-[11px] text-[#77736B] mt-6">
-          Zipnary Resident Portal • Port 5000
+          Zipnary Resident Portal
         </p>
       </div>
     </div>

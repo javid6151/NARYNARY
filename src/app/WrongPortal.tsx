@@ -13,7 +13,7 @@ export function WrongPortal({ portal }: { portal: PortalId }) {
       <Card>
         <h1 className="text-lg font-semibold">This is the {CURRENT_PORTAL?.label} portal</h1>
         <p className="text-[13px] text-ink-2 mt-1">
-          Your account uses the {target.label} portal on port {target.port}. Each port keeps its own sign-in, so you’ll sign in again there.
+          Your account uses the {target.label} portal. You can switch to your dedicated portal below.
         </p>
         <div className="flex gap-2 mt-4">
           <Button onClick={() => window.location.assign(portalUrl(portal))}>Open {target.label} portal</Button>

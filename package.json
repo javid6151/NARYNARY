@@ -21,6 +21,7 @@
         "db:reset": "supabase db reset",
         "db:types": "node scripts/gen-types.mjs",
         "seed:dev": "node scripts/seed-dev.mjs",
+        "auth:reset": "node scripts/reset-auth-clean.mjs",
         "test:rls": "node scripts/rls-test.mjs"
     },
     "dependencies": {

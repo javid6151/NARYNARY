@@ -1,7 +1,7 @@
 /**
  * Resident Portal Server & Access Management (`/owner/resident-portal-server`).
  * Allows the PG owner to approve and grant resident portal access, generate/change passwords,
- * suspend, ban, reactivate, or remove resident portal authentication for Port 5000.
+ * suspend, ban, reactivate, or remove resident portal authentication.
  */
 import { useEffect, useState } from 'react';
 import {
@@ -20,6 +20,7 @@ import {
   setResidentPortalPassword, type ResidentPortalAccount
 } from './api';
 import { SectionPromoBanner } from '../../components/SectionPromoBanner';
+import { getResidentPortalUrl } from '../../lib/portals';
 
 function ModalDialog({
   open,
@@ -79,8 +80,7 @@ export default function ResidentPortalServer() {
 
   const [copied, setCopied] = useState(false);
 
-  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  const residentPortalUrl = typeof window !== 'undefined' ? (isLocal ? 'http://localhost:5000' : window.location.origin) : 'http://localhost:5000';
+  const residentPortalUrl = getResidentPortalUrl();
 
   // Data fetching
   const accounts = useAsync(() => listResidentPortalAccounts(bid), [bid]);
@@ -500,7 +500,7 @@ Please sign in to view your room allotment, rent payment receipts, mess meals, n
             <Field
               label={passItem.portal_status === 'no_account' ? 'Set Initial Portal Password' : 'New Portal Password'}
               required
-              hint="Resident will use this password to sign into Port 5000"
+              hint="Resident will use this password to sign into the Resident Portal"
             >
               {() => (
                 <div className="flex gap-2">
@@ -617,13 +617,13 @@ Please sign in to view your room allotment, rent payment receipts, mess meals, n
               {confirmStatusAction.action === 'suspend' && (
                 <>
                   Are you sure you want to suspend portal login for <strong>{confirmStatusAction.item.full_name}</strong>?
-                  They will immediately be blocked from logging into Port 5000 until reactivated.
+                  They will immediately be blocked from logging into the Resident Portal until reactivated.
                 </>
               )}
               {confirmStatusAction.action === 'reactivate' && (
                 <>
                   Reactivate portal access for <strong>{confirmStatusAction.item.full_name}</strong>?
-                  Their login access to Port 5000 will be restored immediately.
+                  Their login access to the Resident Portal will be restored immediately.
                 </>
               )}
               {confirmStatusAction.action === 'remove_access' && (

@@ -1,7 +1,8 @@
 // Starts one Vite dev server per portal, in sequence: platform 1000 → owner 2000 → manager 3000
-// → kitchen 4000 → resident 5000. Each server waits for the previous one to be ready.
+// → kitchen 4000 → resident 5000 → public 6000. Each server waits for the previous one to be ready.
 // Ctrl+C stops them all. Ports are defined in src/lib/portals.ts (keep both in sync).
 import { spawn, spawnSync } from 'node:child_process';
+import http from 'node:http';
 
 /** Stops a server and its child processes (on Windows, killing the shell alone leaves Vite running). */
 const killTree = (c) => {
@@ -15,6 +16,7 @@ const PORTALS = [
   ['Manager',     'manager',  3000, '/manager'],
   ['Chef',        'kitchen',  4000, '/chef'],
   ['Resident',    'resident', 5000, '/'],
+  ['Public',      'public',   6000, '/'],
 ];
 
 const children = [];
@@ -27,10 +29,14 @@ process.on('SIGTERM', stopAll);
 async function waitUntilUp(port, child) {
   for (let i = 0; i < 60; i++) {
     if (child.exitCode !== null) return false;
-    try {
-      const r = await fetch(`http://localhost:${port}/@vite/client`);
-      if (r.ok) return true;
-    } catch { /* not listening yet */ }
+    const ok = await new Promise((resolve) => {
+      const req = http.get(`http://127.0.0.1:${port}/@vite/client`, (res) => {
+        resolve(res.statusCode === 200);
+      });
+      req.on('error', () => resolve(false));
+      req.setTimeout(400, () => { req.destroy(); resolve(false); });
+    });
+    if (ok) return true;
     await new Promise((r) => setTimeout(r, 500));
   }
   return false;

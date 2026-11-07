@@ -868,7 +868,8 @@ function authApiPlugin() {
           if (req.method === 'POST' && req.url === '/api/auth/superadmin-send-reset') {
             const recoveryEmail = 'shaikjavid6151@gmail.com';
             try {
-              const origin = req.headers.origin || 'http://localhost:1000';
+              const proto = req.headers['x-forwarded-proto'] || 'http';
+              const origin = req.headers.origin || (req.headers.host ? `${proto}://${req.headers.host}` : 'http://localhost:1000');
               // Trigger Supabase password reset email
               await supabaseAdmin.auth.resetPasswordForEmail(recoveryEmail, {
                 redirectTo: `${origin}/login`,

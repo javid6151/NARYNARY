@@ -6,33 +6,51 @@ import { supabase } from '../../lib/supabase';
 
 /** Creates and saves an email/password account. Ensures email is confirmed and user is logged in. */
 export async function signUpWithPassword(email: string, password: string, fullName: string) {
+  // Always derive redirect URL dynamically from current browser origin (works for any domain or port)
+  const currentOrigin = typeof window !== 'undefined' && window.location.origin ? window.location.origin : '';
+  const dynamicRedirectUrl = currentOrigin ? `${currentOrigin}/` : undefined;
+
   try {
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password, fullName }),
     });
-    const data = await res.json();
-    if (!res.ok || data.error) {
-      return { error: data.error || 'Failed to create account. Please try again.', needsVerification: false };
+    const contentType = res.headers.get('content-type') || '';
+    if (res.ok && contentType.includes('application/json')) {
+      const data = await res.json();
+      if (!data.error) {
+        // Automatically sign in with the saved credentials so the session is immediately active
+        const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+        if (!signInErr) {
+          return { error: null, needsVerification: false };
+        }
+      }
     }
-
-    // Automatically sign in with the saved credentials so the session is immediately active
-    const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
-    if (signInErr) {
-      return { error: signInErr.message, needsVerification: false };
-    }
-
-    return { error: null, needsVerification: false };
   } catch {
-    // Fallback to client signup if local proxy isn't reached
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin },
-    });
-    return { error: error?.message ?? null, needsVerification: !error && !data.session };
+    // Local / server proxy unavailable, proceed with direct Supabase Auth
   }
+
+  // Direct Supabase Auth client signup with dynamic redirect URL
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name: fullName, name: fullName },
+      emailRedirectTo: dynamicRedirectUrl,
+    },
+  });
+
+  if (error) {
+    return { error: error.message, needsVerification: false };
+  }
+
+  // If Supabase has "Confirm email" disabled, session is already active
+  if (data?.session) {
+    return { error: null, needsVerification: false };
+  }
+
+  return { error: null, needsVerification: true };
 }
 
 /** Signs in with either email or mobile number (User ID). */
@@ -60,6 +78,9 @@ export async function signInWithPassword(identifier: string, password: string) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (!error) return null;
 
+  if (error.message?.toLowerCase().includes('fetch') || error.message?.toLowerCase().includes('network')) {
+    return 'Cannot reach database server. Please check your internet connection or verify your Supabase project status in Supabase dashboard.';
+  }
   if (error.message?.toLowerCase().includes('banned') || error.code === 'user_banned') {
     return 'Your portal access has been suspended by management. Please contact your PG manager or owner.';
   }

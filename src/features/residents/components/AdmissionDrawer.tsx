@@ -6,6 +6,7 @@ import { Async, Avatar, Badge, Button, Card, Drawer, ErrorBanner, Field, Input, 
 import { ResidentDocuments } from '../../files/components/ResidentDocuments';
 import { listAdmissionCharges, reviewAdmission, setResidentPortalPassword } from '../api';
 import type { AdmissionCharge, AdmissionRow } from '../types';
+import { getResidentPortalUrl } from '../../../lib/portals';
 
 export function AdmissionDrawer({ row, canApprove, onClose, onDone }: {
   row: AdmissionRow | null;
@@ -48,8 +49,7 @@ export function AdmissionDrawer({ row, canApprove, onClose, onDone }: {
   };
 
   const defaultPassword = `Pass${(r.phone || '1234').replace(/\D/g, '').slice(-4)}!`;
-  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  const portalUrl = typeof window !== 'undefined' ? (isLocal ? 'http://localhost:5000' : window.location.origin) : 'http://localhost:5000';
+  const portalUrl = getResidentPortalUrl();
 
   const footer = pending && canApprove ? (
     <>
@@ -142,7 +142,7 @@ export function AdmissionDrawer({ row, canApprove, onClose, onDone }: {
       
       {/* Resident Portal Access Card */}
       {row.status === 'approved' && (
-        <Card title="Resident Portal Access & Password (Port 5000)">
+        <Card title="Resident Portal Access & Password">
           <div className="space-y-3 text-[13px]">
             {createdCreds ? (
               <div className="p-3.5 rounded-xl bg-ok-bg/50 border border-ok/30 space-y-2.5">
@@ -207,7 +207,7 @@ export function AdmissionDrawer({ row, canApprove, onClose, onDone }: {
             ) : (
               <div className="space-y-3">
                 <p className="text-muted text-xs">
-                  This resident does not have portal access yet. Enter or generate a password below to enable their login on <b>Port 5000</b>.
+                  This resident does not have portal access yet. Enter or generate a password below to enable their login to the <b>Resident Portal</b>.
                 </p>
                 <div className="flex gap-2 items-center">
                   <Input

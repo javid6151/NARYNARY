@@ -5,6 +5,7 @@ import { fmtDate, inr, label } from '../../../lib/format';
 import { Button, Confirm, Field, Input } from '../../../components/ui';
 import { setResidentPassword } from '../../auth/api';
 import type { ResidentDetails, ResidentRow } from '../types';
+import { getResidentPortalUrl } from '../../../lib/portals';
 
 export function ResidentOverview({ r, details: x }: { r: ResidentRow; details: ResidentDetails }) {
   const [openPassModal, setOpenPassModal] = useState(false);
@@ -24,7 +25,7 @@ export function ResidentOverview({ r, details: x }: { r: ResidentRow; details: R
     ['Portal Status', r.has_login ? 'Activated' : 'Ready to activate'],
   ];
 
-  const portalUrl = typeof window !== 'undefined' ? `${window.location.origin}/` : 'http://localhost:3000/';
+  const portalUrl = getResidentPortalUrl();
 
   const handleSetPassword = async () => {
     if (!newPassword || newPassword.length < 6) return;
@@ -135,7 +136,7 @@ export function ResidentOverview({ r, details: x }: { r: ResidentRow; details: R
             <h3 className="text-sm font-semibold text-brand-900">Resident Portal Access</h3>
           </div>
           <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-brand-100 text-brand-800">
-            Port 5000
+            Resident App
           </span>
         </div>
 

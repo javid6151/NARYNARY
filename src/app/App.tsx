@@ -130,11 +130,13 @@ export default function App() {
           </>
         ) : (
           <>
-            {/* Direct Portal / Landing for role ports 1000, 2000, 3000, 4000 */}
+            {/* Direct Portal / Landing for role ports 1000, 2000, 3000, 4000, 6000 */}
             <Route
               path="/"
               element={
-                (currentPortNum === 1000 || portalEnv === 'platform') && isPlatformAdmin ? (
+                currentPortNum === 6000 || portalEnv === 'public' ? (
+                  <LandingPage />
+                ) : (currentPortNum === 1000 || portalEnv === 'platform') && isPlatformAdmin ? (
                   <Navigate to="/platformadmin" replace />
                 ) : (currentPortNum === 2000 || portalEnv === 'owner') && isOwnerActive ? (
                   <Navigate to="/owner" replace />
@@ -150,6 +152,8 @@ export default function App() {
                   <Navigate to="/manager" replace />
                 ) : isChefActive ? (
                   <Navigate to="/chef" replace />
+                ) : isResidentActive ? (
+                  <Navigate to={homePath || '/resident'} replace />
                 ) : (
                   <LandingPage />
                 )

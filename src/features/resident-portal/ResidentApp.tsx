@@ -94,11 +94,7 @@ export default function ResidentApp() {
                 {staff.role === 'owner' ? 'Owner' : 'Manager'} Portal View
               </span>
               <a
-                href={
-                  typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-                    ? (staff.role === 'owner' ? 'http://localhost:2000/owner' : 'http://localhost:3000/manager')
-                    : (staff.role === 'owner' ? '/owner' : '/manager')
-                }
+                href={staff.role === 'owner' ? '/owner' : '/manager'}
                 className="font-medium hover:underline text-xs"
               >
                 Staff Console →

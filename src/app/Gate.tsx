@@ -16,14 +16,15 @@ export function Gate({ allow, children }: { allow: boolean; children: ReactNode 
   if (loading) return <FullLoading />;
   if (isSuspended) return <AccountSuspended />;
   if (!session) {
-    const isResidentPort = typeof window !== 'undefined' && (window.location.port === '5000' || import.meta.env.VITE_PORTAL === 'resident');
+    const isResidentRoute = loc.pathname.startsWith('/resident') || loc.pathname.includes('/tenant/') || loc.pathname.includes('/tentant/');
+    const isResidentPort = typeof window !== 'undefined' && (window.location.port === '5000' || import.meta.env.VITE_PORTAL === 'resident' || isResidentRoute);
     if (isResidentPort) {
       return <ResidentLogin />;
     }
     return <Navigate to="/" state={{ from: loc.pathname }} replace />;
   }
   if (!allow) {
-    if (homePath === loc.pathname || loc.pathname.startsWith(homePath)) {
+    if (homePath === loc.pathname || (homePath !== '/' && loc.pathname.startsWith(homePath))) {
       return (
         <div className="max-w-md mx-auto pt-24 px-4 text-center space-y-4">
           <h1 className="text-xl font-semibold text-bad">Access Denied</h1>

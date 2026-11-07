@@ -16,7 +16,6 @@ import { useAuth } from '../access/useAuth';
 import { claimPendingAccess, determinePortalRoute, getMyAccess } from '../access/api';
 import { signInWithPassword, signUpWithPassword } from '../auth/api';
 import { BRAND } from '../../lib/brand';
-import { supabase } from '../../lib/supabase';
 import '../owner/owner-portal.css';
 
 export default function LandingPage() {
@@ -85,19 +84,8 @@ export default function LandingPage() {
       await refreshAccess();
 
       const freshAccess = await getMyAccess();
-      const { port: targetPort, path: targetPath } = await determinePortalRoute(freshAccess, true);
-      const isLocalhost =
-        typeof window !== 'undefined' &&
-        (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-      const currentPort = typeof window !== 'undefined' && window.location.port ? Number(window.location.port) : 5000;
-
-      if (isLocalhost && currentPort !== targetPort && targetPort) {
-        const s = (await supabase.auth.getSession()).data.session;
-        const hash = s ? `#access_token=${s.access_token}&refresh_token=${s.refresh_token}&token_type=bearer` : '';
-        window.location.href = `http://localhost:${targetPort}${targetPath}${hash}`;
-      } else {
-        nav(targetPath, { replace: true });
-      }
+      const { path: targetPath } = await determinePortalRoute(freshAccess, true);
+      nav(targetPath || '/', { replace: true });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Invalid Login ID or Password. Please check and try again.');
     } finally {
@@ -526,7 +514,7 @@ export default function LandingPage() {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-[#343B2B] text-white shadow-xs">
-                  Port 2000 · /owner
+                  Owner · /owner
                 </div>
               </div>
               <div className="p-5 flex-1 flex flex-col justify-between">
@@ -566,7 +554,7 @@ export default function LandingPage() {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-[#343B2B] text-white shadow-xs">
-                  Port 3000 · /manager
+                  Manager · /manager
                 </div>
               </div>
               <div className="p-5 flex-1 flex flex-col justify-between">
@@ -606,7 +594,7 @@ export default function LandingPage() {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-[#343B2B] text-white shadow-xs">
-                  Port 4000 · /chef
+                  Chef · /chef
                 </div>
               </div>
               <div className="p-5 flex-1 flex flex-col justify-between">
@@ -646,7 +634,7 @@ export default function LandingPage() {
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
                 <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-[#343B2B] text-white shadow-xs">
-                  Port 5000 · /resident
+                  Resident · /resident
                 </div>
               </div>
               <div className="p-5 flex-1 flex flex-col justify-between">
@@ -813,10 +801,10 @@ export default function LandingPage() {
             <div className="space-y-2 text-xs">
               <p className="font-semibold text-[#30271F] uppercase tracking-wider text-[11px]">Role Workspaces</p>
               <ul className="space-y-1.5 text-[#59534B]">
-                <li><Link to="/owner" className="hover:text-[#343B2B]">Owner Console (Port 2000)</Link></li>
-                <li><Link to="/manager" className="hover:text-[#343B2B]">Manager Operations (Port 3000)</Link></li>
-                <li><Link to="/chef" className="hover:text-[#343B2B]">Kitchen & Mess (Port 4000)</Link></li>
-                <li><Link to="/resident" className="hover:text-[#343B2B]">Resident App (Port 5000)</Link></li>
+                <li><Link to="/owner" className="hover:text-[#343B2B]">Owner Console</Link></li>
+                <li><Link to="/manager" className="hover:text-[#343B2B]">Manager Operations</Link></li>
+                <li><Link to="/chef" className="hover:text-[#343B2B]">Kitchen & Mess</Link></li>
+                <li><Link to="/resident" className="hover:text-[#343B2B]">Resident App</Link></li>
               </ul>
             </div>
 
@@ -825,7 +813,7 @@ export default function LandingPage() {
               <ul className="space-y-1.5 text-[#59534B]">
                 <li><a href="#login-section" onClick={() => setTab('signin')} className="hover:text-[#343B2B]">Sign In</a></li>
                 <li><a href="#login-section" onClick={() => setTab('signup')} className="hover:text-[#343B2B]">Start 90-Day Free Trial</a></li>
-                <li><Link to="/platformadmin" className="hover:text-[#343B2B]">Super Admin Portal (Port 1000)</Link></li>
+                <li><Link to="/platformadmin" className="hover:text-[#343B2B]">Super Admin Portal</Link></li>
               </ul>
             </div>
           </div>

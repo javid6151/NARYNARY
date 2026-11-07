@@ -10,6 +10,14 @@ import { BUILDING_STORAGE_KEY } from './useBuilding';
 import { AuthContext, type AuthCtx } from './useAuth';
 import type { Access } from './types';
 
+/** Safe timeout wrapper to prevent hanging promises on network failures or paused Supabase projects */
+function withTimeout<T>(promise: PromiseLike<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    Promise.resolve(promise),
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [access, setAccess] = useState<Access | null>(null);
@@ -20,24 +28,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshAccess = useCallback(async () => {
     try {
       // Accept any staff invitation / link resident record matching the verified email.
-      await claimPendingAccess();
+      await withTimeout(claimPendingAccess(), 2500, undefined);
     } catch (e) {
       console.warn('claimPendingAccess non-fatal:', e);
     }
     try {
-      const acc = await getMyAccess();
+      const acc = await withTimeout(getMyAccess(), 3000, null as unknown as Access);
       setAccess(acc);
 
+      if (!acc) {
+        setHomePath('/');
+        setIsSuspended(false);
+        return;
+      }
+
       // Check if user's membership is suspended
-      const { data: { session: curSession } } = await supabase.auth.getSession();
-      const currentUid = curSession?.user?.id;
+      const curSessionRes = await withTimeout(
+        supabase.auth.getSession(),
+        2000,
+        { data: { session: null } } as any
+      );
+      const currentUid = curSessionRes?.data?.session?.user?.id;
       if (currentUid) {
-        const { data: mems } = await supabase
-          .from('tenant_memberships')
-          .select('id, role, status')
-          .eq('user_id', currentUid);
-        const hasSuspended = mems?.some((m) => m.status === 'suspended');
-        const hasActive = mems?.some((m) => m.status === 'active');
+        const { data: mems } = await withTimeout(
+          supabase
+            .from('tenant_memberships')
+            .select('id, role, status')
+            .eq('user_id', currentUid),
+          2000,
+          { data: null } as any
+        );
+        const hasSuspended = mems?.some((m: any) => m.status === 'suspended');
+        const hasActive = mems?.some((m: any) => m.status === 'active');
         if (hasSuspended && !hasActive && !acc?.is_platform_admin) {
           setIsSuspended(true);
         } else {
@@ -47,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsSuspended(false);
       }
 
-      const path = await determinePortalPath(acc, true);
+      const path = await withTimeout(determinePortalPath(acc, true), 2000, '/');
       setHomePath(path);
     } catch (e) {
       console.error('getMyAccess error:', e);
@@ -69,18 +91,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const refreshToken = hashParams.get('refresh_token');
 
           if (accessToken && refreshToken) {
-            const { data: sData, error: sErr } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken,
-            });
+            const sRes = await withTimeout(
+              supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              }),
+              3000,
+              { data: { session: null }, error: new Error('Timeout restoring session') } as any
+            );
 
             // Clean the tokens from the browser URL address bar
             window.history.replaceState(null, '', window.location.pathname + window.location.search);
 
-            if (!sErr && sData.session) {
+            if (!sRes.error && sRes.data.session) {
               if (!active) return;
-              setSession(sData.session);
-              await refreshAccess();
+              setSession(sRes.data.session);
+              await withTimeout(refreshAccess(), 3500, undefined);
               setLoading(false);
               return;
             }
@@ -92,11 +118,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // 2. Read saved session from this port's localStorage
       try {
-        const { data } = await supabase.auth.getSession();
+        const sessionRes = await withTimeout(
+          supabase.auth.getSession(),
+          3000,
+          { data: { session: null }, error: null } as any
+        );
         if (!active) return;
-        setSession(data.session);
-        if (data.session) {
-          await refreshAccess();
+        setSession(sessionRes.data.session);
+        if (sessionRes.data.session) {
+          await withTimeout(refreshAccess(), 3500, undefined);
         } else {
           setHomePath('/');
         }
@@ -114,7 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       if (event === 'SIGNED_IN') {
         setLoading(true);
-        refreshAccess().finally(() => setLoading(false));
+        withTimeout(refreshAccess(), 3500, undefined).finally(() => setLoading(false));
       }
       if (event === 'SIGNED_OUT') {
         setAccess(null);
@@ -155,7 +185,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isSuspended,
       homePath,
       signOut: async () => {
-        await supabase.auth.signOut();
+        try {
+          await withTimeout(supabase.auth.signOut(), 2000, undefined);
+        } catch {}
+        setSession(null);
         setHomePath('/');
         setAccess(null);
         setIsSuspended(false);

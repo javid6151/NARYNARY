@@ -10,6 +10,7 @@ import { BuildingPicker } from '../../components/BuildingPicker';
 import { listAdmissions, setResidentPortalPassword } from './api';
 import { AdmissionDrawer } from './components/AdmissionDrawer';
 import type { AdmissionRow } from './types';
+import { getResidentPortalUrl } from '../../lib/portals';
 
 type Tab = 'all' | 'pending_review' | 'approved' | 'rejected' | 'completed';
 
@@ -35,8 +36,7 @@ export default function Admissions() {
     copied: boolean;
   } | null>(null);
 
-  const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
-  const portalUrl = typeof window !== 'undefined' ? (isLocal ? 'http://localhost:5000' : window.location.origin) : 'http://localhost:5000';
+  const portalUrl = getResidentPortalUrl();
 
   const st = useAsync(() => (!buildingId ? Promise.resolve([] as AdmissionRow[]) : listAdmissions(buildingId)), [buildingId]);
 
@@ -262,7 +262,7 @@ export default function Admissions() {
                 <div className="p-3.5 rounded-xl bg-ok-bg/50 border border-ok/30 space-y-2.5">
                   <div className="flex items-center gap-2 text-ok font-semibold text-xs">
                     <CheckCircle2 className="size-4" />
-                    Authentication details live on Port 5000!
+                    Authentication details live for Resident Portal!
                   </div>
                   <div className="bg-white p-2.5 rounded-lg border border-line font-mono text-xs space-y-1">
                     <div>Portal: <b>{portalUrl}</b></div>
@@ -328,7 +328,7 @@ export default function Admissions() {
                   </div>
                 </div>
 
-                <Field label="Portal Login Password / PIN" required hint="Resident will sign in on Port 5000 using their mobile and this password">
+                <Field label="Portal Login Password / PIN" required hint="Resident will sign in using their mobile and this password">
                   {() => (
                     <div className="flex gap-2">
                       <Input
