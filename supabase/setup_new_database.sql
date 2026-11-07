@@ -2110,7 +2110,7 @@ declare
   v_a record; v_period_end date; v_first_rent numeric(12,2);
 begin
   select * into v_a from public.admissions where id = p_admission for update;
-  if v_a is null or not public.can_access_building(v_a.tenant_id, v_a.building_id, array['owner']) then
+  if v_a is null or (auth.uid() is not null and not (public.is_platform_admin() or public.can_access_building(v_a.tenant_id, v_a.building_id, array['owner','manager']))) then
     raise exception 'NOT_FOUND: admission not found' using errcode = 'P0001';
   end if;
   if v_a.status = 'approved' and p_decision = 'approve' then

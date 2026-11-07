@@ -9,7 +9,7 @@ import { NavLink, Outlet, useNavigate, useParams } from 'react-router-dom';
 import {
   LayoutDashboard, BedDouble, Users, Wallet, Receipt, MessageSquareWarning, Wrench, UtensilsCrossed,
   Package, UserCog, Megaphone, FileBarChart, LogOut, Menu, X, ChefHat, Home, Briefcase,
-  Headphones, ChevronRight, UserPlus, MoreHorizontal
+  Headphones, ChevronRight, UserPlus, MoreHorizontal, KeyRound
 } from 'lucide-react';
 import { useAuth } from '../features/access/useAuth';
 import { NotificationBell } from '../features/communication/components/NotificationBell';
@@ -45,6 +45,7 @@ export function ManagerShell() {
     { to: `${base}/buildings`, label: 'Rooms', icon: BedDouble },
     { to: `${base}/residents`, label: 'Residents', icon: Users },
     { to: `${base}/residents/new`, label: 'Admissions', icon: UserPlus },
+    { to: `${base}/resident-portal-server`, label: 'Resident Portal Server', icon: KeyRound },
     { to: `${base}/payments`, label: 'Payments', icon: Wallet },
     { to: `${base}/expenses`, label: 'Expenses', icon: Receipt },
     { to: `${base}/food`, label: 'Food & Mess', icon: UtensilsCrossed },

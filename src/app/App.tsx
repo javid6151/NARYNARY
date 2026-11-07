@@ -102,6 +102,7 @@ export default function App() {
       <Route path="residents/new" element={<NewAdmission />} />
       <Route path="admissions" element={<Navigate to="../residents" replace />} />
       <Route path="admissions/new" element={<NewAdmission />} />
+      <Route path="resident-portal-server" element={<ResidentPortalServer />} />
       <Route path="payments" element={<Payments />} />
       <Route path="expenses" element={<Expenses />} />
       <Route path="complaints" element={<Complaints />} />
