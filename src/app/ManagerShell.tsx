@@ -43,7 +43,7 @@ export function ManagerShell() {
   const navItems = [
     { to: base, label: 'Dashboard', icon: LayoutDashboard, end: true },
     { to: `${base}/buildings`, label: 'Rooms', icon: BedDouble },
-    { to: `${base}/residents`, label: 'Residents', icon: Users },
+    { to: `${base}/residents`, label: 'Residents', icon: Users, end: true },
     { to: `${base}/residents/new`, label: 'Admissions', icon: UserPlus },
     { to: `${base}/resident-portal-server`, label: 'Resident Portal Server', icon: KeyRound },
     { to: `${base}/payments`, label: 'Payments', icon: Wallet },
@@ -308,6 +308,7 @@ export function ManagerShell() {
 
             <NavLink
               to={`${base}/residents`}
+              end
               className={({ isActive }) =>
                 cx(
                   'flex flex-col items-center gap-1 py-1 px-3 rounded-xl text-[11px] font-medium transition-colors',
