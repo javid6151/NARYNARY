@@ -70,7 +70,7 @@ export function OwnerShell() {
           </div>
           <div>
             <span className="font-bold text-[17px] tracking-tight text-[#30271F] block leading-tight">ZIPNARY</span>
-            <span className="text-[11px] font-medium tracking-wide text-[#77736B] uppercase">Owner Portal</span>
+            <span className="text-[11px] font-medium tracking-wide text-[#77736B] uppercase">Property Management</span>
           </div>
         </div>
         <button
