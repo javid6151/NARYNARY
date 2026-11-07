@@ -59,7 +59,8 @@ create policy inventory_reconciliation_lines_insert on public.inventory_reconcil
   with check (public.has_tenant_role(tenant_id, array['owner','manager']));
 
 -- 3. Refactor inventory_stock view to represent unified stock balance per ingredient per building
-create or replace view public.inventory_stock with (security_invoker = true) as
+drop view if exists public.inventory_stock cascade;
+create view public.inventory_stock with (security_invoker = true) as
 select
   i.id as item_id,
   i.tenant_id,
