@@ -16,6 +16,7 @@ import { useAuth } from '../access/useAuth';
 import { claimPendingAccess, determinePortalRoute, getMyAccess } from '../access/api';
 import { signInWithPassword, signUpWithPassword } from '../auth/api';
 import { BRAND } from '../../lib/brand';
+import { supabase } from '../../lib/supabase';
 import '../owner/owner-portal.css';
 
 export default function LandingPage() {
@@ -84,7 +85,19 @@ export default function LandingPage() {
       await refreshAccess();
 
       const freshAccess = await getMyAccess();
-      const { path: targetPath } = await determinePortalRoute(freshAccess, true);
+      const { path: targetPath, port: targetPort } = await determinePortalRoute(freshAccess, true);
+
+      const currentPort = typeof window !== 'undefined' && window.location.port ? Number(window.location.port) : null;
+      const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+
+      if (isLocalhost && currentPort && targetPort && currentPort !== targetPort) {
+        const sessionRes = await supabase.auth.getSession();
+        const s = sessionRes.data.session;
+        const hash = s?.access_token ? `#access_token=${s.access_token}&refresh_token=${s.refresh_token}` : '';
+        window.location.href = `http://localhost:${targetPort}${targetPath}${hash}`;
+        return;
+      }
+
       nav(targetPath || '/', { replace: true });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Invalid Login ID or Password. Please check and try again.');

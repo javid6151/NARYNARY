@@ -3,6 +3,7 @@
  * Roles and access are never decided here; they come from `my_access` after sign-in.
  */
 import { supabase } from '../../lib/supabase';
+import { CURRENT_PORTAL } from '../../lib/portals';
 
 /** Creates and saves an email/password account. Ensures email is confirmed and user is logged in. */
 export async function signUpWithPassword(email: string, password: string, fullName: string) {
@@ -63,7 +64,7 @@ export async function signInWithPassword(identifier: string, password: string) {
       const res = await fetch('/api/auth/resolve-identifier', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: email }),
+        body: JSON.stringify({ identifier: email, portal: CURRENT_PORTAL?.id }),
       });
       const data = await res.json();
       if (!res.ok || data.error || !data.email) {

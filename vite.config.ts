@@ -58,7 +58,7 @@ function authApiPlugin() {
 
         try {
           if (req.method === 'POST' && req.url === '/api/auth/resolve-identifier') {
-            const { identifier } = await readBody();
+            const { identifier, portal } = await readBody();
             if (!identifier) return json({ error: 'Identifier is required' }, 400);
 
             const clean = String(identifier).trim();
@@ -80,7 +80,90 @@ function authApiPlugin() {
             }
             const phone10 = digits.slice(-10);
 
-            // 1. Look up in residents (prefer active or with user_id)
+            // Fetch candidate matching users from Supabase auth.users
+            const { data: userList } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+            const matchingUsers = userList?.users?.filter((x: any) =>
+              (x.phone && x.phone.replace(/\D/g, '').endsWith(phone10)) ||
+              (x.user_metadata?.phone && String(x.user_metadata.phone).replace(/\D/g, '').endsWith(phone10)) ||
+              (x.email && x.email.toLowerCase().startsWith(phone10))
+            ) || [];
+
+            // 1. If logging in on Manager Portal (Port 3000 / portal === 'manager'), strictly prioritize Manager staff account
+            if (portal === 'manager') {
+              const mgrUser = matchingUsers.find((x: any) =>
+                x.user_metadata?.role === 'manager' ||
+                x.email?.toLowerCase().includes('@staff.') ||
+                x.email?.toLowerCase().includes('manager')
+              );
+              if (mgrUser?.email) {
+                return json({ email: mgrUser.email.toLowerCase(), role: 'manager' });
+              }
+
+              const { data: mgrMems } = await supabaseAdmin
+                .from('tenant_memberships')
+                .select('user_id, role, invite_email')
+                .eq('role', 'manager')
+                .eq('status', 'active');
+              const foundMem = mgrMems?.find((m: any) =>
+                matchingUsers.some((u: any) => u.id === m.user_id) ||
+                (m.invite_email && m.invite_email.replace(/\D/g, '').includes(phone10))
+              );
+              if (foundMem) {
+                const u = matchingUsers.find((x: any) => x.id === (foundMem as any).user_id) as any;
+                if (u?.email) return json({ email: String(u.email).toLowerCase(), role: 'manager' });
+                if ((foundMem as any).invite_email) return json({ email: String((foundMem as any).invite_email).toLowerCase(), role: 'manager' });
+              }
+            }
+
+            // 2. If logging in on Chef Portal (Port 4000 / portal === 'kitchen'), strictly prioritize Chef staff account
+            if (portal === 'kitchen') {
+              const chefUser = matchingUsers.find((x: any) =>
+                x.user_metadata?.role === 'chef' ||
+                x.email?.toLowerCase().includes('chef') ||
+                x.email?.toLowerCase().includes('@staff.')
+              );
+              if (chefUser?.email) {
+                return json({ email: chefUser.email.toLowerCase(), role: 'chef' });
+              }
+            }
+
+            // 3. If logging in on Resident Portal (Port 5000 / portal === 'resident'), prioritize Resident
+            if (portal === 'resident') {
+              const { data: resList } = await supabaseAdmin.from('residents').select('*');
+              const r = resList
+                ?.filter((x: any) => x.phone && x.phone.replace(/\D/g, '').endsWith(phone10))
+                ?.sort((a: any, b: any) => (b.user_id ? 1 : 0) - (a.user_id ? 1 : 0) || (b.status === 'active' ? 1 : 0) - (a.status === 'active' ? 1 : 0))[0];
+              if (r?.email) {
+                return json({ email: String(r.email).toLowerCase(), fullName: r.full_name, role: 'resident' });
+              }
+            }
+
+            // 4. If logging in on Owner Portal (Port 2000 / portal === 'owner'), prioritize Tenant Owner
+            if (portal === 'owner') {
+              const { data: tenants } = await supabaseAdmin.from('tenants').select('*');
+              const t = tenants?.find((x: any) => x.phone && x.phone.replace(/\D/g, '').endsWith(phone10));
+              if (t?.email) {
+                return json({ email: String(t.email).toLowerCase(), fullName: t.business_name, role: 'owner' });
+              }
+            }
+
+            // 5. General Fallbacks when portal is unspecified or not matched above:
+            // Prefer staff members (manager/chef) over tenant owner if on staff domain or staff metadata
+            const staffMatch = matchingUsers.find((x: any) =>
+              (x.user_metadata?.role === 'manager' || x.user_metadata?.role === 'chef' || x.email?.includes('@staff.')) && portal !== 'owner'
+            );
+            if (staffMatch?.email) {
+              return json({ email: staffMatch.email.toLowerCase(), role: staffMatch.user_metadata?.role || 'staff' });
+            }
+
+            // Tenants (owner mobile)
+            const { data: tenants } = await supabaseAdmin.from('tenants').select('*');
+            const t = tenants?.find((x: any) => x.phone && x.phone.replace(/\D/g, '').endsWith(phone10));
+            if (t?.email) {
+              return json({ email: String(t.email).toLowerCase(), fullName: t.business_name, role: 'owner' });
+            }
+
+            // Residents
             const { data: resList } = await supabaseAdmin.from('residents').select('*');
             const r = resList
               ?.filter((x: any) => x.phone && x.phone.replace(/\D/g, '').endsWith(phone10))
@@ -96,22 +179,10 @@ function authApiPlugin() {
               return json({ email: String(r.email).toLowerCase(), fullName: r.full_name, role: 'resident' });
             }
 
-            // 2. Look up in tenants (owner mobile)
-            const { data: tenants } = await supabaseAdmin.from('tenants').select('*');
-            const t = tenants?.find((x: any) => x.phone && x.phone.replace(/\D/g, '').endsWith(phone10));
-            if (t?.email) {
-              return json({ email: String(t.email).toLowerCase(), fullName: t.business_name, role: 'owner' });
-            }
-
-            // 3. Look up in auth.users
-            const { data: users } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-            const u = users?.users?.find((x: any) =>
-              (x.phone && x.phone.replace(/\D/g, '').endsWith(phone10)) ||
-              (x.user_metadata?.phone && String(x.user_metadata.phone).replace(/\D/g, '').endsWith(phone10)) ||
-              (x.email && x.email.toLowerCase().startsWith(phone10))
-            );
-            if (u?.email) {
-              return json({ email: u.email.toLowerCase(), role: 'user' });
+            // Any remaining auth.users match
+            const firstUser = matchingUsers[0] as any;
+            if (firstUser?.email) {
+              return json({ email: String(firstUser.email).toLowerCase(), role: 'user' });
             }
 
             return json({ error: `No registered account found with mobile number ${clean}` }, 404);

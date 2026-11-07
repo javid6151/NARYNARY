@@ -22,6 +22,7 @@ import { OwnerShell } from './OwnerShell';
 import { ManagerShell } from './ManagerShell';
 import { ResidentLogin } from '../features/resident-portal/ResidentLogin';
 import { AccountSuspended } from '../components/AccountSuspended';
+import { WrongPortal } from './WrongPortal';
 
 const Dashboard = lazy(() => import('../features/dashboard/Dashboard'));
 const Buildings = lazy(() => import('../features/property/Buildings'));
@@ -63,7 +64,13 @@ export default function App() {
   const isResidentActive = !!resident && resident.tenant_status === 'active';
   const currentPortNum = typeof window !== 'undefined' && window.location.port ? Number(window.location.port) : null;
   const portalEnv = import.meta.env.VITE_PORTAL as string | undefined;
+
+  const isPlatformPort = currentPortNum === 1000 || portalEnv === 'platform';
+  const isOwnerPort = currentPortNum === 2000 || portalEnv === 'owner';
+  const isManagerPort = currentPortNum === 3000 || portalEnv === 'manager';
+  const isChefPort = currentPortNum === 4000 || portalEnv === 'kitchen';
   const isResidentPort = typeof window !== 'undefined' && (window.location.port === '5000' || portalEnv === 'resident');
+  const isPublicPort = currentPortNum === 6000 || portalEnv === 'public';
 
   const ownerRoutes = (
     <>
@@ -134,16 +141,40 @@ export default function App() {
             <Route
               path="/"
               element={
-                currentPortNum === 6000 || portalEnv === 'public' ? (
+                isPublicPort ? (
                   <LandingPage />
-                ) : (currentPortNum === 1000 || portalEnv === 'platform') && isPlatformAdmin ? (
-                  <Navigate to="/platformadmin" replace />
-                ) : (currentPortNum === 2000 || portalEnv === 'owner') && isOwnerActive ? (
-                  <Navigate to="/owner" replace />
-                ) : (currentPortNum === 3000 || portalEnv === 'manager') && isManagerActive ? (
-                  <Navigate to="/manager" replace />
-                ) : (currentPortNum === 4000 || portalEnv === 'kitchen') && isChefActive ? (
-                  <Navigate to="/chef" replace />
+                ) : isPlatformPort ? (
+                  isPlatformAdmin ? (
+                    <Navigate to="/platformadmin" replace />
+                  ) : access ? (
+                    <WrongPortal portal={isOwnerActive ? 'owner' : isManagerActive ? 'manager' : isChefActive ? 'kitchen' : 'resident'} />
+                  ) : (
+                    <LandingPage />
+                  )
+                ) : isOwnerPort ? (
+                  isOwnerActive || isPlatformAdmin ? (
+                    <Navigate to="/owner" replace />
+                  ) : access ? (
+                    <WrongPortal portal={isManagerActive ? 'manager' : isChefActive ? 'kitchen' : 'resident'} />
+                  ) : (
+                    <LandingPage />
+                  )
+                ) : isManagerPort ? (
+                  isManagerActive || isPlatformAdmin ? (
+                    <Navigate to="/manager" replace />
+                  ) : access ? (
+                    <WrongPortal portal={isOwnerActive ? 'owner' : isChefActive ? 'kitchen' : 'resident'} />
+                  ) : (
+                    <LandingPage />
+                  )
+                ) : isChefPort ? (
+                  isChefActive || isPlatformAdmin ? (
+                    <Navigate to="/chef" replace />
+                  ) : access ? (
+                    <WrongPortal portal={isOwnerActive ? 'owner' : isManagerActive ? 'manager' : 'resident'} />
+                  ) : (
+                    <LandingPage />
+                  )
                 ) : isPlatformAdmin ? (
                   <Navigate to="/platformadmin" replace />
                 ) : isOwnerActive ? (
@@ -170,7 +201,7 @@ export default function App() {
         <Route
           path="/:tenantSlug/:pgSlug/owner"
           element={
-            <Gate allow={isPlatformAdmin || isOwnerActive}>
+            <Gate allow={isPlatformAdmin || (isOwnerActive && !isManagerPort && !isChefPort)}>
               <BuildingProvider>
                 <OwnerShell />
               </BuildingProvider>
@@ -183,7 +214,7 @@ export default function App() {
         <Route
           path="/:tenantSlug/owner"
           element={
-            <Gate allow={isPlatformAdmin || isOwnerActive}>
+            <Gate allow={isPlatformAdmin || (isOwnerActive && !isManagerPort && !isChefPort)}>
               <BuildingProvider>
                 <OwnerShell />
               </BuildingProvider>
@@ -196,7 +227,7 @@ export default function App() {
         <Route
           path="/owner"
           element={
-            <Gate allow={isPlatformAdmin || isOwnerActive}>
+            <Gate allow={isPlatformAdmin || (isOwnerActive && !isManagerPort && !isChefPort)}>
               <BuildingProvider>
                 <OwnerShell />
               </BuildingProvider>
@@ -210,7 +241,7 @@ export default function App() {
         <Route
           path="/:tenantSlug/:pgSlug/manager"
           element={
-            <Gate allow={isPlatformAdmin || isManagerActive}>
+            <Gate allow={isPlatformAdmin || (isManagerActive && !isOwnerPort && !isChefPort)}>
               <BuildingProvider>
                 <ManagerShell />
               </BuildingProvider>
@@ -223,7 +254,7 @@ export default function App() {
         <Route
           path="/:tenantSlug/manager"
           element={
-            <Gate allow={isPlatformAdmin || isManagerActive}>
+            <Gate allow={isPlatformAdmin || (isManagerActive && !isOwnerPort && !isChefPort)}>
               <BuildingProvider>
                 <ManagerShell />
               </BuildingProvider>
@@ -236,7 +267,7 @@ export default function App() {
         <Route
           path="/manager"
           element={
-            <Gate allow={isPlatformAdmin || isManagerActive}>
+            <Gate allow={isPlatformAdmin || (isManagerActive && !isOwnerPort && !isChefPort)}>
               <BuildingProvider>
                 <ManagerShell />
               </BuildingProvider>
@@ -260,7 +291,7 @@ export default function App() {
         <Route
           path="/:tenantSlug/:pgSlug/chef/*"
           element={
-            <Gate allow={isPlatformAdmin || isChefActive || isStaffActive}>
+            <Gate allow={isPlatformAdmin || (isChefActive && !isOwnerPort && !isManagerPort)}>
               <BuildingProvider>
                 <KitchenApp />
               </BuildingProvider>
@@ -270,7 +301,7 @@ export default function App() {
         <Route
           path="/:tenantSlug/chef/*"
           element={
-            <Gate allow={isPlatformAdmin || isChefActive || isStaffActive}>
+            <Gate allow={isPlatformAdmin || (isChefActive && !isOwnerPort && !isManagerPort)}>
               <BuildingProvider>
                 <KitchenApp />
               </BuildingProvider>
@@ -280,7 +311,7 @@ export default function App() {
         <Route
           path="/chef/*"
           element={
-            <Gate allow={isPlatformAdmin || isChefActive || isStaffActive}>
+            <Gate allow={isPlatformAdmin || (isChefActive && !isOwnerPort && !isManagerPort)}>
               <BuildingProvider>
                 <KitchenApp />
               </BuildingProvider>
@@ -290,7 +321,7 @@ export default function App() {
         <Route
           path="/kitchen/*"
           element={
-            <Gate allow={isPlatformAdmin || isChefActive || isStaffActive}>
+            <Gate allow={isPlatformAdmin || (isChefActive && !isOwnerPort && !isManagerPort)}>
               <BuildingProvider>
                 <KitchenApp />
               </BuildingProvider>

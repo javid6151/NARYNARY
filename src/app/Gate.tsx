@@ -8,10 +8,11 @@ import { useAuth } from '../features/access/useAuth';
 import { Loading } from '../components/ui';
 import { AccountSuspended } from '../components/AccountSuspended';
 import { ResidentLogin } from '../features/resident-portal/ResidentLogin';
+import { WrongPortal } from './WrongPortal';
 
-/** Requires a session; when `allow` is false, sends the user to their own home portal. */
+/** Requires a session; when `allow` is false, sends the user to their own home portal or shows WrongPortal. */
 export function Gate({ allow, children }: { allow: boolean; children: ReactNode }) {
-  const { session, loading, homePath, isSuspended } = useAuth();
+  const { session, loading, isSuspended, staff, chef, resident, access } = useAuth();
   const loc = useLocation();
   if (loading) return <FullLoading />;
   if (isSuspended) return <AccountSuspended />;
@@ -24,26 +25,34 @@ export function Gate({ allow, children }: { allow: boolean; children: ReactNode 
     return <Navigate to="/" state={{ from: loc.pathname }} replace />;
   }
   if (!allow) {
-    if (homePath === loc.pathname || (homePath !== '/' && loc.pathname.startsWith(homePath))) {
-      return (
-        <div className="max-w-md mx-auto pt-24 px-4 text-center space-y-4">
-          <h1 className="text-xl font-semibold text-bad">Access Denied</h1>
-          <p className="text-[13px] text-muted">Your account does not have permission to access this portal.</p>
-          <div className="flex justify-center gap-2">
-            <button
-              onClick={() => {
-                localStorage.clear();
-                window.location.href = '/';
-              }}
-              className="inline-flex items-center justify-center rounded-lg font-medium h-9 px-3 text-sm bg-brand-600 text-white cursor-pointer"
-            >
-              Sign out & Re-login
-            </button>
-          </div>
-        </div>
-      );
+    const isOwner = staff?.role === 'owner';
+    const isManager = staff?.role === 'manager';
+    const isChef = !!chef;
+    const isResident = !!resident;
+    const isPlatform = !!access?.is_platform_admin;
+    const correctPortal = isOwner ? 'owner' : isManager ? 'manager' : isChef ? 'kitchen' : isResident ? 'resident' : isPlatform ? 'platform' : null;
+
+    if (correctPortal) {
+      return <WrongPortal portal={correctPortal} />;
     }
-    return <Navigate to={homePath} replace />;
+
+    return (
+      <div className="max-w-md mx-auto pt-24 px-4 text-center space-y-4">
+        <h1 className="text-xl font-semibold text-bad">Access Denied</h1>
+        <p className="text-[13px] text-muted">Your account does not have permission to access this portal.</p>
+        <div className="flex justify-center gap-2">
+          <button
+            onClick={() => {
+              localStorage.clear();
+              window.location.href = '/';
+            }}
+            className="inline-flex items-center justify-center rounded-lg font-medium h-9 px-3 text-sm bg-brand-600 text-white cursor-pointer"
+          >
+            Sign out & Re-login
+          </button>
+        </div>
+      </div>
+    );
   }
   return <>{children}</>;
 }

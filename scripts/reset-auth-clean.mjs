@@ -166,6 +166,28 @@ async function main() {
   await supabaseAdmin.from('profiles').upsert({ id: superUser.id, full_name: 'ZIPCO Super Admin', email: superEmail }, { onConflict: 'id' });
   console.log('   ✓ Super Admin active in platform_admins and profiles');
 
+  // 4b. Ensure a default active subscription plan exists for onboarding approvals
+  const { data: existingPlans } = await supabaseAdmin.from('subscription_plans').select('id, is_default, is_active');
+  const hasDefault = existingPlans?.some((p) => p.is_default && p.is_active);
+  if (!hasDefault) {
+    if (existingPlans && existingPlans.length > 0) {
+      await supabaseAdmin.from('subscription_plans').update({ is_default: true }).eq('id', existingPlans[0].id);
+      console.log('   ✓ Set existing plan as default subscription plan');
+    } else {
+      await supabaseAdmin.from('subscription_plans').insert({
+        name: 'Standard',
+        monthly_price: 4999,
+        included_residents: 120,
+        max_managers: 3,
+        max_chefs: 3,
+        trial_days: 90,
+        is_default: true,
+        is_active: true,
+      });
+      console.log('   ✓ Seeded default Standard subscription plan');
+    }
+  }
+
   // 5. Verify sign-in
   const anonClient = createClient(url, anonKey);
   const { data: signInRes, error: signInErr } = await anonClient.auth.signInWithPassword({

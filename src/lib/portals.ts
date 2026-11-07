@@ -48,7 +48,10 @@ export function getResidentPortalUrl(): string {
 
 export const portalUrl = (id: PortalId): string => {
   const p = PORTALS.find((x) => x.id === id);
-  const path = p ? p.path : '/';
+  if (!p) return '/';
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return `http://localhost:${p.port}${p.path}`;
+  }
   const base = getPortalBaseUrl();
-  return base ? `${base}${path}` : path;
+  return base ? `${base}${p.path}` : p.path;
 };
