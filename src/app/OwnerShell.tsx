@@ -216,10 +216,7 @@ export function OwnerShell() {
           </div>
 
           <div className="hidden sm:flex items-center gap-2">
-            <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-[#EBF0E6] text-[#343B2B] border border-[#CAD7BF]">
-              Owner Portal
-            </span>
-            <span className="text-xs text-[#77736B] hidden md:inline">
+            <span className="text-xs font-medium text-[#77736B] hidden md:inline">
               {ownerDisplayName}
               {staff?.tenant_code && <span className="tabular"> · {staff.tenant_code}</span>}
             </span>
