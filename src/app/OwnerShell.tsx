@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { NavLink, Outlet, useNavigate, useParams } from 'react-router-dom';
 import {
   LayoutDashboard, BedDouble, Users, Wallet, Receipt, MessageSquareWarning, Wrench, UtensilsCrossed,
-  Package, UserCog, Megaphone, FileBarChart, Settings, LogOut, Menu, X, ChefHat, Home, Shield, KeyRound,
+  Package, UserCog, Megaphone, FileBarChart, Settings, LogOut, Menu, X, ChefHat, Home, KeyRound,
   Headphones, ChevronRight, UserPlus, MoreHorizontal
 } from 'lucide-react';
 import { useAuth } from '../features/access/useAuth';
@@ -80,12 +80,6 @@ export function OwnerShell() {
         >
           <X className="size-5" />
         </button>
-      </div>
-
-      {/* Role Pill Banner */}
-      <div className="px-5 py-2.5 bg-[#EBF0E6] border-b border-[#DED6CB] flex items-center gap-2 text-xs text-[#343B2B]">
-        <Shield className="size-3.5 text-[#343B2B]" />
-        <span className="font-semibold tracking-wide uppercase text-[10.5px]">PG Owner Administration</span>
       </div>
 
       {/* Navigation Links */}

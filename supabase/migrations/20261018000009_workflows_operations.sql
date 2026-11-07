@@ -568,10 +568,11 @@ begin
   if coalesce(p_qty, 0) <= 0 then raise exception 'VALIDATION_ERROR: quantity must be greater than zero' using errcode = 'P0001'; end if;
   if not exists (select 1 from public.inventory_items where id = p_item and tenant_id = p_tenant and is_active) then
     raise exception 'NOT_FOUND: item not found' using errcode = 'P0001'; end if;
-  perform pg_advisory_xact_lock(hashtext('stock:' || p_location::text || ':' || p_item::text));
+  perform pg_advisory_xact_lock(hashtext('stock:' || p_building::text || ':' || p_item::text));
   if public.inventory_direction(p_type) < 0 then
+    -- Check unified available balance for the building across store/kitchen
     select coalesce(sum(public.inventory_direction(transaction_type) * quantity), 0) into v_bal
-      from public.inventory_transactions where inventory_location_id = p_location and item_id = p_item;
+      from public.inventory_transactions where building_id = p_building and item_id = p_item;
     if v_bal < p_qty then
       raise exception 'BUSINESS_RULE_VIOLATION: only % % available for %',
         trim(to_char(v_bal, 'FM999999990.###')), (select base_unit from public.inventory_items where id = p_item),
