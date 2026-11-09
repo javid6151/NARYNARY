@@ -5,30 +5,55 @@ import { useAuth } from '../../access/useAuth';
 import { supabase } from '../../../lib/supabase';
 import { PHONE_RE } from '../../../lib/validation';
 import { PgLogo } from '../../../components/PgLogo';
+import { cx } from '../../../lib/cx';
 
-function resizeImageToSquare(file: File, maxSize = 512): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = () => {
-      const img = new Image();
-      img.onerror = reject;
-      img.onload = () => {
+async function processImageFile(file: File, maxSize = 512): Promise<string> {
+  return new Promise((resolve) => {
+    let objUrl = '';
+    try {
+      objUrl = URL.createObjectURL(file);
+    } catch {
+      return fallbackFileReader(file).then(resolve);
+    }
+
+    const img = new Image();
+
+    img.onload = () => {
+      try {
         const canvas = document.createElement('canvas');
         canvas.width = maxSize;
         canvas.height = maxSize;
         const ctx = canvas.getContext('2d');
-        if (!ctx) return resolve(reader.result as string);
-
-        // Center and cover-crop into square
-        const minDim = Math.min(img.width, img.height);
-        const sx = (img.width - minDim) / 2;
-        const sy = (img.height - minDim) / 2;
-        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, maxSize, maxSize);
-        resolve(canvas.toDataURL('image/png', 0.92));
-      };
-      img.src = reader.result as string;
+        if (ctx) {
+          const minDim = Math.min(img.width, img.height);
+          const sx = (img.width - minDim) / 2;
+          const sy = (img.height - minDim) / 2;
+          ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, maxSize, maxSize);
+          const dataUrl = canvas.toDataURL('image/png', 0.92);
+          URL.revokeObjectURL(objUrl);
+          return resolve(dataUrl);
+        }
+      } catch (e) {
+        console.warn('Canvas processing error, falling back:', e);
+      }
+      URL.revokeObjectURL(objUrl);
+      fallbackFileReader(file).then(resolve);
     };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objUrl);
+      fallbackFileReader(file).then(resolve);
+    };
+
+    img.src = objUrl;
+  });
+}
+
+function fallbackFileReader(file: File): Promise<string> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve((reader.result as string) || '');
+    reader.onerror = () => resolve('');
     reader.readAsDataURL(file);
   });
 }
@@ -164,12 +189,9 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      setLogoError('Please choose an image file (PNG, JPG, SVG, or WEBP).');
-      return;
-    }
-    if (file.size > 4 * 1024 * 1024) {
-      setLogoError('Image file must be smaller than 4 MB.');
+    if (file.size > 25 * 1024 * 1024) {
+      setLogoError('Image file is too large (maximum 25 MB).');
+      onToast('Image file is too large (maximum 25 MB).');
       return;
     }
 
@@ -177,8 +199,13 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
     setLogoError(null);
 
     try {
+      onToast('Processing image...');
       // 1. Resize & crop to square 512x512 PNG data URL
-      const dataUrl = await resizeImageToSquare(file, 512);
+      const dataUrl = await processImageFile(file, 512);
+
+      if (!dataUrl) {
+        throw new Error('Could not read image file. Please try another image.');
+      }
 
       // Instant local preview
       setLogoPreview(dataUrl);
@@ -230,10 +257,13 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
       } catch {}
       setLogoPreview(activeUrl);
     } catch (err: unknown) {
-      setLogoError(err instanceof Error ? err.message : 'Failed to update PG logo');
+      const msg = err instanceof Error ? err.message : 'Failed to update PG logo';
+      setLogoError(msg);
+      onToast(msg);
     } finally {
       setLogoBusy(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
+      e.target.value = '';
     }
   };
 
@@ -486,37 +516,50 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
 
             <ErrorBanner error={logoError} />
 
-            {/* Live Logo Preview Box */}
-            <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-[#F5F0E8] border border-[#DED6CB] text-center mb-4">
-              <PgLogo tenantId={tenantId} logoUrl={logoPreview} name={pgName || businessName} size="xl" className="shadow-md mb-2" />
+            {/* Live Logo Preview Box - Can also tap to select image */}
+            <label className="flex flex-col items-center justify-center p-5 rounded-2xl bg-[#F5F0E8] border border-[#DED6CB] text-center mb-4 cursor-pointer hover:bg-[#EFE9DF] transition-colors group">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleLogoSelect}
+                className="sr-only"
+                disabled={logoBusy}
+              />
+              <div className="relative">
+                <PgLogo tenantId={tenantId} logoUrl={logoPreview} name={pgName || businessName} size="xl" className="shadow-md mb-2 group-hover:opacity-90 transition-opacity" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Upload className="size-6 text-white" />
+                </div>
+              </div>
               <p className="font-bold text-base text-[#30271F] truncate max-w-full">
                 {pgName || businessName}
               </p>
               <p className="text-[11px] text-[#77736B] font-medium mt-0.5">
-                {logoPreview ? 'Custom PG Logo Active' : 'Letter Monogram Avatar'}
+                {logoPreview ? 'Custom PG Logo Active (Tap to change)' : 'Letter Monogram Avatar (Tap to upload)'}
               </p>
-            </div>
-
-            {/* Hidden File Input */}
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/png,image/jpeg,image/webp,image/svg+xml"
-              onChange={handleLogoSelect}
-              className="hidden"
-            />
+            </label>
 
             <div className="flex items-center gap-2 mb-5">
-              <Button
-                type="button"
-                variant="secondary"
-                busy={logoBusy}
-                onClick={() => fileInputRef.current?.click()}
-                className="flex-1 justify-center"
-              >
-                <Upload className="size-4" />
-                <span>{logoPreview ? 'Change Logo Image' : 'Upload PG Logo'}</span>
-              </Button>
+              <label className="flex-1 flex cursor-pointer">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoSelect}
+                  className="sr-only"
+                  disabled={logoBusy}
+                />
+                <div
+                  className={cx(
+                    'flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-colors select-none',
+                    logoBusy
+                      ? 'bg-subtle text-muted cursor-wait'
+                      : 'bg-white border border-[#DED6CB] text-[#30271F] hover:bg-[#F5F0E8] shadow-2xs active:bg-[#ECE5DA]'
+                  )}
+                >
+                  <Upload className="size-4 shrink-0 text-[#77736B]" />
+                  <span>{logoBusy ? 'Processing Image...' : (logoPreview ? 'Change Logo Image' : 'Upload PG Logo')}</span>
+                </div>
+              </label>
               {logoPreview && (
                 <Button
                   type="button"

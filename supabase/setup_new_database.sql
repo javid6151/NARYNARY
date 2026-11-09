@@ -561,7 +561,7 @@ create table public.resident_room_assignments (
   created_at timestamptz not null default now(),
   foreign key (tenant_id, resident_id) references public.residents(tenant_id, id),
   foreign key (tenant_id, admission_id) references public.admissions(tenant_id, id),
-  foreign key (tenant_id, building_id, bed_id) references public.beds(tenant_id, building_id, id),
+  foreign key (tenant_id, building_id, be d_id) references public.beds(tenant_id, building_id, id),
   check (end_at is null or end_at >= start_at)
 );
 -- At most one active occupant per bed and one active bed per resident.
