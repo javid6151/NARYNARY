@@ -24,6 +24,14 @@ export function listActiveResidents(buildingId: string): Promise<ResidentRow[]> 
   ) as unknown as Promise<ResidentRow[]>;
 }
 
+/** Single resident directory row (for resident drawer), with room, bed, dues, and portal status. */
+export async function getResidentRow(residentId: string): Promise<ResidentRow | null> {
+  const rows = (await q(
+    supabase.from('resident_directory').select('*').eq('id', residentId).limit(1),
+  )) as unknown as ResidentRow[];
+  return rows[0] ?? null;
+}
+
 /** Residents who checked out of this building (found through their completed admissions), by name. */
 export async function listPastResidents(buildingId: string): Promise<ResidentRow[]> {
   const adm = await q(supabase.from('admissions').select('resident_id').eq('building_id', buildingId).eq('status', 'completed'));

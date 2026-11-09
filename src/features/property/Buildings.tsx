@@ -11,6 +11,9 @@ import { Async, Button, Card, Empty, Toast } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
 import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import { CheckoutDialog } from '../residents/components/CheckoutDialog';
+import { ResidentDrawer } from '../residents/components/ResidentDrawer';
+import { getResidentRow } from '../residents/api';
+import type { ResidentRow } from '../residents/types';
 import { getBuildingLayout } from './api';
 import type { LayoutBed, LayoutFloor } from './types';
 import { BuildingRequestDrawer } from './components/BuildingRequestDrawer';
@@ -32,7 +35,21 @@ export default function Buildings() {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [drawer, setDrawer] = useState<null | 'floor' | 'room' | 'edit' | 'building'>(null);
   const [checkout, setCheckout] = useState<LayoutBed | null>(null);
+  const [selectedResident, setSelectedResident] = useState<ResidentRow | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+
+  const openResident = async (residentId: string) => {
+    try {
+      const row = await getResidentRow(residentId);
+      if (row) {
+        setSelectedResident(row);
+      } else {
+        setToast('Resident record not found');
+      }
+    } catch {
+      setToast('Failed to load resident details');
+    }
+  };
 
   const floors = layout.data ?? [];
   // Keep the selected floor index in range when floors change.
@@ -150,9 +167,16 @@ export default function Buildings() {
                 }}
                 onRoom={setRoomId}
                 onAddRoom={() => setDrawer('room')}
+                onSelectResident={openResident}
               />
               {room && (
-                <RoomBeds room={room} onEdit={() => setDrawer('edit')} onClose={() => setRoomId(null)} onCheckout={setCheckout} />
+                <RoomBeds
+                  room={room}
+                  onEdit={() => setDrawer('edit')}
+                  onClose={() => setRoomId(null)}
+                  onCheckout={setCheckout}
+                  onSelectResident={openResident}
+                />
               )}
             </div>
           )
@@ -196,6 +220,23 @@ export default function Buildings() {
           layout.reload();
         }}
       />
+      {selectedResident && (
+        <ResidentDrawer
+          r={selectedResident}
+          onClose={() => setSelectedResident(null)}
+          onChanged={(msg) => {
+            setToast(msg);
+            layout.reload();
+            getResidentRow(selectedResident.id).then((updated) => {
+              if (updated && updated.status === 'active') {
+                setSelectedResident(updated);
+              } else {
+                setSelectedResident(null);
+              }
+            });
+          }}
+        />
+      )}
       <Toast message={toast} onDone={() => setToast(null)} />
     </>
   );

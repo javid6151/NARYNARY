@@ -15,6 +15,7 @@ export function FloorLayout({
   onFloor,
   onRoom,
   onAddRoom,
+  onSelectResident,
 }: {
   floors: LayoutFloor[];
   floorIdx: number;
@@ -22,6 +23,7 @@ export function FloorLayout({
   onFloor: (index: number) => void;
   onRoom: (roomId: string | null) => void;
   onAddRoom: () => void;
+  onSelectResident?: (residentId: string) => void;
 }) {
   const [filter, setFilter] = useState<'all' | 'available' | 'occupied'>('all');
   const floor = floors[Math.min(floorIdx, Math.max(0, floors.length - 1))];
@@ -196,9 +198,20 @@ export function FloorLayout({
                 <div className="flex items-center justify-between text-xs pt-2 border-t border-[#ECE5DA]">
                   <div className="flex items-center -space-x-1.5">
                     {occupants.slice(0, 3).map((b) => (
-                      <span key={b.bed_id} title={b.resident_name ?? ''}>
+                      <button
+                        type="button"
+                        key={b.bed_id}
+                        title={`View resident details: ${b.resident_name ?? 'Resident'}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (b.resident_id && onSelectResident) {
+                            onSelectResident(b.resident_id);
+                          }
+                        }}
+                        className="rounded-full hover:scale-115 hover:ring-2 hover:ring-[#343B2B] transition-all cursor-pointer focus:outline-none"
+                      >
                         <Avatar name={b.resident_name ?? 'Resident'} size={22} />
-                      </span>
+                      </button>
                     ))}
                     {occupants.length > 3 && (
                       <span className="size-5 rounded-full bg-[#ECE5DA] text-[10px] font-bold text-[#77736B] flex items-center justify-center">
