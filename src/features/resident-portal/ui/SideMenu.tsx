@@ -52,6 +52,9 @@ export function SideMenu({ p, open, onClose }: { p: ResidentProfile; open: boole
           <div className="flex-1 min-w-0">
             <p className="font-bold text-[15px] truncate leading-tight">{p.business_name}</p>
             <p className="text-[12px] text-white/80 truncate mt-0.5">{p.full_name} · Room {p.room_number}</p>
+            <span className="inline-block font-mono text-[10px] font-bold text-white/90 bg-white/20 px-1.5 py-0.2 rounded mt-1">
+              {p.resident_code || ('RES-' + String(p.resident_id).replace(/-/g, '').slice(0, 6).toUpperCase())}
+            </span>
           </div>
           <button onClick={onClose} aria-label="Close menu" className="p-1.5 rounded-md hover:bg-white/10 cursor-pointer">
             <X className="size-5" />

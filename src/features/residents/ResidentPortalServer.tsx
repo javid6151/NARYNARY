@@ -72,6 +72,7 @@ export default function ResidentPortalServer() {
 
   const [createdCreds, setCreatedCreds] = useState<{
     fullName: string;
+    residentCode?: string;
     phone: string;
     email: string;
     password: string;
@@ -151,8 +152,10 @@ export default function ResidentPortalServer() {
 
     setPassItem(null);
     reloadAll();
+    const rCode = passItem.resident_code || ('RES-' + String(passItem.id).replace(/-/g, '').slice(0, 6).toUpperCase());
     setCreatedCreds({
       fullName: passItem.full_name,
+      residentCode: rCode,
       phone: passItem.phone,
       email: res.email,
       password: pw,
@@ -180,13 +183,14 @@ export default function ResidentPortalServer() {
     );
   });
 
-  const copyCredsToClipboard = (c: { fullName: string; phone: string; email: string; password: string }) => {
+  const copyCredsToClipboard = (c: { fullName: string; residentCode?: string; phone: string; email: string; password: string }) => {
     const text =
 `*Zipnary Resident Portal Access*
 Hi ${c.fullName}! Your resident account has been granted access.
 
+🆔 *Resident Unique ID:* ${c.residentCode || 'Active Resident'}
 🌐 *Login Portal:* ${residentPortalUrl}
-📱 *Mobile Number:* ${c.phone}
+📱 *Login ID (Mobile):* ${c.phone}
 🔑 *Portal Password:* ${c.password}
 
 Please sign in to view your room allotment, rent payment receipts, mess meals, notices and complaints.`;
@@ -398,7 +402,12 @@ Please sign in to view your room allotment, rent payment receipts, mess meals, n
                       </div>
                       <div>
                         <div>{r.full_name}</div>
-                        <div className="text-[11px] font-normal text-muted">{r.building_name}</div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="font-mono text-[10.5px] font-bold text-[#343B2B] bg-[#EBF0E6] px-1.5 py-0.2 rounded border border-[#CAD7BF]">
+                            {r.resident_code || ('RES-' + String(r.id).replace(/-/g, '').slice(0, 6).toUpperCase())}
+                          </span>
+                          <span className="text-[11px] font-normal text-muted">{r.building_name}</span>
+                        </div>
                       </div>
                     </div>
                   </Td>
@@ -614,6 +623,12 @@ Please sign in to view your room allotment, rent payment receipts, mess meals, n
                   >
                     <Copy className="size-3" />
                   </button>
+                </span>
+              </div>
+              <div className="flex justify-between items-center py-1 border-b border-line/60">
+                <span className="text-muted font-sans">Resident Unique ID:</span>
+                <span className="font-bold text-[#30271F] bg-[#EBF0E6] px-2 py-0.5 rounded border border-[#CAD7BF]">
+                  {createdCreds.residentCode || 'RES-000001'}
                 </span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-line/60">

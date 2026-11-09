@@ -12,7 +12,7 @@ import { listActiveResidents, listOpenComplaintIds, listPastResidents } from './
 import { ResidentDrawer } from './components/ResidentDrawer';
 import { VacantRoomsModal } from '../property/components/VacantRoomsModal';
 import { PaymentReminderModal } from '../billing/components/PaymentReminderModal';
-import type { ResidentRow } from './types';
+import { formatResidentCode, type ResidentRow } from './types';
 
 export default function Residents() {
   const { buildingId, building } = useBuilding();
@@ -192,7 +192,12 @@ export default function Residents() {
                         <Avatar name={r.full_name} size={32} />
                         <div>
                           <p className="font-semibold text-[#30271F]">{r.full_name}</p>
-                          <p className="text-[11px] text-[#77736B] md:hidden">{r.phone}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="font-mono text-[10.5px] font-bold text-[#343B2B] bg-[#EBF0E6] px-1.5 py-0.2 rounded border border-[#CAD7BF]">
+                              {formatResidentCode(r)}
+                            </span>
+                            <p className="text-[11px] text-[#77736B] md:hidden">{r.phone}</p>
+                          </div>
                         </div>
                       </div>
                     </Td>

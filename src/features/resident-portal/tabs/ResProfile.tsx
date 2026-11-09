@@ -136,6 +136,7 @@ export function ResProfile({ p }: { p: ResidentProfile }) {
           </div>
         </div>
         <div className="mt-2">
+          <Row k="Resident Unique ID" v={<span className="font-mono font-bold text-[#30271F] bg-[#EBF0E6] px-2 py-0.5 rounded border border-[#CAD7BF]">{p.resident_code || ('RES-' + String(p.resident_id).replace(/-/g, '').slice(0, 6).toUpperCase())}</span>} />
           <Row k="PG / Hostel" v={<span className="font-semibold text-[#30271F]">{p.business_name}</span>} />
           <Row k="Building" v={p.building_name} />
           <Row k="Floor" v={p.floor_name} />
@@ -158,6 +159,7 @@ export function ResProfile({ p }: { p: ResidentProfile }) {
           </div>
         </div>
         <div>
+          <Row k="Resident Unique ID" v={<span className="font-mono font-bold text-[#30271F]">{p.resident_code || ('RES-' + String(p.resident_id).replace(/-/g, '').slice(0, 6).toUpperCase())}</span>} />
           <Row k="Full name" v={p.full_name} />
           <Row k="Mobile" v={p.phone || '—'} />
           <Row k="Email" v={p.email || '—'} />

@@ -279,6 +279,7 @@ export async function checkoutResident(c: { admissionId: string | null; date: st
 
 export interface ResidentPortalAccount {
   id: string;
+  resident_code?: string;
   tenant_id: string;
   user_id: string | null;
   full_name: string;

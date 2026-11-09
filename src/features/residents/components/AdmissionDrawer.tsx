@@ -5,7 +5,7 @@ import { fmtDate, inr } from '../../../lib/format';
 import { Async, Avatar, Badge, Button, Card, Drawer, ErrorBanner, Field, Input, Textarea } from '../../../components/ui';
 import { ResidentDocuments } from '../../files/components/ResidentDocuments';
 import { listAdmissionCharges, reviewAdmission, setResidentPortalPassword } from '../api';
-import type { AdmissionCharge, AdmissionRow } from '../types';
+import { formatResidentCode, type AdmissionCharge, type AdmissionRow } from '../types';
 import { getResidentPortalUrl } from '../../../lib/portals';
 
 export function AdmissionDrawer({ row, canApprove, onClose, onDone }: {
@@ -64,7 +64,10 @@ export function AdmissionDrawer({ row, canApprove, onClose, onDone }: {
     </>
   ) : undefined;
 
+  const residentCode = formatResidentCode(r);
+
   const summary: [string, string][] = [
+    ['Resident Unique ID', residentCode],
     ['Building', row.buildings.name],
     ['Floor', row.floors.name ?? ''],
     ['Room / Bed', `Room ${row.rooms.room_number} / ${row.beds.bed_label}`],
@@ -83,7 +86,12 @@ export function AdmissionDrawer({ row, canApprove, onClose, onDone }: {
       <div className="flex items-center gap-4">
         <Avatar name={r.full_name} size={56} />
         <div>
-          <p className="text-lg font-semibold">{r.full_name}</p>
+          <p className="text-lg font-semibold flex items-center gap-2 flex-wrap">
+            {r.full_name}
+            <span className="font-mono text-xs font-bold text-[#343B2B] bg-[#EBF0E6] px-2 py-0.5 rounded-md border border-[#CAD7BF]">
+              {residentCode}
+            </span>
+          </p>
           <p className="text-[13px] text-muted">
             {r.phone}
             {r.email ? ` · ${r.email}` : ''}

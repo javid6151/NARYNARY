@@ -94,7 +94,7 @@ export function ResidentLogin() {
           <div className="mb-6 pb-4 border-b border-[#DED6CB] flex items-center justify-between">
             <div>
               <h1 className="text-xl font-bold text-[#30271F]">Resident Sign In</h1>
-              <p className="text-xs text-[#77736B] mt-0.5">Enter your registered mobile or email</p>
+              <p className="text-xs text-[#77736B] mt-0.5">Enter your registered mobile, email, or Resident ID</p>
             </div>
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#EBF0E6] text-[#343B2B] border border-[#CAD7BF]">
               <ShieldCheck className="size-3.5" />
@@ -110,14 +110,14 @@ export function ResidentLogin() {
           )}
 
           <form onSubmit={handleSignIn} className="space-y-4">
-            <Field label="Mobile Number or Email" required>
+            <Field label="Mobile Number, Email, or Resident ID" required>
               {(id) => (
                 <Input
                   id={id}
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="e.g. 9876543210 or resident@email.com"
+                  placeholder="e.g. 9876543210 or RES-000001"
                   autoComplete="username"
                   className="h-11 rounded-xl bg-[#FFFEFC] border-[#DED6CB]"
                   required

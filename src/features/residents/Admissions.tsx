@@ -9,7 +9,7 @@ import { Async, Avatar, Badge, Button, Card, Empty, ErrorBanner, Field, Input, P
 import { BuildingPicker } from '../../components/BuildingPicker';
 import { listAdmissions, setResidentPortalPassword } from './api';
 import { AdmissionDrawer } from './components/AdmissionDrawer';
-import type { AdmissionRow } from './types';
+import { formatResidentCode, type AdmissionRow } from './types';
 import { getResidentPortalUrl } from '../../lib/portals';
 
 type Tab = 'all' | 'pending_review' | 'approved' | 'rejected' | 'completed';
@@ -152,7 +152,12 @@ export default function Admissions() {
                         <Avatar name={r.residents.full_name} size={32} />
                         <div>
                           <p className="font-medium">{r.residents.full_name}</p>
-                          <p className="text-[12px] text-muted">{r.residents.phone}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="font-mono text-[10.5px] font-bold text-[#343B2B] bg-[#EBF0E6] px-1.5 py-0.2 rounded border border-[#CAD7BF]">
+                              {formatResidentCode(r.residents)}
+                            </span>
+                            <p className="text-[12px] text-muted">{r.residents.phone}</p>
+                          </div>
                         </div>
                       </div>
                     </Td>

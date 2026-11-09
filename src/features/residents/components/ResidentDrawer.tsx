@@ -11,7 +11,7 @@ import { ResidentDocuments } from '../../files/components/ResidentDocuments';
 import { RecordPaymentDrawer } from '../../billing/components/RecordPaymentDrawer';
 import { receiptNo } from '../../billing/receipt';
 import { getResident, listResidentCharges, listResidentComplaints, listResidentPayments } from '../api';
-import type { ResidentCharge, ResidentRow } from '../types';
+import { formatResidentCode, type ResidentCharge, type ResidentRow } from '../types';
 import { CheckoutDialog } from './CheckoutDialog';
 import { EditResident } from './EditResident';
 import { ResidentOverview } from './ResidentOverview';
@@ -43,8 +43,11 @@ export function ResidentDrawer({ r, onClose, onChanged }: { r: ResidentRow; onCl
       <div className="flex flex-wrap items-center gap-4">
         <Avatar name={r.full_name} size={56} />
         <div className="flex-1 min-w-0">
-          <p className="text-lg font-semibold">
+          <p className="text-lg font-semibold flex items-center gap-2 flex-wrap">
             {r.full_name} <Badge status={r.status} />
+            <span className="font-mono text-xs font-bold text-[#343B2B] bg-[#EBF0E6] px-2 py-0.5 rounded-md border border-[#CAD7BF]">
+              {formatResidentCode(r)}
+            </span>
           </p>
           <p className="text-[13px] text-muted">
             {r.room_number ? `Room ${r.room_number} · Bed ${r.bed_label} · ` : ''}

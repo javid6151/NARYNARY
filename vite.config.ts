@@ -74,6 +74,31 @@ function authApiPlugin() {
               return json({ email: cleanEmail });
             }
 
+            if (clean.toUpperCase().startsWith('RES-')) {
+              try {
+                const { data: resRows } = await supabaseAdmin
+                  .from('residents')
+                  .select('id, user_id, email, phone, status');
+                const matched = (resRows || []).find((r: any) =>
+                  (r.resident_code && r.resident_code.toUpperCase() === clean.toUpperCase()) ||
+                  ('RES-' + String(r.id).replace(/-/g, '').slice(0, 6).toUpperCase()) === clean.toUpperCase()
+                );
+                if (matched?.user_id) {
+                  const { data: mem } = await supabaseAdmin.from('tenant_memberships').select('status').eq('user_id', matched.user_id).maybeSingle();
+                  if (mem?.status === 'suspended' || matched.status === 'blocked') {
+                    return json({ error: 'Your portal access has been suspended by management. Please contact your PG manager or owner.' }, 403);
+                  }
+                }
+                if (matched?.email) {
+                  return json({ email: String(matched.email).toLowerCase(), role: 'resident' });
+                }
+                if (matched?.phone) {
+                  const p10 = String(matched.phone).replace(/\D/g, '').slice(-10);
+                  return json({ email: `${p10}@resident.zipnary.internal`, role: 'resident' });
+                }
+              } catch {}
+            }
+
             const digits = clean.replace(/\D/g, '');
             if (digits.length < 5) {
               return json({ error: 'Please enter a valid mobile number or email' }, 400);
@@ -1014,6 +1039,7 @@ function authApiPlugin() {
 
               return {
                 id: r.id,
+                resident_code: r.resident_code || ('RES-' + String(r.id).replace(/-/g, '').slice(0, 6).toUpperCase()),
                 tenant_id: r.tenant_id,
                 user_id: r.user_id,
                 full_name: r.full_name,

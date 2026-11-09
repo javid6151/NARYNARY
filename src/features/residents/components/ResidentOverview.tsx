@@ -4,7 +4,7 @@ import { Bell, KeyRound, MessageCircle, Copy, Check, Pencil, ArrowLeftRight } fr
 import { fmtDate, inr, label } from '../../../lib/format';
 import { Button, Confirm, Field, Input } from '../../../components/ui';
 import { setResidentPassword } from '../../auth/api';
-import type { ResidentDetails, ResidentRow } from '../types';
+import { formatResidentCode, type ResidentDetails, type ResidentRow } from '../types';
 import { getResidentPortalUrl } from '../../../lib/portals';
 
 export function ResidentOverview({
@@ -25,7 +25,10 @@ export function ResidentOverview({
   const [copied, setCopied] = useState(false);
   const [copiedReminder, setCopiedReminder] = useState(false);
 
+  const residentCode = formatResidentCode(r);
+
   const facts: [string, string | null][] = [
+    ['Resident Unique ID', residentCode],
     ['Email', x.email],
     ['Gender', label(x.gender)],
     ['Date of birth', fmtDate(x.date_of_birth)],
@@ -59,7 +62,7 @@ export function ResidentOverview({
     }
   };
 
-  const shareText = `Hi ${r.full_name},\n\nHere are your Zipnary PG Resident Portal login details:\n• Portal URL: ${portalUrl}\n• Login ID (Mobile Number): ${r.phone}\n\nYou can log in to view rent dues, pay online, see food menus, and raise complaints.`;
+  const shareText = `Hi ${r.full_name},\n\nHere are your Zipnary PG Resident Portal login details:\n• Resident ID: ${residentCode}\n• Portal URL: ${portalUrl}\n• Login ID (Mobile Number): ${r.phone}\n\nYou can log in to view rent dues, pay online, see food menus, and raise complaints.`;
   const cleanPhone = r.phone.replace(/\D/g, '').replace(/^(\d{10})$/, '91$1');
   const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(shareText)}`;
 

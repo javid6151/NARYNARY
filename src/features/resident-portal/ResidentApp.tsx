@@ -60,6 +60,7 @@ export default function ResidentApp() {
   const staffPreviewProfile: ResidentProfile | null = selectedResident
     ? {
         resident_id: selectedResident.id,
+        resident_code: selectedResident.resident_code || ('RES-' + String(selectedResident.id).replace(/-/g, '').slice(0, 6).toUpperCase()),
         full_name: selectedResident.full_name,
         phone: selectedResident.phone,
         email: selectedResident.email,

@@ -3,6 +3,7 @@
 /** One row of the `resident_directory` view: resident + current bed + outstanding dues. */
 export interface ResidentRow {
   id: string;
+  resident_code?: string | null;
   full_name: string;
   phone: string;
   email: string | null;
@@ -24,6 +25,7 @@ export interface ResidentRow {
 /** Full resident record (`residents` table) shown on the profile overview. */
 export interface ResidentDetails {
   id: string;
+  resident_code?: string | null;
   full_name: string;
   phone: string;
   email: string | null;
@@ -34,6 +36,16 @@ export interface ResidentDetails {
   emergency_contact_phone: string | null;
   /** Only the last 4 characters of the ID are ever stored. */
   id_number_last4: string | null;
+}
+
+/** Helper to display a human-readable Resident Unique ID (e.g. RES-000001). */
+export function formatResidentCode(r?: { resident_code?: string | null; id?: string | null } | null): string {
+  if (r?.resident_code) return r.resident_code;
+  if (r?.id) {
+    const clean = r.id.replace(/-/g, '').slice(0, 6).toUpperCase();
+    return `RES-${clean}`;
+  }
+  return 'RES-000001';
 }
 
 /** Editable resident fields (staff edit form). */

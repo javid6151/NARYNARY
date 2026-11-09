@@ -58,7 +58,12 @@ export function ResHome({ p }: { p: ResidentProfile }) {
             <span className="rounded-full ring-2 ring-[#343B2B]/20 shrink-0"><Avatar name={p.full_name} size={42} /></span>
             <span className="min-w-0 flex-1">
               <span className="block text-[13px] font-semibold text-[#30271F] truncate">Room {p.room_number} · Bed {p.bed_label}</span>
-              <span className="block text-[12px] text-[#77736B] truncate">{p.building_name} · {p.business_name}</span>
+              <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                <span className="font-mono text-[11px] font-bold text-[#343B2B] bg-[#EBF0E6] px-1.5 py-0.5 rounded border border-[#CAD7BF]">
+                  {p.resident_code || ('RES-' + String(p.resident_id).replace(/-/g, '').slice(0, 6).toUpperCase())}
+                </span>
+                <span className="text-[12px] text-[#77736B] truncate">{p.building_name} · {p.business_name}</span>
+              </div>
             </span>
             <span className="text-[11px] font-semibold text-[#2F6B27] flex items-center gap-1.5 whitespace-nowrap"><span className="resident-status-dot" aria-hidden />Active</span>
           </div>
