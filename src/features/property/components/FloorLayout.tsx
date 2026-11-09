@@ -44,23 +44,29 @@ export function FloorLayout({
     floors.length > 1 ? (
       <div role="tablist" className="flex gap-1.5 bg-[#F5F0E8] border border-[#DED6CB] rounded-xl p-1 overflow-x-auto">
         {floors.map((f, i) => {
-          const label =
-            f.floor_name?.trim() ||
-            (typeof f.floor_number === 'number'
+          const rawName = f.floor_name?.trim();
+          const label = rawName
+            ? rawName.charAt(0).toUpperCase() + rawName.slice(1)
+            : typeof f.floor_number === 'number'
               ? f.floor_number === 0
                 ? 'Ground Floor'
                 : `Floor ${f.floor_number}`
-              : `Floor ${i + 1}`);
+              : `Floor ${i + 1}`;
+          const active = i === floorIdx;
           return (
             <button
               key={f.floor_id}
               role="tab"
-              aria-selected={i === floorIdx}
+              aria-selected={active}
               onClick={() => onFloor(i)}
+              style={{
+                color: active ? '#FFFFFF' : '#30271F',
+                backgroundColor: active ? '#343B2B' : 'transparent',
+              }}
               className={cx(
                 'px-3.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer',
-                i === floorIdx
-                  ? 'bg-[#343B2B] text-white shadow-xs'
+                active
+                  ? 'bg-[#343B2B] text-white shadow-xs !text-white'
                   : 'text-[#30271F] hover:bg-[#ECE5DA]',
               )}
             >

@@ -111,25 +111,17 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
       .then((data) => {
         if (!active) return;
         if (data.hasLogo && data.logoUrl) {
-          setLogoPreview(data.logoUrl);
+          setLogoPreview((prev) => prev || data.logoUrl);
         } else if (currentLogoUrl) {
-          setLogoPreview(currentLogoUrl);
+          setLogoPreview((prev) => prev || currentLogoUrl);
         }
       })
-      .catch(() => {
-        if (currentLogoUrl) setLogoPreview(currentLogoUrl);
-      });
+      .catch(() => {});
 
     return () => {
       active = false;
     };
   }, [tenantId]);
-
-  useEffect(() => {
-    if (currentLogoUrl) {
-      setLogoPreview(currentLogoUrl);
-    }
-  }, [currentLogoUrl]);
 
   const handleProfileSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -516,15 +508,21 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
 
             <ErrorBanner error={logoError} />
 
-            {/* Live Logo Preview Box - Can also tap to select image */}
-            <label className="flex flex-col items-center justify-center p-5 rounded-2xl bg-[#F5F0E8] border border-[#DED6CB] text-center mb-4 cursor-pointer hover:bg-[#EFE9DF] transition-colors group">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleLogoSelect}
-                className="sr-only"
-                disabled={logoBusy}
-              />
+            {/* Single Native File Input */}
+            <input
+              id="pg-logo-file-input"
+              type="file"
+              accept="image/*"
+              onChange={handleLogoSelect}
+              className="sr-only"
+              disabled={logoBusy}
+            />
+
+            {/* Live Logo Preview Box - Tap to select image */}
+            <label
+              htmlFor="pg-logo-file-input"
+              className="flex flex-col items-center justify-center p-5 rounded-2xl bg-[#F5F0E8] border border-[#DED6CB] text-center mb-4 cursor-pointer hover:bg-[#EFE9DF] transition-colors group"
+            >
               <div className="relative">
                 <PgLogo tenantId={tenantId} logoUrl={logoPreview} name={pgName || businessName} size="xl" className="shadow-md mb-2 group-hover:opacity-90 transition-opacity" />
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity">
@@ -535,19 +533,15 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
                 {pgName || businessName}
               </p>
               <p className="text-[11px] text-[#77736B] font-medium mt-0.5">
-                {logoPreview ? 'Custom PG Logo Active (Tap to change)' : 'Letter Monogram Avatar (Tap to upload)'}
+                {logoPreview ? 'Custom PG Logo Active (Click to change)' : 'Letter Monogram Avatar (Click to upload)'}
               </p>
             </label>
 
             <div className="flex items-center gap-2 mb-5">
-              <label className="flex-1 flex cursor-pointer">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoSelect}
-                  className="sr-only"
-                  disabled={logoBusy}
-                />
+              <label
+                htmlFor="pg-logo-file-input"
+                className="flex-1 flex cursor-pointer"
+              >
                 <div
                   className={cx(
                     'flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-medium text-sm transition-colors select-none',

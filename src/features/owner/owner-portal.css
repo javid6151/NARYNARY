@@ -144,10 +144,16 @@
 }
 
 /* Tabs in Owner Portal */
-.owner-portal [role="tab"][aria-selected="true"] {
+.owner-portal .border-b [role="tab"][aria-selected="true"],
+.owner-portal nav [role="tab"][aria-selected="true"] {
   border-bottom-color: var(--owner-olive) !important;
   color: var(--owner-olive) !important;
   font-weight: 600;
+}
+
+.owner-portal [role="tab"][class*="text-white"],
+.owner-portal [role="tab"][class*="bg-[#343B2B]"] {
+  color: #ffffff !important;
 }
 
 /* Tables in Owner Portal */
