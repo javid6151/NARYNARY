@@ -324,6 +324,13 @@ function authApiPlugin() {
 
               const { data: pub } = supabaseAdmin.storage.from('pg-logos').getPublicUrl(path);
               logoUrl = `${pub.publicUrl}?t=${Date.now()}`;
+
+              try {
+                await supabaseAdmin
+                  .from('tenants')
+                  .update({ logo_url: logoUrl })
+                  .eq('id', tenantId);
+              } catch {}
             }
 
             if (businessName && typeof businessName === 'string' && businessName.trim()) {
@@ -341,6 +348,9 @@ function authApiPlugin() {
             const tenantId = urlObj.searchParams.get('tenantId');
             if (tenantId) {
               await supabaseAdmin.storage.from('pg-logos').remove([`${tenantId}.png`]);
+              try {
+                await supabaseAdmin.from('tenants').update({ logo_url: null }).eq('id', tenantId);
+              } catch {}
             }
             return json({ ok: true });
           }
@@ -350,9 +360,16 @@ function authApiPlugin() {
             const tenantId = urlObj.searchParams.get('tenantId');
             if (!tenantId) return json({ error: 'tenantId is required' }, 400);
 
+            const { data: files } = await supabaseAdmin.storage.from('pg-logos').list('', { search: `${tenantId}.png` });
+            const fileExists = Array.isArray(files) && files.some((f: any) => f.name === `${tenantId}.png`);
+
             const { data: pub } = supabaseAdmin.storage.from('pg-logos').getPublicUrl(`${tenantId}.png`);
             const { data: t } = await supabaseAdmin.from('tenants').select('business_name').eq('id', tenantId).maybeSingle();
-            return json({ logoUrl: `${pub.publicUrl}?t=${Date.now()}`, businessName: t?.business_name });
+            return json({
+              hasLogo: fileExists,
+              logoUrl: fileExists ? `${pub.publicUrl}?t=${Date.now()}` : null,
+              businessName: t?.business_name,
+            });
           }
 
           if (req.method === 'POST' && req.url === '/api/auth/set-resident-password') {

@@ -49,8 +49,34 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
     setPgName(businessName);
   }, [businessName]);
 
+  // Load existing logo on mount from branding API
   useEffect(() => {
-    setLogoPreview(currentLogoUrl);
+    let active = true;
+    if (!tenantId) return;
+
+    fetch(`/api/tenant/branding?tenantId=${tenantId}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!active) return;
+        if (data.hasLogo && data.logoUrl) {
+          setLogoPreview(data.logoUrl);
+        } else if (currentLogoUrl) {
+          setLogoPreview(currentLogoUrl);
+        }
+      })
+      .catch(() => {
+        if (currentLogoUrl) setLogoPreview(currentLogoUrl);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [tenantId]);
+
+  useEffect(() => {
+    if (currentLogoUrl) {
+      setLogoPreview(currentLogoUrl);
+    }
   }, [currentLogoUrl]);
 
   const handleProfileSubmit = async (e: FormEvent) => {
@@ -158,6 +184,12 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
       const activeUrl = resData.logoUrl || dataUrl;
       setLogoPreview(activeUrl);
 
+      // Notify all tabs and portal components immediately
+      try {
+        localStorage.setItem('zipco_pg_logo_ts', String(Date.now()));
+        window.dispatchEvent(new CustomEvent('pg_logo_updated', { detail: { logoUrl: activeUrl } }));
+      } catch {}
+
       // 3. Save to auth state and refresh
       try {
         await updateTenantBranding({
@@ -169,7 +201,10 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
       setBrandingSuccess(true);
       onToast('PG Logo uploaded successfully! Live across all staff and resident portals.');
       setTimeout(() => setBrandingSuccess(false), 4000);
-      await refreshAccess();
+      try {
+        await refreshAccess();
+      } catch {}
+      setLogoPreview(activeUrl);
     } catch (err: unknown) {
       setLogoError(err instanceof Error ? err.message : 'Failed to update PG logo');
     } finally {
@@ -194,13 +229,20 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
         });
         setLogoPreview(null);
         try {
+          localStorage.removeItem('zipco_pg_logo_ts');
+          window.dispatchEvent(new CustomEvent('pg_logo_updated', { detail: { logoUrl: null } }));
+        } catch {}
+        try {
           await updateTenantBranding({
             logo_url: null,
             business_name: pgName.trim() || businessName,
           });
         } catch {}
         onToast('PG Logo removed. Reverted to letter monogram avatar.');
-        await refreshAccess();
+        try {
+          await refreshAccess();
+        } catch {}
+        setLogoPreview(null);
       } catch (err: unknown) {
         setLogoError(err instanceof Error ? err.message : 'Failed to remove PG logo');
       } finally {

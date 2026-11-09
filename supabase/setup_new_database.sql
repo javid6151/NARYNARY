@@ -4175,6 +4175,9 @@ join public.buildings b on b.tenant_id = i.tenant_id and b.status = 'active';
 grant select, insert on public.inventory_reconciliations to authenticated;
 grant select, insert on public.inventory_reconciliation_lines to authenticated;
 
+-- Ensure tenants table has logo_url column
+alter table public.tenants add column if not exists logo_url text;
+
 -- update_tenant_branding
 create or replace function public.update_tenant_branding(
   p_logo_url text,

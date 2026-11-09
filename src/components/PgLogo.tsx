@@ -29,11 +29,38 @@ export function PgLogo({
   alt,
 }: PgLogoProps) {
   const [imgError, setImgError] = useState(false);
+  const [version, setVersion] = useState<number>(() => {
+    try {
+      const stored = typeof window !== 'undefined' ? localStorage.getItem('zipco_pg_logo_ts') : null;
+      return stored ? Number(stored) : 0;
+    } catch {
+      return 0;
+    }
+  });
+
   const sizeClasses = SIZE_MAP[size] || SIZE_MAP.md;
   const initial = (name.trim() ? name.trim().charAt(0) : 'P').toUpperCase();
 
+  useEffect(() => {
+    const onLogoUpdated = () => {
+      setImgError(false);
+      setVersion(Date.now());
+    };
+    window.addEventListener('pg_logo_updated', onLogoUpdated);
+    window.addEventListener('storage', onLogoUpdated);
+    return () => {
+      window.removeEventListener('pg_logo_updated', onLogoUpdated);
+      window.removeEventListener('storage', onLogoUpdated);
+    };
+  }, []);
+
   // Primary URL is explicit logoUrl; fallback is the standard tenant logo in public pg-logos bucket
-  const primaryUrl = logoUrl || (tenantId ? `${SUPABASE_URL}/storage/v1/object/public/pg-logos/${tenantId}.png` : null);
+  let primaryUrl: string | null = null;
+  if (logoUrl) {
+    primaryUrl = logoUrl;
+  } else if (tenantId) {
+    primaryUrl = `${SUPABASE_URL}/storage/v1/object/public/pg-logos/${tenantId}.png${version ? `?v=${version}` : ''}`;
+  }
 
   useEffect(() => {
     setImgError(false);
