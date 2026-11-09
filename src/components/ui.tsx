@@ -241,14 +241,33 @@ export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: 
 export function Drawer({ open, onClose, title, children, footer, wide }:
   { open: boolean; onClose: () => void; title: ReactNode; children: ReactNode; footer?: ReactNode; wide?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   useEffect(() => {
     if (!open) return;
     const prev = document.activeElement as HTMLElement | null;
-    ref.current?.querySelector<HTMLElement>('input,select,textarea,button')?.focus();
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+
+    // Focus the first interactive element in the drawer body, fallback to close button
+    const contentInput = ref.current?.querySelector<HTMLElement>(
+      '.overflow-y-auto input:not([type="hidden"]):not([disabled]), .overflow-y-auto select:not([disabled]), .overflow-y-auto textarea:not([disabled])'
+    );
+    if (contentInput) {
+      contentInput.focus();
+    } else {
+      ref.current?.querySelector<HTMLElement>('button, input, select, textarea')?.focus();
+    }
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCloseRef.current();
+    };
     window.addEventListener('keydown', onKey);
-    return () => { window.removeEventListener('keydown', onKey); prev?.focus(); };
-  }, [open, onClose]);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      prev?.focus();
+    };
+  }, [open]);
+
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
