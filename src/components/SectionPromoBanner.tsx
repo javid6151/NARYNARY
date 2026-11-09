@@ -40,60 +40,70 @@ export function SectionPromoBanner({
 }: SectionPromoBannerProps) {
   return (
     <div
-      className={`relative overflow-hidden rounded-[26px] p-6 sm:p-8 min-h-[195px] flex flex-col justify-between text-white shadow-md border border-[#DED6CB]/30 mb-6 ${className}`}
-      style={{
-        backgroundColor: '#261F18',
-        backgroundImage: `linear-gradient(180deg, rgba(24, 18, 14, 0.42) 0%, rgba(24, 18, 14, 0.85) 100%), url('${imageSrc}')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center 40%',
-      }}
+      className={`relative overflow-hidden rounded-[26px] p-6 sm:p-8 min-h-[195px] flex flex-col justify-between bg-[#F5F0E8] border border-[#DED6CB]/35 shadow-[0_2px_14px_rgba(48,39,31,0.03)] mb-6 group ${className}`}
     >
+      {/* Ambient Photographic Background Layer with low intensity & bottom gradient fade */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none select-none" aria-hidden="true">
+        <div
+          className="absolute inset-0 bg-cover bg-[center_38%] opacity-28 mix-blend-multiply filter contrast-95 transition-transform duration-500 group-hover:scale-105"
+          style={{ backgroundImage: `url('${imageSrc}')` }}
+        />
+        {/* Top-to-bottom gradient dissolving smoothly into page bg #F5F0E8 */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              'linear-gradient(180deg, rgba(245, 240, 232, 0.1) 0%, rgba(245, 240, 232, 0.45) 45%, rgba(245, 240, 232, 0.9) 78%, #F5F0E8 100%)',
+          }}
+        />
+      </div>
+
       {/* Top Header / Eyebrow */}
       <div className="relative z-10 flex items-start justify-between gap-4">
         <div>
-          <span className="text-[11.5px] font-bold uppercase tracking-[0.16em] text-[#A6B49A] block mb-1.5 drop-shadow-sm">
+          <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#343B2B] block mb-1.5">
             {eyebrow}
           </span>
-          <h2 className="text-2xl sm:text-[28px] font-bold tracking-tight text-white leading-tight drop-shadow-sm max-w-xl">
+          <h2 className="text-2xl sm:text-[28px] font-bold tracking-tight text-[#30271F] leading-tight max-w-xl">
             {title}
           </h2>
           {subtitle && (
-            <p className="text-xs sm:text-[13.5px] text-white/85 mt-2 max-w-lg font-normal leading-relaxed drop-shadow-sm">
+            <p className="text-xs sm:text-[13.5px] text-[#5C554B] mt-2 max-w-lg font-normal leading-relaxed">
               {subtitle}
             </p>
           )}
         </div>
 
         {statsBadge && (
-          <div className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/20 text-xs font-semibold text-white shadow-sm">
-            <span className="size-2 rounded-full bg-emerald-400" />
+          <div className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFEFC] border border-[#DED6CB] text-xs font-semibold text-[#30271F] shadow-2xs">
+            <span className="size-2 rounded-full bg-emerald-500" />
             <span>{statsBadge}</span>
           </div>
         )}
       </div>
 
-      {/* Action Buttons with signature deep olive pill button matching user reference */}
+      {/* Action Buttons with signature deep olive pill button & porcelain secondary */}
       {(primaryAction || secondaryAction) && (
         <div className="relative z-10 mt-6 pt-1 flex flex-wrap items-center gap-3">
           {primaryAction && (
             <button
               onClick={primaryAction.onClick}
-              className="inline-flex items-center gap-2.5 px-6 py-2.5 sm:py-3 rounded-2xl bg-[#343B2B] hover:bg-[#2A3022] text-white text-xs sm:text-[13.5px] font-semibold backdrop-blur-md border border-white/20 transition-all duration-150 hover:shadow-lg hover:border-white/35 active:scale-[0.98] cursor-pointer shadow-sm group"
+              className="inline-flex items-center gap-2.5 px-6 py-2.5 sm:py-3 rounded-2xl bg-[#343B2B] hover:bg-[#252A1F] text-white text-xs sm:text-[13.5px] font-semibold transition-all duration-150 hover:shadow-md active:scale-[0.98] cursor-pointer shadow-xs group/btn"
             >
               {primaryAction.icon && (
-                <primaryAction.icon className="size-4 text-[#CAD7BF] transition-transform group-hover:scale-105" />
+                <primaryAction.icon className="size-4 text-[#CAD7BF] transition-transform group-hover/btn:scale-105" />
               )}
               <span>{primaryAction.label}</span>
-              <ArrowRight className="size-4 text-white/90 transition-transform group-hover:translate-x-1" />
+              <ArrowRight className="size-4 text-white/90 transition-transform group-hover/btn:translate-x-1" />
             </button>
           )}
 
           {secondaryAction && (
             <button
               onClick={secondaryAction.onClick}
-              className="inline-flex items-center gap-2 px-4 py-2.5 sm:py-3 rounded-2xl bg-white/15 hover:bg-white/25 text-white text-xs sm:text-[13.5px] font-semibold backdrop-blur-md border border-white/20 transition-all cursor-pointer shadow-sm"
+              className="inline-flex items-center gap-2 px-5 py-2.5 sm:py-3 rounded-2xl bg-[#FFFEFC] hover:bg-[#ECE5DA] text-[#30271F] text-xs sm:text-[13.5px] font-semibold border border-[#DED6CB] transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
             >
-              {secondaryAction.icon && <secondaryAction.icon className="size-4" />}
+              {secondaryAction.icon && <secondaryAction.icon className="size-4 text-[#343B2B]" />}
               <span>{secondaryAction.label}</span>
             </button>
           )}
