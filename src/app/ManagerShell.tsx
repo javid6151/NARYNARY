@@ -16,6 +16,7 @@ import { useBuilding } from '../features/access/useBuilding';
 import { toSlug } from '../features/access/api';
 import { NotificationBell } from '../features/communication/components/NotificationBell';
 import { Avatar } from '../components/ui';
+import { PgLogo } from '../components/PgLogo';
 import { cx } from '../lib/cx';
 import '../features/owner/owner-portal.css';
 
@@ -78,19 +79,22 @@ export function ManagerShell() {
     { to: `${base}/reports`, label: 'Reports', icon: FileBarChart },
   ];
 
-  const managerDisplayName = staff?.tenant_name || access?.memberships?.[0]?.tenant_name || 'Manager';
+  const managerDisplayName = staff?.tenant_name || access?.memberships?.[0]?.tenant_name || 'PG Business';
+  const tenantLogoUrl = staff?.logo_url || access?.memberships?.[0]?.logo_url || null;
 
   const sidebar = (
     <nav aria-label="Manager Main Navigation" className="flex flex-col h-full bg-[#F5F0E8] text-[#30271F] border-r border-[#DED6CB] select-none">
       {/* Brand Header */}
       <div className="h-18 px-5 flex items-center justify-between border-b border-[#DED6CB]">
-        <div className="flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-[#343B2B] text-white flex items-center justify-center font-bold text-lg shadow-sm">
-            <span>Z</span>
-          </div>
-          <div>
-            <span className="font-bold text-[17px] tracking-tight text-[#30271F] block leading-tight">ZIPNARY</span>
-            <span className="text-[11px] font-medium tracking-wide text-[#77736B] uppercase">Manager Portal</span>
+        <div className="flex items-center gap-3 min-w-0">
+          <PgLogo logoUrl={tenantLogoUrl} name={managerDisplayName} size="md" />
+          <div className="min-w-0">
+            <span className="font-bold text-[17px] tracking-tight text-[#30271F] block leading-tight truncate">
+              {managerDisplayName}
+            </span>
+            <span className="text-[11px] font-medium tracking-wide text-[#77736B] uppercase truncate block">
+              {bName ? `${bName} · Manager` : 'Manager Portal'}
+            </span>
           </div>
         </div>
         <button
@@ -234,11 +238,11 @@ export function ManagerShell() {
           </button>
 
           {/* Mobile Brand */}
-          <div className="lg:hidden flex items-center gap-2">
-            <div className="size-7 rounded-lg bg-[#343B2B] text-white flex items-center justify-center font-bold text-xs">
-              Z
-            </div>
-            <span className="font-bold text-[15px] text-[#30271F]">ZIPNARY</span>
+          <div className="lg:hidden flex items-center gap-2 min-w-0">
+            <PgLogo logoUrl={tenantLogoUrl} name={managerDisplayName} size="xs" />
+            <span className="font-bold text-[15px] text-[#30271F] truncate max-w-36">
+              {managerDisplayName}
+            </span>
           </div>
 
           <div className="hidden sm:flex items-center gap-2">

@@ -18,6 +18,7 @@ export interface AuthCtx {
   loading: boolean;
   refreshAccess: () => Promise<void>;
   updateProfile: (updates: { full_name?: string; phone?: string }) => Promise<void>;
+  updateTenantBranding: (branding: { logo_url?: string | null; business_name?: string }) => Promise<void>;
   signOut: () => Promise<void>;
   /** Owner membership if any. */
   owner: Membership | null;

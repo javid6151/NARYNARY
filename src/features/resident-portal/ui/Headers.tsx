@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Menu } from 'lucide-react';
 import { NotificationBell } from '../../communication/components/NotificationBell';
+import { PgLogo } from '../../../components/PgLogo';
 import type { ResidentProfile } from '../types';
 
 export function BrandHeader({
@@ -18,7 +19,6 @@ export function BrandHeader({
 }) {
   const pgName = p?.business_name || p?.building_name || 'PG Resident Portal';
   const sub = subtitle || (p?.building_name ? `${p.building_name} · Resident portal` : 'Resident portal');
-  const initial = (p?.business_name || p?.building_name || 'P').charAt(0).toUpperCase();
 
   return (
     <header className={`sticky top-0 z-20 -mx-4 px-4 h-16 flex items-center gap-3 ${overlay ? 'resident-brand-header--overlay' : 'resident-brand-header'}`}>
@@ -26,10 +26,8 @@ export function BrandHeader({
         <Menu className="size-6 text-[#30271F]" />
       </button>
 
-      {/* Specific PG Logo Monogram Avatar */}
-      <div className="size-9 rounded-xl bg-[#343B2B] text-white flex items-center justify-center font-bold text-base shadow-xs shrink-0 select-none">
-        <span>{initial}</span>
-      </div>
+      {/* Specific PG Logo (or monogram fallback) */}
+      <PgLogo logoUrl={p?.logo_url} name={pgName} size="sm" />
 
       <div className="flex-1 leading-tight min-w-0">
         <p className="resident-brand-name text-[18px] font-bold tracking-tight text-[#30271F] truncate">{pgName}</p>

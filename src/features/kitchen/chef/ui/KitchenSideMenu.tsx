@@ -5,13 +5,16 @@ import { CalendarDays, ClipboardList, Headphones, Home, LayoutDashboard, LogOut,
 import { cx } from '../../../../lib/cx';
 import { useAuth } from '../../../access/useAuth';
 import { useBuilding } from '../../../access/useBuilding';
+import { PgLogo } from '../../../../components/PgLogo';
 import { useKitchenBase } from '../useKitchenBase';
 
 export function KitchenSideMenu({ name, open, onClose }: { name: string; open: boolean; onClose: () => void }) {
-  const { staff, signOut } = useAuth();
+  const { staff, chef, signOut } = useAuth();
   const { building } = useBuilding();
   const nav = useNavigate();
   const base = useKitchenBase();
+  const tenantBusinessName = chef?.tenant_name || staff?.tenant_name || building?.name || 'PG Kitchen';
+  const tenantLogoUrl = chef?.logo_url || staff?.logo_url || null;
 
   const links = [
     { to: base, label: 'Home', icon: Home, end: true },
@@ -38,12 +41,10 @@ export function KitchenSideMenu({ name, open, onClose }: { name: string; open: b
       <div className="absolute inset-0 bg-[#30271F]/40 backdrop-blur-xs" onClick={onClose} aria-hidden />
       <aside role="dialog" aria-modal="true" aria-label="Menu" className="relative h-full w-[82%] max-w-xs bg-[#F5F0E8] text-[#30271F] flex flex-col border-r border-[#DED6CB] shadow-2xl animate-in slide-in-from-left duration-200">
         <div className="p-5 bg-[#343B2B] text-white flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-white/10 flex items-center justify-center font-bold text-lg">
-            <span>Z</span>
-          </div>
+          <PgLogo logoUrl={tenantLogoUrl} name={tenantBusinessName} size="md" className="bg-white/10" />
           <div className="flex-1 min-w-0">
-            <p className="font-bold text-[15px] truncate">{name || 'Chef'}</p>
-            <p className="text-[12px] text-white/75 truncate">{building?.name ?? 'Kitchen Staff'}</p>
+            <p className="font-bold text-[15px] truncate">{tenantBusinessName}</p>
+            <p className="text-[12px] text-white/75 truncate">{building?.name ? `${building.name} · ${name || 'Chef'}` : (name || 'Chef')}</p>
           </div>
           <button onClick={onClose} aria-label="Close menu" className="p-1.5 rounded-lg hover:bg-white/15 text-white cursor-pointer transition-colors">
             <X className="size-5" />

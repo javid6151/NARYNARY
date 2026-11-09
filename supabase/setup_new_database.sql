@@ -96,6 +96,7 @@ create table public.tenants (
   phone text,
   email text,
   city text,
+  logo_url text,
   status text not null default 'pending'
     check (status in ('pending','active','changes_requested','rejected','suspended','banned','closed')),
   approved_at timestamptz,
@@ -1904,14 +1905,14 @@ returns jsonb language sql stable security definer set search_path = '' as $$
     'memberships', coalesce((
       select jsonb_agg(jsonb_build_object(
         'membership_id', m.id, 'tenant_id', m.tenant_id, 'role', m.role, 'status', m.status,
-        'tenant_name', t.business_name, 'tenant_status', t.status, 'currency', t.currency, 'timezone', t.timezone,
+        'tenant_name', t.business_name, 'tenant_status', t.status, 'logo_url', t.logo_url, 'currency', t.currency, 'timezone', t.timezone,
         'building_ids', case when m.role = 'owner'
             then coalesce((select jsonb_agg(b.id) from public.buildings b where b.tenant_id = m.tenant_id and b.status = 'active'), '[]'::jsonb)
             else coalesce((select jsonb_agg(bm.building_id) from public.building_memberships bm where bm.membership_id = m.id), '[]'::jsonb) end
       ) order by m.created_at)
       from public.tenant_memberships m join public.tenants t on t.id = m.tenant_id
       where m.user_id = auth.uid() and m.status = 'active'), '[]'::jsonb),
-    'owned_tenant', (select jsonb_build_object('tenant_id', t.id, 'status', t.status, 'business_name', t.business_name)
+    'owned_tenant', (select jsonb_build_object('tenant_id', t.id, 'status', t.status, 'business_name', t.business_name, 'logo_url', t.logo_url)
                      from public.tenants t where t.owner_user_id = auth.uid() order by t.created_at desc limit 1)
   );
 $$;
@@ -3143,7 +3144,7 @@ create or replace function public.my_resident_profile()
 returns jsonb language sql stable security definer set search_path = '' as $$
   select jsonb_build_object(
     'resident_id', r.id, 'tenant_id', r.tenant_id, 'full_name', r.full_name, 'phone', r.phone, 'email', r.email,
-    'business_name', t.business_name, 'building_id', a.building_id, 'building_name', b.name, 'building_address', b.address,
+    'business_name', t.business_name, 'logo_url', t.logo_url, 'building_id', a.building_id, 'building_name', b.name, 'building_address', b.address,
     'pg_phone', t.phone, 'pg_email', t.email,
     'floor_name', f.name, 'room_number', rm.room_number, 'sharing', rm.sharing_capacity, 'bed_label', bd.bed_label,
     'admission_date', ad.admission_date, 'monthly_rent', ad.monthly_rent, 'security_deposit', ad.security_deposit,
@@ -3545,7 +3546,7 @@ returns jsonb language sql stable security definer set search_path = '' as $$
     'memberships', coalesce((
       select jsonb_agg(jsonb_build_object(
         'membership_id', m.id, 'tenant_id', m.tenant_id, 'tenant_code', t.tenant_code, 'role', m.role, 'status', m.status,
-        'tenant_name', t.business_name, 'tenant_status', t.status, 'currency', t.currency, 'timezone', t.timezone,
+        'tenant_name', t.business_name, 'tenant_status', t.status, 'logo_url', t.logo_url, 'currency', t.currency, 'timezone', t.timezone,
         'building_ids', case when m.role = 'owner'
             then coalesce((select jsonb_agg(b.id) from public.buildings b where b.tenant_id = m.tenant_id and b.status = 'active'), '[]'::jsonb)
             else coalesce((select jsonb_agg(bm.building_id) from public.building_memberships bm where bm.membership_id = m.id), '[]'::jsonb) end
@@ -3553,7 +3554,7 @@ returns jsonb language sql stable security definer set search_path = '' as $$
       from public.tenant_memberships m join public.tenants t on t.id = m.tenant_id
       where m.user_id = auth.uid() and m.status = 'active'), '[]'::jsonb),
     'owned_tenant', (select jsonb_build_object('tenant_id', t.id, 'tenant_code', t.tenant_code, 'status', t.status,
-                                               'business_name', t.business_name)
+                                               'business_name', t.business_name, 'logo_url', t.logo_url)
                      from public.tenants t where t.owner_user_id = auth.uid() order by t.created_at desc limit 1)
   );
 $$;
@@ -4010,7 +4011,7 @@ create or replace function public.my_resident_profile()
 returns jsonb language sql stable security definer set search_path = '' as $$
   select jsonb_build_object(
     'resident_id', r.id, 'tenant_id', r.tenant_id, 'full_name', r.full_name, 'phone', r.phone, 'email', r.email,
-    'business_name', t.business_name, 'building_id', a.building_id, 'building_name', b.name, 'building_address', b.address,
+    'business_name', t.business_name, 'logo_url', t.logo_url, 'building_id', a.building_id, 'building_name', b.name, 'building_address', b.address,
     'pg_phone', t.phone, 'pg_email', t.email,
     'floor_name', f.name, 'room_number', rm.room_number, 'sharing', rm.sharing_capacity, 'bed_label', bd.bed_label,
     'admission_date', ad.admission_date, 'monthly_rent', ad.monthly_rent, 'security_deposit', ad.security_deposit,
@@ -4173,3 +4174,38 @@ join public.buildings b on b.tenant_id = i.tenant_id and b.status = 'active';
 -- 4. Grants for authenticated users
 grant select, insert on public.inventory_reconciliations to authenticated;
 grant select, insert on public.inventory_reconciliation_lines to authenticated;
+
+-- update_tenant_branding
+create or replace function public.update_tenant_branding(
+  p_logo_url text,
+  p_business_name text default null
+) returns void language plpgsql security definer set search_path = '' as $$
+declare
+  v_tenant_id uuid;
+begin
+  select t.id into v_tenant_id
+  from public.tenants t
+  where t.owner_user_id = auth.uid()
+  limit 1;
+
+  if v_tenant_id is null then
+    select m.tenant_id into v_tenant_id
+    from public.tenant_memberships m
+    where m.user_id = auth.uid() and m.role = 'owner' and m.status = 'active'
+    limit 1;
+  end if;
+
+  if v_tenant_id is null then
+    raise exception 'FORBIDDEN: Only the tenant owner can update PG branding';
+  end if;
+
+  update public.tenants
+  set
+    logo_url = p_logo_url,
+    business_name = coalesce(nullif(trim(p_business_name), ''), business_name),
+    updated_at = now()
+  where id = v_tenant_id;
+end;
+$$;
+revoke all on function public.update_tenant_branding(text, text) from anon, public;
+grant execute on function public.update_tenant_branding(text, text) to authenticated;

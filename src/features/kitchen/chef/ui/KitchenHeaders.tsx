@@ -4,11 +4,19 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChefHat, Menu } from 'lucide-react';
 import { NotificationBell } from '../../../communication/components/NotificationBell';
 import { Avatar } from '../../../../components/ui';
+import { PgLogo } from '../../../../components/PgLogo';
+import { useAuth } from '../../../access/useAuth';
+import { useBuilding } from '../../../access/useBuilding';
 import { useKitchenBase } from '../useKitchenBase';
 
 export function KitchenBrandHeader({ name, onMenu }: { name: string; onMenu: () => void }) {
   const nav = useNavigate();
   const base = useKitchenBase();
+  const { staff, chef } = useAuth();
+  const { building } = useBuilding();
+  const tenantBusinessName = chef?.tenant_name || staff?.tenant_name || building?.name || 'PG Kitchen';
+  const tenantLogoUrl = chef?.logo_url || staff?.logo_url || null;
+
   return (
     <header className="sticky top-0 z-20 bg-[#FFFEFC]/92 backdrop-blur-md border-b border-[#DED6CB] -mx-4 px-4 h-16 flex items-center gap-3 shadow-2xs mb-4">
       <button
@@ -19,13 +27,15 @@ export function KitchenBrandHeader({ name, onMenu }: { name: string; onMenu: () 
         <Menu className="size-5" />
       </button>
 
-      <div className="flex items-center gap-2.5">
-        <div className="size-9 rounded-xl bg-[#343B2B] text-white flex items-center justify-center font-bold text-base shadow-sm">
-          <span>Z</span>
-        </div>
+      <div className="flex items-center gap-2.5 min-w-0">
+        <PgLogo logoUrl={tenantLogoUrl} name={tenantBusinessName} size="sm" />
         <div className="leading-tight min-w-0">
-          <span className="font-bold text-[16px] text-[#30271F] block leading-tight">ZIPNARY</span>
-          <span className="text-[10.5px] font-semibold uppercase tracking-wider text-[#77736B]">Chef & Kitchen</span>
+          <span className="font-bold text-[16px] text-[#30271F] block leading-tight truncate">
+            {tenantBusinessName}
+          </span>
+          <span className="text-[10.5px] font-semibold uppercase tracking-wider text-[#77736B] truncate block">
+            {building?.name ? `${building.name} · Kitchen` : 'Chef & Kitchen'}
+          </span>
         </div>
       </div>
 

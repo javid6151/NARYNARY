@@ -8,6 +8,7 @@ export interface ResidentProfile {
   phone: string;
   email: string | null;
   business_name: string;
+  logo_url?: string | null;
   building_id: string;
   building_name: string;
   building_address: string | null;

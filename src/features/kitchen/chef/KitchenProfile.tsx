@@ -36,7 +36,7 @@ export function KitchenProfile({ name }: { name: string }) {
       <Card title="Kitchen Operational Access" className="bg-[#FFFEFC] border-[#DED6CB] rounded-2xl shadow-2xs">
         <dl className="grid grid-cols-2 gap-y-2.5 text-[13.5px]">
           <dt className="text-[#77736B]">PG Enterprise</dt>
-          <dd className="text-right font-semibold text-[#30271F]">{m?.tenant_name || 'ZIPNARY'}</dd>
+          <dd className="text-right font-semibold text-[#30271F]">{m?.tenant_name || 'PG Business'}</dd>
           <dt className="text-[#77736B]">Assigned Role</dt>
           <dd className="text-right capitalize font-semibold text-[#343B2B]">{m?.role || 'Chef'}</dd>
           <dt className="text-[#77736B]">Authorized Buildings</dt>

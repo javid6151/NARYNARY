@@ -5,6 +5,7 @@ import { Building2, HelpCircle, LogOut, Mail, MapPin, Phone, ShieldCheck } from 
 import { fmtDate, inr } from '../../../lib/format';
 import { useAuth } from '../../access/useAuth';
 import { Avatar, Button } from '../../../components/ui';
+import { PgLogo } from '../../../components/PgLogo';
 import type { ResidentProfile } from '../types';
 import { TopBar } from '../ui/Headers';
 
@@ -20,7 +21,6 @@ function Row({ k, v }: { k: string; v: ReactNode }) {
 export function ResProfile({ p }: { p: ResidentProfile }) {
   const { signOut } = useAuth();
   const nav = useNavigate();
-  const pgInitial = (p.business_name || p.building_name || 'PG').trim().charAt(0).toUpperCase();
 
   return (
     <>
@@ -47,9 +47,7 @@ export function ResProfile({ p }: { p: ResidentProfile }) {
       <section className="resident-profile-card p-4 space-y-3">
         <div className="flex items-center justify-between pb-3 border-b border-[#EAE3D7]">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="size-10 rounded-xl bg-[#343B2B] text-white flex items-center justify-center font-bold text-base shadow-xs shrink-0 select-none">
-              {pgInitial}
-            </span>
+            <PgLogo logoUrl={p.logo_url} name={p.business_name} size="md" />
             <div className="min-w-0">
               <h2 className="text-[15px] font-bold text-[#30271F] leading-tight truncate">
                 {p.business_name}

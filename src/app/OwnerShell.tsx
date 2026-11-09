@@ -15,6 +15,7 @@ import { useBuilding } from '../features/access/useBuilding';
 import { toSlug } from '../features/access/api';
 import { NotificationBell } from '../features/communication/components/NotificationBell';
 import { Avatar } from '../components/ui';
+import { PgLogo } from '../components/PgLogo';
 import { cx } from '../lib/cx';
 import '../features/owner/owner-portal.css';
 
@@ -82,19 +83,23 @@ export function OwnerShell() {
     (access?.is_platform_admin ? 'ZIPCO Admin' : 'Owner');
 
   const tenantBusinessName =
-    staff?.tenant_name || access?.owned_tenant?.business_name || 'ZIPNARY';
+    staff?.tenant_name || access?.owned_tenant?.business_name || 'PG Business';
+  const tenantLogoUrl =
+    staff?.logo_url || access?.owned_tenant?.logo_url || null;
 
   const sidebar = (
     <nav aria-label="Owner Main Navigation" className="flex flex-col h-full bg-[#F5F0E8] text-[#30271F] border-r border-[#DED6CB] select-none">
       {/* Brand Header */}
       <div className="h-18 px-5 flex items-center justify-between border-b border-[#DED6CB]">
-        <div className="flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-[#343B2B] text-white flex items-center justify-center font-bold text-lg shadow-sm">
-            <span>Z</span>
-          </div>
-          <div>
-            <span className="font-bold text-[17px] tracking-tight text-[#30271F] block leading-tight">ZIPNARY</span>
-            <span className="text-[11px] font-medium tracking-wide text-[#77736B] uppercase">Property Management</span>
+        <div className="flex items-center gap-3 min-w-0">
+          <PgLogo logoUrl={tenantLogoUrl} name={tenantBusinessName} size="md" />
+          <div className="min-w-0">
+            <span className="font-bold text-[17px] tracking-tight text-[#30271F] block leading-tight truncate">
+              {tenantBusinessName}
+            </span>
+            <span className="text-[11px] font-medium tracking-wide text-[#77736B] uppercase truncate block">
+              {bName ? `${bName} · PG SaaS` : 'Property Management'}
+            </span>
           </div>
         </div>
         <button
@@ -221,17 +226,17 @@ export function OwnerShell() {
           </button>
 
           {/* Mobile Brand */}
-          <div className="lg:hidden flex items-center gap-2">
-            <div className="size-7 rounded-lg bg-[#343B2B] text-white flex items-center justify-center font-bold text-xs">
-              Z
-            </div>
-            <span className="font-bold text-[15px] text-[#30271F]">ZIPNARY</span>
+          <div className="lg:hidden flex items-center gap-2 min-w-0">
+            <PgLogo logoUrl={tenantLogoUrl} name={tenantBusinessName} size="xs" />
+            <span className="font-bold text-[15px] text-[#30271F] truncate max-w-36">
+              {tenantBusinessName}
+            </span>
           </div>
 
           <div className="hidden sm:flex items-center gap-2">
-            <span className="text-xs font-medium text-[#77736B] hidden md:inline">
+            <span className="text-xs font-semibold text-[#30271F] hidden md:inline">
               {tenantBusinessName}
-              {staff?.tenant_code && <span className="tabular"> · {staff.tenant_code}</span>}
+              {staff?.tenant_code && <span className="tabular font-normal text-[#77736B]"> · {staff.tenant_code}</span>}
             </span>
           </div>
 

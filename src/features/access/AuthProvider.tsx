@@ -171,6 +171,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [session, refreshAccess]
   );
 
+  const updateTenantBranding = useCallback(
+    async (branding: { logo_url?: string | null; business_name?: string }) => {
+      try {
+        const { error: rpcErr } = await (supabase.rpc as any)('update_tenant_branding', {
+          p_logo_url: branding.logo_url ?? null,
+          p_business_name: branding.business_name ?? null,
+        });
+        if (rpcErr) throw rpcErr;
+      } catch (err: unknown) {
+        console.warn('update_tenant_branding RPC error, attempting fallback update:', err);
+        const myUid = session?.user?.id;
+        if (myUid) {
+          await supabase
+            .from('tenants')
+            .update({
+              logo_url: branding.logo_url,
+              ...(branding.business_name ? { business_name: branding.business_name.trim() } : {}),
+            })
+            .eq('owner_user_id', myUid);
+        }
+      }
+      await refreshAccess();
+    },
+    [session, refreshAccess]
+  );
+
   useEffect(() => {
     let active = true;
 
@@ -272,6 +298,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       refreshAccess,
       updateProfile,
+      updateTenantBranding,
       owner,
       manager,
       staff,
@@ -294,7 +321,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem(BUILDING_STORAGE_KEY);
       },
     };
-  }, [session, access, profile, loading, refreshAccess, updateProfile, homePath, isSuspended]);
+  }, [session, access, profile, loading, refreshAccess, updateProfile, updateTenantBranding, homePath, isSuspended]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

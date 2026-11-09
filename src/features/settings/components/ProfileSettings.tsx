@@ -1,12 +1,13 @@
-import { useState, type FormEvent } from 'react';
-import { User, Phone, Mail, Shield, Building2, KeyRound, CheckCircle2, Lock, Save } from 'lucide-react';
+import { useState, useRef, useEffect, type FormEvent } from 'react';
+import { User, Phone, Mail, Shield, Building2, KeyRound, CheckCircle2, Lock, Save, Upload, Trash2 } from 'lucide-react';
 import { Button, Card, Field, Input, Avatar, ErrorBanner } from '../../../components/ui';
 import { useAuth } from '../../access/useAuth';
 import { supabase } from '../../../lib/supabase';
 import { PHONE_RE } from '../../../lib/validation';
+import { PgLogo } from '../../../components/PgLogo';
 
 export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
-  const { session, access, staff, profile, updateProfile } = useAuth();
+  const { session, access, staff, profile, updateProfile, updateTenantBranding } = useAuth();
 
   const currentFullName =
     profile?.full_name ||
@@ -30,9 +31,26 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
   const [passBusy, setPassBusy] = useState(false);
   const [passError, setPassError] = useState<string | null>(null);
 
+  // PG Branding & Logo
   const businessName = staff?.tenant_name || access?.owned_tenant?.business_name || 'PG Business';
   const tenantCode = staff?.tenant_code || access?.owned_tenant?.tenant_code || '—';
   const userEmail = profile?.email || session?.user?.email || '—';
+  const currentLogoUrl = staff?.logo_url || access?.owned_tenant?.logo_url || null;
+
+  const [pgName, setPgName] = useState(businessName);
+  const [logoPreview, setLogoPreview] = useState<string | null>(currentLogoUrl);
+  const [logoBusy, setLogoBusy] = useState(false);
+  const [logoError, setLogoError] = useState<string | null>(null);
+  const [brandingSuccess, setBrandingSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    setPgName(businessName);
+  }, [businessName]);
+
+  useEffect(() => {
+    setLogoPreview(currentLogoUrl);
+  }, [currentLogoUrl]);
 
   const handleProfileSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -88,6 +106,115 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
     }
   };
 
+  const handleLogoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setLogoError('Please choose an image file (PNG, JPG, SVG, or WEBP).');
+      return;
+    }
+    if (file.size > 4 * 1024 * 1024) {
+      setLogoError('Image file must be smaller than 4 MB.');
+      return;
+    }
+
+    setLogoBusy(true);
+    setLogoError(null);
+
+    try {
+      // 1. Read file as Data URL
+      const reader = new FileReader();
+      const dataUrlPromise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      const dataUrl = await dataUrlPromise;
+
+      let finalLogoUrl = dataUrl;
+
+      // 2. Attempt upload to Supabase Storage
+      try {
+        const tenantId = staff?.tenant_id || access?.owned_tenant?.tenant_id || 'tenant';
+        const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const path = `pg-logos/${tenantId}-${Date.now()}-${cleanName}`;
+        const { error: upErr } = await supabase.storage
+          .from('staff-documents')
+          .upload(path, file, { contentType: file.type, upsert: true });
+
+        if (!upErr) {
+          const { data: pub } = supabase.storage.from('staff-documents').getPublicUrl(path);
+          if (pub?.publicUrl) {
+            finalLogoUrl = pub.publicUrl;
+          }
+        }
+      } catch (storageErr) {
+        console.warn('Storage upload fallback to Data URL:', storageErr);
+      }
+
+      setLogoPreview(finalLogoUrl);
+
+      // 3. Save branding
+      await updateTenantBranding({
+        logo_url: finalLogoUrl,
+        business_name: pgName.trim() || businessName,
+      });
+
+      setBrandingSuccess(true);
+      onToast('PG Logo uploaded successfully! It is now live across all staff and resident portals.');
+      setTimeout(() => setBrandingSuccess(false), 4000);
+    } catch (err: unknown) {
+      setLogoError(err instanceof Error ? err.message : 'Failed to update PG logo');
+    } finally {
+      setLogoBusy(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveLogo = async () => {
+    if (window.confirm('Remove PG logo and revert to monogram avatar?')) {
+      setLogoBusy(true);
+      setLogoError(null);
+      try {
+        setLogoPreview(null);
+        await updateTenantBranding({
+          logo_url: null,
+          business_name: pgName.trim() || businessName,
+        });
+        onToast('PG Logo removed. Reverted to letter monogram avatar.');
+      } catch (err: unknown) {
+        setLogoError(err instanceof Error ? err.message : 'Failed to remove PG logo');
+      } finally {
+        setLogoBusy(false);
+      }
+    }
+  };
+
+  const handleSaveBranding = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!pgName.trim() || pgName.trim().length < 2) {
+      setLogoError('Please enter a valid PG business name (at least 2 characters).');
+      return;
+    }
+
+    setLogoBusy(true);
+    setLogoError(null);
+    try {
+      await updateTenantBranding({
+        logo_url: logoPreview,
+        business_name: pgName.trim(),
+      });
+      setBrandingSuccess(true);
+      onToast(`PG branding updated successfully to "${pgName.trim()}"!`);
+      setTimeout(() => setBrandingSuccess(false), 4000);
+    } catch (err: unknown) {
+      setLogoError(err instanceof Error ? err.message : 'Failed to update PG branding');
+    } finally {
+      setLogoBusy(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* 1. Profile Hero Card */}
@@ -110,12 +237,15 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
           </div>
         </div>
 
-        {savedSuccess && (
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#EBF0E6] text-[#343B2B] text-xs font-semibold border border-[#CAD7BF] animate-in fade-in duration-200">
-            <CheckCircle2 className="size-4" />
-            <span>Changes saved live</span>
-          </div>
-        )}
+        <div className="flex items-center gap-3 self-end sm:self-center">
+          <PgLogo logoUrl={logoPreview} name={pgName || businessName} size="md" />
+          {savedSuccess && (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#EBF0E6] text-[#343B2B] text-xs font-semibold border border-[#CAD7BF] animate-in fade-in duration-200">
+              <CheckCircle2 className="size-4" />
+              <span>Changes saved live</span>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -242,8 +372,97 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
           </Card>
         </div>
 
-        {/* 4. Business & Account Summary Sidebar (1 Col) */}
+        {/* 4. PG Business Branding & Logo (1 Col) */}
         <div className="space-y-6">
+          <Card title="PG Branding & Logo">
+            <p className="text-xs text-[#77736B] -mt-2 mb-4">
+              Your PG logo and business name are shown across all staff portals (owner, manager, chef) and resident accounts.
+            </p>
+
+            <ErrorBanner error={logoError} />
+
+            {/* Live Logo Preview Box */}
+            <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-[#F5F0E8] border border-[#DED6CB] text-center mb-4">
+              <PgLogo logoUrl={logoPreview} name={pgName || businessName} size="xl" className="shadow-md mb-2" />
+              <p className="font-bold text-base text-[#30271F] truncate max-w-full">
+                {pgName || businessName}
+              </p>
+              <p className="text-[11px] text-[#77736B] font-medium mt-0.5">
+                {logoPreview ? 'Custom PG Logo Active' : 'Letter Monogram Avatar'}
+              </p>
+            </div>
+
+            {/* Hidden File Input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/png,image/jpeg,image/webp,image/svg+xml"
+              onChange={handleLogoSelect}
+              className="hidden"
+            />
+
+            <div className="flex items-center gap-2 mb-5">
+              <Button
+                type="button"
+                variant="secondary"
+                busy={logoBusy}
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1 justify-center"
+              >
+                <Upload className="size-4" />
+                <span>{logoPreview ? 'Change Logo Image' : 'Upload PG Logo'}</span>
+              </Button>
+              {logoPreview && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={logoBusy}
+                  onClick={handleRemoveLogo}
+                  className="text-bad hover:bg-bad-bg hover:text-bad"
+                  title="Remove Logo"
+                >
+                  <Trash2 className="size-4" />
+                </Button>
+              )}
+            </div>
+
+            <form onSubmit={handleSaveBranding} className="space-y-4 pt-4 border-t border-[#DED6CB]">
+              <Field
+                label="PG Business Name"
+                required
+                hint="Shown in header, invoices, and resident portal."
+              >
+                {(id) => (
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[#77736B]" />
+                    <Input
+                      id={id}
+                      value={pgName}
+                      onChange={(e) => setPgName(e.target.value)}
+                      placeholder="e.g. Sunshine PG"
+                      className="pl-9 font-medium"
+                      required
+                    />
+                  </div>
+                )}
+              </Field>
+
+              <div className="flex items-center gap-2">
+                <Button type="submit" busy={logoBusy}>
+                  <Save className="size-4" />
+                  <span>Save PG Name</span>
+                </Button>
+                {brandingSuccess && (
+                  <span className="text-xs font-semibold text-[#2F6B27] flex items-center gap-1">
+                    <CheckCircle2 className="size-3.5" />
+                    Saved!
+                  </span>
+                )}
+              </div>
+            </form>
+          </Card>
+
+          {/* Account Details */}
           <Card title="Account & Business Details">
             <div className="space-y-4 text-xs">
               <div>

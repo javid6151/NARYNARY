@@ -11,6 +11,7 @@ export interface Membership {
   status: string;
   tenant_name: string;
   tenant_status: string;
+  logo_url?: string | null;
   currency: string;
   timezone: string;
   /** Owners: every active building of the tenant. Staff: only assigned buildings. */
@@ -23,7 +24,7 @@ export interface Access {
   /** Active memberships only. */
   memberships: Membership[];
   /** The tenant this user applied to own (any status), used by onboarding. */
-  owned_tenant: { tenant_id: string; tenant_code: string; status: string; business_name: string } | null;
+  owned_tenant: { tenant_id: string; tenant_code: string; status: string; business_name: string; logo_url?: string | null } | null;
 }
 
 /** An active building the user can see (RLS decides which). */
