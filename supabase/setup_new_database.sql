@@ -3144,6 +3144,7 @@ returns jsonb language sql stable security definer set search_path = '' as $$
   select jsonb_build_object(
     'resident_id', r.id, 'tenant_id', r.tenant_id, 'full_name', r.full_name, 'phone', r.phone, 'email', r.email,
     'business_name', t.business_name, 'building_id', a.building_id, 'building_name', b.name, 'building_address', b.address,
+    'pg_phone', t.phone, 'pg_email', t.email,
     'floor_name', f.name, 'room_number', rm.room_number, 'sharing', rm.sharing_capacity, 'bed_label', bd.bed_label,
     'admission_date', ad.admission_date, 'monthly_rent', ad.monthly_rent, 'security_deposit', ad.security_deposit,
     'mess_included', ad.mess_included,
@@ -4010,6 +4011,7 @@ returns jsonb language sql stable security definer set search_path = '' as $$
   select jsonb_build_object(
     'resident_id', r.id, 'tenant_id', r.tenant_id, 'full_name', r.full_name, 'phone', r.phone, 'email', r.email,
     'business_name', t.business_name, 'building_id', a.building_id, 'building_name', b.name, 'building_address', b.address,
+    'pg_phone', t.phone, 'pg_email', t.email,
     'floor_name', f.name, 'room_number', rm.room_number, 'sharing', rm.sharing_capacity, 'bed_label', bd.bed_label,
     'admission_date', ad.admission_date, 'monthly_rent', ad.monthly_rent, 'security_deposit', ad.security_deposit,
     'mess_included', ad.mess_included, 'share_birthday', r.share_birthday, 'has_birthday', r.date_of_birth is not null,

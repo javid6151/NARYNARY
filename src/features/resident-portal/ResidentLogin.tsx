@@ -3,7 +3,7 @@
  * Completely scoped to residents — redesigned with the ZIPNARY Enterprise Design System.
  */
 import { useState, type FormEvent } from 'react';
-import { ArrowRight, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Building2, ShieldCheck } from 'lucide-react';
 import { ErrorBanner, Field, Input } from '../../components/ui';
 import { useAuth } from '../access/useAuth';
 import { claimPendingAccess, determinePortalRoute, getMyAccess } from '../access/api';
@@ -75,12 +75,12 @@ export function ResidentLogin() {
       <div className="w-full max-w-md">
         {/* Resident Portal Branding Header */}
         <div className="text-center mb-6 space-y-2">
-          <div className="size-12 rounded-2xl bg-[#343B2B] text-white flex items-center justify-center font-bold text-xl shadow-xs mx-auto mb-2">
-            <span>Z</span>
+          <div className="size-12 rounded-2xl bg-[#343B2B] text-white flex items-center justify-center shadow-xs mx-auto mb-2">
+            <Building2 className="size-6 text-[#FFFEFC]" />
           </div>
           <div>
-            <span className="font-bold text-2xl tracking-tight text-[#30271F] block leading-tight">ZIPNARY</span>
-            <span className="text-[11px] font-semibold tracking-wider text-[#77736B] uppercase">Resident Portal</span>
+            <span className="font-bold text-2xl tracking-tight text-[#30271F] block leading-tight">Resident Portal</span>
+            <span className="text-[11px] font-semibold tracking-wider text-[#77736B] uppercase">Hostel &amp; PG Living</span>
           </div>
           <p className="text-xs text-[#77736B] max-w-sm mx-auto">
             Access your room details, rent payment receipts, mess meals, notices and complaints.
@@ -170,16 +170,16 @@ export function ResidentLogin() {
           </form>
 
           <div className="pt-6 border-t border-[#DED6CB] text-center text-xs text-[#77736B] mt-6 space-y-1">
-            <p>Staying at a PG managed by Zipnary?</p>
+            <p className="font-medium text-[#30271F]">New resident?</p>
             <p className="text-[11.5px] text-[#77736B]">
-              Your PG manager creates your resident account during admission.
+              Your PG manager sets up your account during check-in.
             </p>
           </div>
         </div>
 
-        {/* Quick Footer */}
-        <p className="text-center text-[11px] text-[#77736B] mt-6">
-          Zipnary Resident Portal
+        {/* Quick Footer Watermark */}
+        <p className="text-center text-[11px] uppercase tracking-wider text-[#A59D90] font-medium mt-6">
+          Powered by ZIPNARY
         </p>
       </div>
     </div>

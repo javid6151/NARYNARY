@@ -5,7 +5,6 @@ import {
 } from 'lucide-react';
 import { cx } from '../../../lib/cx';
 import { useAuth } from '../../access/useAuth';
-import { Avatar } from '../../../components/ui';
 import type { ResidentProfile } from '../types';
 
 export function SideMenu({ p, open, onClose }: { p: ResidentProfile; open: boolean; onClose: () => void }) {
@@ -47,11 +46,13 @@ export function SideMenu({ p, open, onClose }: { p: ResidentProfile; open: boole
     <div className="fixed inset-0 z-50">
       <div className="absolute inset-0 bg-ink/40" onClick={onClose} aria-hidden />
       <aside role="dialog" aria-modal="true" aria-label="Menu" className="relative h-full w-[80%] max-w-xs bg-white flex flex-col">
-        <div className="p-5 bg-brand-600 text-white flex items-center gap-3">
-          <Avatar name={p.full_name} size={44} />
+        <div className="p-5 bg-[#343B2B] text-white flex items-center gap-3">
+          <div className="size-10 rounded-xl bg-white/15 flex items-center justify-center font-bold text-base text-white shrink-0 select-none">
+            {p.business_name ? p.business_name.charAt(0).toUpperCase() : 'P'}
+          </div>
           <div className="flex-1 min-w-0">
-            <p className="font-semibold truncate">{p.full_name}</p>
-            <p className="text-[12px] text-brand-100 truncate">Room {p.room_number} · {p.building_name}</p>
+            <p className="font-bold text-[15px] truncate leading-tight">{p.business_name}</p>
+            <p className="text-[12px] text-white/80 truncate mt-0.5">{p.full_name} · Room {p.room_number}</p>
           </div>
           <button onClick={onClose} aria-label="Close menu" className="p-1.5 rounded-md hover:bg-white/10 cursor-pointer">
             <X className="size-5" />
@@ -74,16 +75,23 @@ export function SideMenu({ p, open, onClose }: { p: ResidentProfile; open: boole
             </li>
           ))}
         </ul>
+        <div className="px-4 py-2.5 border-t border-[#ECE5DA] text-[11.5px] text-[#77736B]">
+          <p className="font-semibold text-[#30271F] truncate">{p.building_name}</p>
+          <p className="truncate text-[11px] mt-0.5">{p.building_address || p.business_name}</p>
+        </div>
         <button
           onClick={async () => {
             await signOut();
             nav('/');
           }}
-          className="m-3 flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] text-bad hover:bg-bad-bg cursor-pointer"
+          className="mx-3 mb-2 flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] text-bad hover:bg-bad-bg cursor-pointer"
         >
           <LogOut className="size-5" aria-hidden />
           Sign out
         </button>
+        <p className="text-[10px] text-center text-[#77736B]/50 pb-3 select-none">
+          Powered by ZIPNARY
+        </p>
       </aside>
     </div>
   );

@@ -67,6 +67,8 @@ export default function ResidentApp() {
         building_id: buildingId ?? selectedResident.building_id ?? '',
         building_name: building?.name ?? 'Main Building',
         building_address: building?.address ?? '',
+        pg_phone: null,
+        pg_email: null,
         floor_name: 'Floor',
         room_number: selectedResident.room_number ?? '101',
         sharing: selectedResident.sharing_capacity ?? 2,
@@ -126,7 +128,7 @@ export default function ResidentApp() {
 
         {!effectiveProfile ? (
           <>
-            <BrandHeader subtitle="PG & Hostel" onMenu={() => undefined} />
+            <BrandHeader p={null} subtitle="PG & Hostel" onMenu={() => undefined} />
             <Card>
               <Empty title="No active stay found">
                 {staff
@@ -153,6 +155,14 @@ export default function ResidentApp() {
             </Routes>
           </main>
         )}
+
+        {/* Subtle White-Label Watermark */}
+        <div className="text-center pt-8 pb-24 select-none pointer-events-none">
+          <p className="text-[11px] font-medium tracking-wider uppercase text-[#77736B]/50">
+            Powered by ZIPNARY
+          </p>
+        </div>
+
         <BottomNav />
       </div>
     </div>

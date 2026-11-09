@@ -11,6 +11,8 @@ export interface ResidentProfile {
   building_id: string;
   building_name: string;
   building_address: string | null;
+  pg_phone?: string | null;
+  pg_email?: string | null;
   floor_name: string;
   room_number: string;
   sharing: number;
