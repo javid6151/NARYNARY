@@ -293,9 +293,6 @@
 .resident-payments-hero .resident-primary-button:hover {
   background: #252A1F;
 }
-  color: var(--resident-clay-deep);
-  box-shadow: none;
-}
 
 .resident-tablist {
   scrollbar-width: none;
