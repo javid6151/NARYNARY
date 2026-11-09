@@ -93,14 +93,9 @@ export function OwnerShell() {
       <div className="h-18 px-5 flex items-center justify-between border-b border-[#DED6CB]">
         <div className="flex items-center gap-3 min-w-0">
           <PgLogo logoUrl={tenantLogoUrl} name={tenantBusinessName} size="md" />
-          <div className="min-w-0">
-            <span className="font-bold text-[17px] tracking-tight text-[#30271F] block leading-tight truncate">
-              {tenantBusinessName}
-            </span>
-            <span className="text-[11px] font-medium tracking-wide text-[#77736B] uppercase truncate block">
-              {bName ? `${bName} · PG SaaS` : 'Property Management'}
-            </span>
-          </div>
+          <span className="font-bold text-[17px] tracking-tight text-[#30271F] truncate">
+            {tenantBusinessName}
+          </span>
         </div>
         <button
           className="lg:hidden p-1.5 rounded-lg hover:bg-[#ECE5DA] text-[#30271F] transition-colors"

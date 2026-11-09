@@ -86,3 +86,4 @@ $$;
 
 revoke all on function public.update_tenant_branding(text, text) from anon, public;
 grant execute on function public.update_tenant_branding(text, text) to authenticated;
+

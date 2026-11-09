@@ -29,14 +29,9 @@ export function KitchenBrandHeader({ name, onMenu }: { name: string; onMenu: () 
 
       <div className="flex items-center gap-2.5 min-w-0">
         <PgLogo logoUrl={tenantLogoUrl} name={tenantBusinessName} size="sm" />
-        <div className="leading-tight min-w-0">
-          <span className="font-bold text-[16px] text-[#30271F] block leading-tight truncate">
-            {tenantBusinessName}
-          </span>
-          <span className="text-[10.5px] font-semibold uppercase tracking-wider text-[#77736B] truncate block">
-            {building?.name ? `${building.name} · Kitchen` : 'Chef & Kitchen'}
-          </span>
-        </div>
+        <span className="font-bold text-[16px] text-[#30271F] truncate">
+          {tenantBusinessName}
+        </span>
       </div>
 
       <div className="flex-1" />
