@@ -5,7 +5,7 @@
  */
 import { useEffect, useState } from 'react';
 import {
-  AlertCircle, Ban, Check, CheckCircle2, Copy, ExternalLink, KeyRound,
+  AlertCircle, Ban, Check, CheckCircle2, Copy, ExternalLink, Globe, KeyRound,
   RefreshCw, Search, ShieldCheck, UserCheck, Users, X
 } from 'lucide-react';
 import { useAsync, useMutation } from '../../lib/hooks';
@@ -79,8 +79,13 @@ export default function ResidentPortalServer() {
   } | null>(null);
 
   const [copied, setCopied] = useState(false);
+  const [customDomain, setCustomDomain] = useState<string>(
+    () => (typeof window !== 'undefined' ? localStorage.getItem('pg_custom_domain') || '' : '')
+  );
+  const [customDomainModalOpen, setCustomDomainModalOpen] = useState(false);
+  const [domainInput, setDomainInput] = useState(customDomain);
 
-  const residentPortalUrl = getResidentPortalUrl();
+  const residentPortalUrl = getResidentPortalUrl(customDomain || null);
 
   // Data fetching
   const accounts = useAsync(() => listResidentPortalAccounts(bid), [bid]);
@@ -221,6 +226,50 @@ Please sign in to view your room allotment, rent payment receipts, mess meals, n
           <button onClick={() => setToast(null)}><X className="size-4" /></button>
         </div>
       )}
+
+      {/* Dynamic Domain & Resident Portal Live Address Bar */}
+      <div className="bg-[#FFFEFC] border border-[#DED6CB] rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="size-10 rounded-xl bg-[#EBF0E6] text-[#343B2B] flex items-center justify-center shrink-0">
+            <Globe className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs font-bold text-[#30271F]">Live Resident Portal Address</span>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#EBF0E6] text-[#343B2B] border border-[#CAD7BF]">
+                {customDomain ? 'Custom Domain Active' : 'Dynamic Domain (Auto-adapts)'}
+              </span>
+            </div>
+            <p className="text-xs text-[#77736B] truncate mt-0.5">
+              Residents sign in at: <a href={residentPortalUrl} target="_blank" rel="noreferrer" className="font-semibold text-brand-700 underline">{residentPortalUrl}</a>
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              navigator.clipboard.writeText(residentPortalUrl);
+              setToast('Resident Portal URL copied to clipboard!');
+            }}
+          >
+            <Copy className="size-3.5" />
+            <span>Copy Link</span>
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              setDomainInput(customDomain);
+              setCustomDomainModalOpen(true);
+            }}
+          >
+            <Globe className="size-3.5" />
+            <span>Domain Settings</span>
+          </Button>
+        </div>
+      </div>
 
       {/* KPI Overview Tiles */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -546,8 +595,26 @@ Please sign in to view your room allotment, rent payment receipts, mess meals, n
 
             <div className="bg-canvas p-4 rounded-xl border border-line font-mono text-xs space-y-2 text-ink">
               <div className="flex justify-between items-center py-1 border-b border-line/60">
-                <span className="text-muted">Login URL:</span>
-                <span className="font-semibold text-brand-700">{residentPortalUrl}</span>
+                <span className="text-muted flex items-center gap-1.5 font-sans">
+                  <Globe className="size-3.5 text-[#77736B]" />
+                  Login URL:
+                </span>
+                <span className="font-semibold text-brand-700 flex items-center gap-1.5">
+                  <a href={residentPortalUrl} target="_blank" rel="noreferrer" className="hover:underline">
+                    {residentPortalUrl}
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(residentPortalUrl);
+                      setToast('Login URL copied to clipboard!');
+                    }}
+                    title="Copy Login URL"
+                    className="p-1 rounded hover:bg-[#ECE5DA] text-[#77736B] hover:text-[#30271F] transition-colors"
+                  >
+                    <Copy className="size-3" />
+                  </button>
+                </span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-line/60">
                 <span className="text-muted">Login ID (Mobile):</span>
@@ -645,6 +712,90 @@ Please sign in to view your room allotment, rent payment receipts, mess meals, n
             </div>
           </div>
         )}
+      </ModalDialog>
+
+      {/* MODAL 4: CONFIGURE RESIDENT PORTAL DOMAIN */}
+      <ModalDialog
+        open={customDomainModalOpen}
+        onClose={() => setCustomDomainModalOpen(false)}
+        title="Resident Portal Domain Settings"
+      >
+        <div className="space-y-4 text-xs">
+          <div className="p-3.5 rounded-xl bg-[#F5F0E8] border border-[#DED6CB] text-[#30271F] space-y-1.5">
+            <div className="flex items-center gap-2 font-bold text-sm">
+              <Globe className="size-4 text-[#343B2B]" />
+              Dynamic Domain System
+            </div>
+            <p className="text-[#77736B] leading-relaxed">
+              By default, Zipnary automatically detects your current website domain from the browser address bar (e.g. <span className="font-mono text-[#30271F]">https://yourdomain.com/resident</span>). When deployed to production, it immediately matches your live website domain with zero configuration.
+            </p>
+          </div>
+
+          <Field
+            label="Custom PG Domain / Resident Web Address (Optional)"
+            hint="If your PG has its own custom domain (e.g. sunshinepg.com or portal.myhostel.in), enter it below."
+          >
+            {(id) => (
+              <Input
+                id={id}
+                value={domainInput}
+                onChange={(e) => setDomainInput(e.target.value)}
+                placeholder="e.g. sunshinepg.com or https://sunshinepg.com"
+                className="font-mono text-xs"
+              />
+            )}
+          </Field>
+
+          <div className="p-3 rounded-xl bg-canvas border border-line text-xs font-mono">
+            <span className="text-muted block text-[11px] mb-1">Effective Portal URL:</span>
+            <span className="font-bold text-brand-700">{getResidentPortalUrl(domainInput || null)}</span>
+          </div>
+
+          <div className="flex items-center justify-between pt-3 border-t border-line">
+            {customDomain ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-bad hover:bg-bad-bg"
+                onClick={() => {
+                  setCustomDomain('');
+                  setDomainInput('');
+                  try {
+                    localStorage.removeItem('pg_custom_domain');
+                  } catch {}
+                  setCustomDomainModalOpen(false);
+                  setToast('Domain reset to dynamic auto-detection!');
+                }}
+              >
+                Reset to Auto-Detect
+              </Button>
+            ) : <span />}
+
+            <div className="flex gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setCustomDomainModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => {
+                  const clean = domainInput.trim();
+                  setCustomDomain(clean);
+                  try {
+                    if (clean) {
+                      localStorage.setItem('pg_custom_domain', clean);
+                    } else {
+                      localStorage.removeItem('pg_custom_domain');
+                    }
+                  } catch {}
+                  setCustomDomainModalOpen(false);
+                  setToast(clean ? `Custom domain saved: ${clean}` : 'Set to dynamic auto-detection');
+                }}
+              >
+                Save Domain
+              </Button>
+            </div>
+          </div>
+        </div>
       </ModalDialog>
       </div>
     </>

@@ -285,7 +285,7 @@ function authApiPlugin() {
           }
 
           if (req.method === 'POST' && req.url === '/api/tenant/branding') {
-            const { tenantId, logoData, businessName } = await readBody();
+            const { tenantId, logoData, businessName, customDomain } = await readBody();
             if (!tenantId) return json({ error: 'tenantId is required' }, 400);
 
             let logoUrl: string | null = null;
@@ -329,7 +329,7 @@ function authApiPlugin() {
                 await supabaseAdmin
                   .from('tenants')
                   .update({ logo_url: logoUrl })
-                  .eq('id', tenantId);
+                  .eq('id', tenantId as string);
               } catch {}
             }
 
@@ -337,26 +337,50 @@ function authApiPlugin() {
               await supabaseAdmin
                 .from('tenants')
                 .update({ business_name: businessName.trim(), updated_at: new Date().toISOString() })
-                .eq('id', tenantId);
+                .eq('id', tenantId as string);
             }
 
-            return json({ ok: true, logoUrl, businessName: businessName?.trim() });
+            if (customDomain !== undefined) {
+              const cleanDomain = typeof customDomain === 'string' && customDomain.trim() ? customDomain.trim() : null;
+              try {
+                await supabaseAdmin
+                  .from('tenants')
+                  .update({ custom_domain: cleanDomain, updated_at: new Date().toISOString() } as any)
+                  .eq('id', tenantId as string);
+              } catch {
+                try {
+                  const { data: tenantRow } = await supabaseAdmin
+                    .from('tenants')
+                    .select('owner_user_id')
+                    .eq('id', tenantId as string)
+                    .single();
+                  const ownerId = (tenantRow as any)?.owner_user_id as string;
+                  if (ownerId) {
+                    await supabaseAdmin.auth.admin.updateUserById(ownerId, {
+                      user_metadata: { custom_domain: cleanDomain },
+                    });
+                  }
+                } catch {}
+              }
+            }
+
+            return json({ ok: true, logoUrl, businessName: businessName?.trim(), customDomain: customDomain !== undefined ? customDomain?.trim() : undefined });
           }
 
           if (req.method === 'DELETE' && req.url?.startsWith('/api/tenant/branding')) {
-            const urlObj = new URL(req.url, 'http://localhost');
+            const urlObj = new URL(req.url!, 'http://localhost');
             const tenantId = urlObj.searchParams.get('tenantId');
             if (tenantId) {
               await supabaseAdmin.storage.from('pg-logos').remove([`${tenantId}.png`]);
               try {
-                await supabaseAdmin.from('tenants').update({ logo_url: null }).eq('id', tenantId);
+                await supabaseAdmin.from('tenants').update({ logo_url: null }).eq('id', tenantId as string);
               } catch {}
             }
             return json({ ok: true });
           }
 
           if (req.method === 'GET' && req.url?.startsWith('/api/tenant/branding')) {
-            const urlObj = new URL(req.url, 'http://localhost');
+            const urlObj = new URL(req.url!, 'http://localhost');
             const tenantId = urlObj.searchParams.get('tenantId');
             if (!tenantId) return json({ error: 'tenantId is required' }, 400);
 
@@ -364,11 +388,23 @@ function authApiPlugin() {
             const fileExists = Array.isArray(files) && files.some((f: any) => f.name === `${tenantId}.png`);
 
             const { data: pub } = supabaseAdmin.storage.from('pg-logos').getPublicUrl(`${tenantId}.png`);
-            const { data: t } = await supabaseAdmin.from('tenants').select('business_name').eq('id', tenantId).maybeSingle();
+            let customDomain: string | null = null;
+            let businessName = '';
+            try {
+              const { data: t } = await supabaseAdmin.from('tenants').select('business_name, owner_user_id').eq('id', tenantId as string).maybeSingle();
+              businessName = (t as any)?.business_name || '';
+              const ownerId = (t as any)?.owner_user_id as string;
+              if (ownerId) {
+                const { data: u } = await supabaseAdmin.auth.admin.getUserById(ownerId);
+                customDomain = (u.user?.user_metadata as any)?.custom_domain || null;
+              }
+            } catch {}
+
             return json({
               hasLogo: fileExists,
               logoUrl: fileExists ? `${pub.publicUrl}?t=${Date.now()}` : null,
-              businessName: t?.business_name,
+              businessName,
+              customDomain,
             });
           }
 

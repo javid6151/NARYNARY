@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, type FormEvent } from 'react';
-import { User, Phone, Mail, Shield, Building2, KeyRound, CheckCircle2, Lock, Save, Upload, Trash2 } from 'lucide-react';
+import { User, Phone, Mail, Shield, Building2, KeyRound, CheckCircle2, Lock, Save, Upload, Trash2, Globe } from 'lucide-react';
 import { Button, Card, Field, Input, Avatar, ErrorBanner } from '../../../components/ui';
 import { useAuth } from '../../access/useAuth';
 import { supabase } from '../../../lib/supabase';
@@ -91,6 +91,9 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
   const currentLogoUrl = staff?.logo_url || access?.owned_tenant?.logo_url || null;
 
   const [pgName, setPgName] = useState(businessName);
+  const [customDomain, setCustomDomain] = useState(
+    typeof window !== 'undefined' ? localStorage.getItem('pg_custom_domain') || '' : ''
+  );
   const [logoPreview, setLogoPreview] = useState<string | null>(currentLogoUrl);
   const [logoBusy, setLogoBusy] = useState(false);
   const [logoError, setLogoError] = useState<string | null>(null);
@@ -101,7 +104,7 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
     setPgName(businessName);
   }, [businessName]);
 
-  // Load existing logo on mount from branding API
+  // Load existing logo and custom domain on mount from branding API
   useEffect(() => {
     let active = true;
     if (!tenantId) return;
@@ -114,6 +117,12 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
           setLogoPreview((prev) => prev || data.logoUrl);
         } else if (currentLogoUrl) {
           setLogoPreview((prev) => prev || currentLogoUrl);
+        }
+        if (data.customDomain) {
+          setCustomDomain(data.customDomain);
+          try {
+            localStorage.setItem('pg_custom_domain', data.customDomain);
+          } catch {}
         }
       })
       .catch(() => {});
@@ -319,10 +328,19 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
         body: JSON.stringify({
           tenantId,
           businessName: pgName.trim(),
+          customDomain: customDomain.trim(),
         }),
       });
       const resData = await res.json();
       if (!res.ok) throw new Error(resData.error || 'Failed to update PG branding');
+
+      try {
+        if (customDomain.trim()) {
+          localStorage.setItem('pg_custom_domain', customDomain.trim());
+        } else {
+          localStorage.removeItem('pg_custom_domain');
+        }
+      } catch {}
 
       try {
         await updateTenantBranding({
@@ -332,7 +350,7 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
       } catch {}
 
       setBrandingSuccess(true);
-      onToast(`PG branding updated successfully to "${pgName.trim()}"!`);
+      onToast(`PG settings updated successfully!`);
       setTimeout(() => setBrandingSuccess(false), 4000);
       await refreshAccess();
     } catch (err: unknown) {
@@ -589,10 +607,28 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
                 )}
               </Field>
 
+              <Field
+                label="Resident Portal Domain / Web Address (Optional)"
+                hint="Auto-adapts dynamically to whatever domain is in the address bar. If you have a custom domain (e.g. sunshinepg.com or portal.myhostel.in), enter it here."
+              >
+                {(id) => (
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[#77736B]" />
+                    <Input
+                      id={id}
+                      value={customDomain}
+                      onChange={(e) => setCustomDomain(e.target.value)}
+                      placeholder="e.g. sunshinepg.com or https://residents.sunshinepg.com"
+                      className="pl-9 font-medium text-xs font-mono"
+                    />
+                  </div>
+                )}
+              </Field>
+
               <div className="flex items-center gap-2">
                 <Button type="submit" busy={logoBusy}>
                   <Save className="size-4" />
-                  <span>Save PG Name</span>
+                  <span>Save PG Branding & Domain</span>
                 </Button>
                 {brandingSuccess && (
                   <span className="text-xs font-semibold text-[#2F6B27] flex items-center gap-1">
