@@ -1,11 +1,13 @@
 /**
  * Redesigned KPI Tiles for the ZIPNARY Owner Portal.
- * 5 Business KPI Cards matching the reference enterprise design:
- * Total Buildings, Total Rooms (with Beds), Occupied Beds (with radial donut),
- * Monthly Revenue (with trend), and Pending Rent (with resident count badge).
+ * 4 Headline Business KPI Cards:
+ * 1. Occupied Beds & Rooms (merged card with radial progress donut & vacant breakdown)
+ * 2. Monthly Revenue (collections with collection rate & total billed)
+ * 3. This Month Expenses (approved operational expenses with unpaid badge & view ledger)
+ * 4. Pending Rent (total outstanding with overdue resident count)
  */
 import { useNavigate } from 'react-router-dom';
-import { DoorOpen, BedDouble, Wallet, AlertCircle } from 'lucide-react';
+import { BedDouble, Wallet, Receipt, AlertCircle } from 'lucide-react';
 import { inr } from '../../../lib/format';
 import type { DashboardSummary } from '../types';
 
@@ -21,6 +23,13 @@ export function KpiTiles({
   const nav = useNavigate();
   const occupancy = s.beds_total ? Math.round((s.beds_occupied / s.beds_total) * 100) : 0;
   const collectionRate = s.billed_month > 0 ? Math.round((s.collected_month / s.billed_month) * 100) : 100;
+  const vacantBeds = Math.max(0, s.beds_total - s.beds_occupied);
+  const vacantRooms =
+    vacantRoomsCount ??
+    Math.max(
+      0,
+      s.rooms_total - Math.floor(s.beds_occupied / Math.max(1, Math.round(s.beds_total / Math.max(1, s.rooms_total))))
+    );
 
   // Donut SVG circumference math
   const radius = 13;
@@ -29,31 +38,7 @@ export function KpiTiles({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-      {/* 1. Vacant Rooms */}
-      <div
-        onClick={onVacantRooms || (() => nav('buildings'))}
-        role="button"
-        tabIndex={0}
-        className="text-left bg-[#FFFEFC] border border-[#DED6CB] rounded-2xl p-4 flex flex-col justify-between hover:border-[#CAD7BF] hover:shadow-xs transition-all cursor-pointer group"
-      >
-        <div className="flex items-center gap-3">
-          <div className="size-10 rounded-xl bg-[#EBF0E6] text-[#343B2B] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-            <DoorOpen className="size-5" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-[12px] font-medium text-[#77736B] block truncate">Vacant Rooms</span>
-            <div className="text-2xl font-bold text-[#30271F] tabular tracking-tight mt-0.5">
-              {vacantRoomsCount ?? Math.max(0, s.rooms_total - Math.floor(s.beds_occupied / Math.max(1, Math.round(s.beds_total / Math.max(1, s.rooms_total)))))}
-            </div>
-          </div>
-        </div>
-        <div className="mt-3 pt-2.5 border-t border-[#ECE5DA] flex items-center justify-between text-[11.5px] text-[#77736B]">
-          <span className="font-semibold text-[#343B2B]">{Math.max(0, s.beds_total - s.beds_occupied)} Vacant Beds</span>
-          <span className="text-[#343B2B] font-medium group-hover:underline">View Rooms →</span>
-        </div>
-      </div>
-
-      {/* 2. Occupied Beds with Circular Radial Ring */}
+      {/* 1. Merged Rooms & Beds Occupancy */}
       <div
         onClick={onVacantRooms || (() => nav('buildings'))}
         role="button"
@@ -67,8 +52,13 @@ export function KpiTiles({
             </div>
             <div className="min-w-0">
               <span className="text-[12px] font-medium text-[#77736B] block truncate">Occupied Beds</span>
-              <div className="text-2xl font-bold text-[#30271F] tabular tracking-tight mt-0.5">
-                {s.beds_occupied}
+              <div className="flex items-baseline gap-1 mt-0.5">
+                <span className="text-2xl font-bold text-[#30271F] tabular tracking-tight">
+                  {s.beds_occupied}
+                </span>
+                <span className="text-xs font-semibold text-[#77736B] tabular">
+                  / {s.beds_total}
+                </span>
               </div>
             </div>
           </div>
@@ -102,12 +92,14 @@ export function KpiTiles({
           </div>
         </div>
         <div className="mt-3 pt-2.5 border-t border-[#ECE5DA] flex items-center justify-between text-[11.5px] text-[#77736B]">
-          <span className="text-[#343B2B] font-semibold">{occupancy}% Occupancy</span>
-          <span className="text-[#77736B] underline">{s.beds_total - s.beds_occupied} vacant</span>
+          <span className="font-semibold text-[#343B2B]">
+            {vacantRooms} Vacant Rooms · {vacantBeds} Beds
+          </span>
+          <span className="text-[#343B2B] font-medium group-hover:underline">View Rooms →</span>
         </div>
       </div>
 
-      {/* 3. Monthly Revenue */}
+      {/* 2. Monthly Revenue */}
       <div
         onClick={() => nav('payments')}
         role="button"
@@ -130,6 +122,38 @@ export function KpiTiles({
             ↑ {collectionRate}%
           </span>
           <span className="text-[#77736B] truncate">Billed: {inr(s.billed_month)}</span>
+        </div>
+      </div>
+
+      {/* 3. This Month Expenses */}
+      <div
+        onClick={() => nav('expenses')}
+        role="button"
+        tabIndex={0}
+        className="text-left bg-[#FFFEFC] border border-[#DED6CB] rounded-2xl p-4 flex flex-col justify-between hover:border-[#CAD7BF] hover:shadow-xs transition-all cursor-pointer group"
+      >
+        <div className="flex items-center gap-3">
+          <div className="size-10 rounded-xl bg-[#F4EFF8] text-[#4C2365] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <Receipt className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[12px] font-medium text-[#77736B] block truncate">This Month Expenses</span>
+            <div className="text-2xl font-bold text-[#30271F] tabular tracking-tight mt-0.5 truncate">
+              {inr(s.expenses_month)}
+            </div>
+          </div>
+        </div>
+        <div className="mt-3 pt-2.5 border-t border-[#ECE5DA] flex items-center justify-between text-[11.5px]">
+          {s.expenses_unpaid > 0 ? (
+            <span className="inline-flex items-center gap-1 font-semibold text-[#B9674B] bg-[#FDF1EC] px-1.5 py-0.5 rounded-md text-[10.5px]">
+              Unpaid: {inr(s.expenses_unpaid)}
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 font-semibold text-[#2F6B27] bg-[#EAF3E4] px-1.5 py-0.5 rounded-md text-[10.5px]">
+              ✓ All Paid
+            </span>
+          )}
+          <span className="text-[#343B2B] font-medium group-hover:underline">View Ledger →</span>
         </div>
       </div>
 
