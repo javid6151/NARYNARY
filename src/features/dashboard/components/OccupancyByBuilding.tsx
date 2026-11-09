@@ -27,23 +27,23 @@ export function OccupancyByBuilding({
   const dotColors = ['#343B2B', '#A6B49A', '#77736B', '#B9674B', '#52473D'];
 
   return (
-    <div className="bg-[#FFFEFC] border border-[#DED6CB] rounded-2xl p-5 flex flex-col justify-between shadow-xs">
+    <div className="bg-[#FFFEFC] border border-[#DED6CB] rounded-2xl p-4 flex flex-col justify-between shadow-xs">
       {/* Header */}
-      <div className="flex items-center justify-between pb-3 mb-2 border-b border-[#ECE5DA]">
-        <h3 className="font-bold text-[15px] text-[#30271F]">Occupancy by Building</h3>
+      <div className="flex items-center justify-between pb-2 mb-1.5 border-b border-[#ECE5DA]">
+        <h3 className="font-bold text-[14px] text-[#30271F]">Occupancy by Building</h3>
         <button
           onClick={() => nav('buildings')}
-          className="text-xs font-semibold text-[#343B2B] hover:text-[#252A1F] hover:underline cursor-pointer"
+          className="text-[11.5px] font-semibold text-[#343B2B] hover:text-[#252A1F] hover:underline cursor-pointer"
         >
           View All
         </button>
       </div>
 
       {/* Content */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 py-2">
-        {/* Left: Donut Chart */}
-        <div className="relative size-32 shrink-0 flex items-center justify-center">
-          <svg className="size-32 -rotate-90" viewBox="0 0 100 100">
+      <div className="flex items-center justify-between gap-4 py-1">
+        {/* Left: Compact Donut Chart */}
+        <div className="relative size-24 shrink-0 flex items-center justify-center">
+          <svg className="size-24 -rotate-90" viewBox="0 0 100 100">
             <circle
               cx="50"
               cy="50"
@@ -65,21 +65,21 @@ export function OccupancyByBuilding({
             />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-            <span className="text-xl font-bold text-[#30271F] tabular tracking-tight">
+            <span className="text-lg font-bold text-[#30271F] tabular tracking-tight leading-none">
               {overallOccupancy}%
             </span>
-            <span className="text-[10.5px] font-medium text-[#77736B]">
+            <span className="text-[9.5px] font-medium text-[#77736B] mt-0.5">
               Occupancy
             </span>
           </div>
         </div>
 
         {/* Right: Building Breakdown List */}
-        <div className="flex-1 w-full space-y-2.5">
+        <div className="flex-1 w-full space-y-1">
           {buildings.length === 0 ? (
             <p className="text-xs text-[#77736B] italic">No buildings registered yet.</p>
           ) : (
-            buildings.slice(0, 4).map((b, idx) => {
+            buildings.slice(0, 3).map((b, idx) => {
               // Individual building occupancy proxy or distributed from overall
               const pct = overallOccupancy > 0 ? overallOccupancy : 0;
               const color = dotColors[idx % dotColors.length];
@@ -90,18 +90,18 @@ export function OccupancyByBuilding({
                   onClick={() => nav('buildings')}
                   role="button"
                   tabIndex={0}
-                  className="flex items-center justify-between p-2 rounded-xl hover:bg-[#F5F0E8] transition-colors cursor-pointer group"
+                  className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-[#F5F0E8] transition-colors cursor-pointer group"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
                     <span
-                      className="size-2.5 rounded-full shrink-0"
+                      className="size-2 rounded-full shrink-0"
                       style={{ backgroundColor: color }}
                     />
-                    <span className="text-xs font-semibold text-[#30271F] truncate group-hover:text-[#343B2B]">
+                    <span className="text-[11.5px] font-semibold text-[#30271F] truncate group-hover:text-[#343B2B]">
                       {b.name}
                     </span>
                   </div>
-                  <span className="text-xs font-bold text-[#30271F] tabular ml-2">
+                  <span className="text-[11.5px] font-bold text-[#30271F] tabular ml-2">
                     {pct}%
                   </span>
                 </div>
@@ -112,13 +112,13 @@ export function OccupancyByBuilding({
       </div>
 
       {/* Summary Footer */}
-      <div className="mt-3 pt-2.5 border-t border-[#ECE5DA] flex items-center justify-between text-xs text-[#77736B]">
+      <div className="mt-2 pt-2 border-t border-[#ECE5DA] flex items-center justify-between text-[11px] text-[#77736B]">
         <span>
           <strong className="text-[#30271F] tabular">{occupiedBeds}</strong> of{' '}
           <strong className="text-[#30271F] tabular">{totalBeds}</strong> beds occupied
         </span>
         <span className="text-[#343B2B] font-semibold">
-          {totalBeds - occupiedBeds} beds vacant
+          {totalBeds - occupiedBeds} {totalBeds - occupiedBeds === 1 ? 'bed' : 'beds'} vacant
         </span>
       </div>
     </div>
