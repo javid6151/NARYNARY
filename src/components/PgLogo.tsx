@@ -57,7 +57,12 @@ export function PgLogo({
   // Primary URL is explicit logoUrl; fallback is the standard tenant logo in public pg-logos bucket
   let primaryUrl: string | null = null;
   if (logoUrl) {
-    primaryUrl = logoUrl;
+    if (logoUrl.startsWith('data:')) {
+      primaryUrl = logoUrl;
+    } else {
+      const sep = logoUrl.includes('?') ? '&' : '?';
+      primaryUrl = version ? `${logoUrl}${sep}v=${version}` : logoUrl;
+    }
   } else if (tenantId) {
     primaryUrl = `${SUPABASE_URL}/storage/v1/object/public/pg-logos/${tenantId}.png${version ? `?v=${version}` : ''}`;
   }

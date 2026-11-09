@@ -6,6 +6,33 @@ import { supabase } from '../../../lib/supabase';
 import { PHONE_RE } from '../../../lib/validation';
 import { PgLogo } from '../../../components/PgLogo';
 
+function resizeImageToSquare(file: File, maxSize = 512): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = maxSize;
+        canvas.height = maxSize;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(reader.result as string);
+
+        // Center and cover-crop into square
+        const minDim = Math.min(img.width, img.height);
+        const sx = (img.width - minDim) / 2;
+        const sy = (img.height - minDim) / 2;
+        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, maxSize, maxSize);
+        resolve(canvas.toDataURL('image/png', 0.92));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
   const { session, access, staff, profile, updateProfile, updateTenantBranding, refreshAccess } = useAuth();
 
@@ -150,14 +177,11 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
     setLogoError(null);
 
     try {
-      // 1. Read file as Data URL
-      const reader = new FileReader();
-      const dataUrlPromise = new Promise<string>((resolve, reject) => {
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
-      const dataUrl = await dataUrlPromise;
+      // 1. Resize & crop to square 512x512 PNG data URL
+      const dataUrl = await resizeImageToSquare(file, 512);
+
+      // Instant local preview
+      setLogoPreview(dataUrl);
 
       const tenantId =
         staff?.tenant_id ||
