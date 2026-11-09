@@ -199,18 +199,11 @@
   color: #265561 !important;
 }
 
-/* Custom hero styling */
+/* Custom hero styling: soft ambient architectural banner with low intensity and bottom fade to match page background #F5F0E8 */
 .owner-hero-banner {
   position: relative;
   /* overflow: visible so building picker and action dropdowns are never clipped */
-  border-radius: 1.5rem;
-  background-color: #30271F;
-  background-image:
-    linear-gradient(180deg, rgba(30, 24, 19, 0.45) 0%, rgba(30, 24, 19, 0.78) 100%),
-    url('/owner-assets/hero-interior.jpg');
-  background-size: cover;
-  background-position: center 38%;
-  box-shadow: 0 10px 30px rgba(48, 39, 31, 0.12);
+  background-color: transparent;
 }
 
 .owner-promo-card {

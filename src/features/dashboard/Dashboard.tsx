@@ -100,17 +100,33 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* 1. HERO WELCOME SECTION (Photo Background + Gradient Overlay) */}
-      <div className="owner-hero-banner p-6 sm:p-8 rounded-3xl text-white relative flex flex-col justify-between min-h-[170px] shadow-md border border-[#DED6CB]/30">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 z-10">
+      {/* 1. HERO WELCOME SECTION (Low intensity ambient photo + seamless bottom fade matching page bg) */}
+      <div className="owner-hero-banner relative -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-7 sm:pt-8 pb-9 sm:pb-11 mb-1">
+        {/* Ambient Architectural Photo Layer with low intensity & bottom gradient fade into #F5F0E8 */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none select-none" aria-hidden="true">
+          <div
+            className="absolute inset-0 bg-cover bg-[center_36%] opacity-28 mix-blend-multiply filter contrast-95"
+            style={{ backgroundImage: `url('/owner-assets/hero-interior.jpg')` }}
+          />
+          {/* Top-to-bottom gradient dissolving smoothly into page bg #F5F0E8 */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'linear-gradient(180deg, rgba(245, 240, 232, 0.12) 0%, rgba(245, 240, 232, 0.45) 45%, rgba(245, 240, 232, 0.9) 78%, #F5F0E8 100%)',
+            }}
+          />
+        </div>
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 z-10 relative">
           <div>
-            <span className="text-xs sm:text-sm font-medium tracking-wide text-white/80 block">
+            <span className="text-xs sm:text-sm font-semibold tracking-wider text-[#77736B] uppercase block">
               {greeting},
             </span>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white mt-0.5 leading-tight">
+            <h1 className="text-2xl sm:text-[32px] font-extrabold tracking-tight text-[#30271F] mt-0.5 leading-tight">
               {ownerGreetingName}
             </h1>
-            <p className="text-xs sm:text-sm text-white/75 mt-1 font-normal">
+            <p className="text-xs sm:text-sm text-[#5C554B] mt-1 font-medium">
               Manage your PG business with ease.
             </p>
           </div>
