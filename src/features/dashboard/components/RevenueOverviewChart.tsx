@@ -4,6 +4,7 @@
  * and period selector ("This Month" / "Recent Trend").
  */
 import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { inr } from '../../../lib/format';
 
 interface DailyData {
@@ -26,7 +27,7 @@ export function RevenueOverviewChart({
   const W = 640;
   const H = 210;
   const pl = 44;
-  const pr = 12;
+  const pr = 16;
   const pt = 14;
   const pb = 28;
 
@@ -37,7 +38,10 @@ export function RevenueOverviewChart({
   const nice = niceMax(maxVal);
 
   const slot = Math.max(1, (W - pl - pr) / Math.max(1, data.length));
-  const bw = Math.max(3, Math.min(10, (slot - 6) / 2));
+  // Adaptive bar width: comfortable width whether few days (early month) or full 31 days
+  const bw = data.length <= 10
+    ? Math.max(8, Math.min(18, (slot - 10) / 2))
+    : Math.max(3, Math.min(10, (slot - 6) / 2));
   const y = (v: number) => pt + (H - pt - pb) * (1 - v / nice);
   const ticks = [0, nice / 2, nice];
 
@@ -47,39 +51,54 @@ export function RevenueOverviewChart({
   const totalSpent = data.reduce((s, d) => s + Number(d.spent || 0), 0);
 
   return (
-    <div className="bg-[#FFFEFC] border border-[#DED6CB] rounded-2xl p-5 flex flex-col justify-between shadow-xs">
+    <div className="bg-[#FFFEFC] border border-[#DED6CB] rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-xs">
       {/* Header with Title and Period Filter */}
-      <div className="flex items-center justify-between pb-3 mb-2 border-b border-[#ECE5DA]">
-        <div>
-          <h3 className="font-bold text-[15px] text-[#30271F]">Revenue Overview</h3>
-          <p className="text-[12px] text-[#77736B]">
-            {periodStart
-              ? `Collections vs. expenses for ${new Date(periodStart + 'T00:00:00').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}`
-              : 'Collections vs. operational expenses'}
-          </p>
+      <div className="pb-3 mb-3 border-b border-[#ECE5DA] space-y-2">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="font-bold text-[15px] sm:text-[16px] text-[#30271F] truncate leading-tight">
+              Revenue Overview
+            </h3>
+            <p className="text-[11.5px] text-[#77736B] truncate mt-0.5">
+              {periodStart
+                ? `Collections vs. expenses · ${new Date(periodStart + 'T00:00:00').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}`
+                : 'Collections vs. operational expenses'}
+            </p>
+          </div>
+
+          {/* Period selector pill with chevron */}
+          <div className="relative shrink-0">
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value as 'daily' | 'summary')}
+              className="appearance-none text-[11.5px] font-semibold bg-[#F5F0E8] hover:bg-[#ECE5DA] border border-[#DED6CB] rounded-full pl-3 pr-7 py-1 text-[#30271F] cursor-pointer focus:outline-none transition-colors shadow-2xs"
+              aria-label="Filter period"
+            >
+              <option value="daily">This Month (Daily)</option>
+              <option value="summary">Summary Totals</option>
+            </select>
+            <ChevronDown className="size-3 text-[#77736B] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-3 text-[12px]">
+        {/* Legend row */}
+        <div className="flex items-center justify-between gap-2 text-[11.5px] pt-0.5">
+          <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 font-medium text-[#30271F]">
-              <span className="size-2.5 rounded-sm bg-[#343B2B] inline-block" />
+              <span className="size-2 rounded-full bg-[#343B2B] inline-block" />
               Collections
             </span>
             <span className="inline-flex items-center gap-1.5 font-medium text-[#77736B]">
-              <span className="size-2.5 rounded-sm bg-[#A6B49A] inline-block" />
+              <span className="size-2 rounded-full bg-[#A6B49A] inline-block" />
               Expenses
             </span>
           </div>
 
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value as 'daily' | 'summary')}
-            className="text-xs font-semibold bg-[#F5F0E8] border border-[#DED6CB] rounded-xl px-2.5 py-1 text-[#30271F] cursor-pointer focus:outline-none"
-            aria-label="Filter period"
-          >
-            <option value="daily">This Month (Daily)</option>
-            <option value="summary">Summary Totals</option>
-          </select>
+          {totalCollected > 0 && (
+            <span className="text-[11px] font-bold text-[#343B2B] tabular">
+              {inr(totalCollected)}
+            </span>
+          )}
         </div>
       </div>
 
@@ -136,9 +155,15 @@ export function RevenueOverviewChart({
 
             {/* Bars */}
             {data.map((d, i) => {
-              const x0 = pl + i * slot + (slot - (bw * 2 + 3)) / 2;
               const va = Number(d.collected || 0);
               const vb = Number(d.spent || 0);
+              const hasBoth = va > 0 && vb > 0;
+              const xCol = hasBoth
+                ? pl + i * slot + (slot - (bw * 2 + 3)) / 2
+                : pl + i * slot + (slot - bw) / 2;
+              const xExp = hasBoth
+                ? xCol + bw + 3
+                : pl + i * slot + (slot - bw) / 2;
               const isHovered = hoverIndex === i;
 
               return (
@@ -149,18 +174,18 @@ export function RevenueOverviewChart({
                     y={pt}
                     width={slot}
                     height={H - pt - pb}
-                    fill={isHovered ? 'rgba(236, 229, 218, 0.4)' : 'transparent'}
+                    fill={isHovered ? 'rgba(236, 229, 218, 0.45)' : 'transparent'}
                     rx={4}
                   />
 
                   {/* Collections Bar (Deep Olive) */}
                   {va > 0 && (
                     <rect
-                      x={x0}
+                      x={xCol}
                       y={y(va)}
                       width={bw}
                       height={Math.max(2, y(0) - y(va))}
-                      rx={Math.min(3, bw / 2)}
+                      rx={Math.min(4, bw / 2)}
                       fill="#343B2B"
                     />
                   )}
@@ -168,17 +193,17 @@ export function RevenueOverviewChart({
                   {/* Expenses Bar (Muted Sage) */}
                   {vb > 0 && (
                     <rect
-                      x={x0 + bw + 3}
+                      x={xExp}
                       y={y(vb)}
                       width={bw}
                       height={Math.max(2, y(0) - y(vb))}
-                      rx={Math.min(3, bw / 2)}
+                      rx={Math.min(4, bw / 2)}
                       fill="#A6B49A"
                     />
                   )}
 
                   {/* X Axis Day number */}
-                  {i % Math.ceil(data.length / 10) === 0 && (
+                  {(data.length <= 12 || i % Math.ceil(data.length / 10) === 0) && (
                     <text
                       x={pl + i * slot + slot / 2}
                       y={H - 8}
