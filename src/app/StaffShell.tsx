@@ -6,7 +6,7 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, BedDouble, Users, Wallet, Receipt, MessageSquareWarning, Wrench, UtensilsCrossed,
+  LayoutDashboard, BedDouble, Users, Wallet, Receipt, MessageSquareWarning, UtensilsCrossed,
   Package, UserCog, Megaphone, FileBarChart, Settings, LogOut, Menu, X, ChefHat, Home,
 } from 'lucide-react';
 import { useAuth } from '../features/access/useAuth';
@@ -22,7 +22,6 @@ const NAV = [
   { to: '/app/payments', label: 'Payments', icon: Wallet },
   { to: '/app/expenses', label: 'Expenses', icon: Receipt },
   { to: '/app/complaints', label: 'Complaints', icon: MessageSquareWarning },
-  { to: '/app/maintenance', label: 'Maintenance', icon: Wrench },
   { to: '/app/food', label: 'Food / Mess', icon: UtensilsCrossed },
   { to: '/app/inventory', label: 'Inventory', icon: Package },
   { to: '/app/staff', label: 'Staff', icon: UserCog },

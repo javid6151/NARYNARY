@@ -6,7 +6,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
-  LayoutDashboard, BedDouble, Users, Wallet, Receipt, MessageSquareWarning, Wrench, UtensilsCrossed,
+  LayoutDashboard, BedDouble, Users, Wallet, Receipt, MessageSquareWarning, UtensilsCrossed,
   Package, UserCog, Megaphone, FileBarChart, Settings, LogOut, Menu, X, ChefHat, KeyRound,
   Headphones, ChevronRight, UserPlus, MoreHorizontal
 } from 'lucide-react';
@@ -70,7 +70,6 @@ export function OwnerShell() {
     { to: `${base}/inventory`, label: 'Inventory', icon: Package },
     { to: `${base}/staff`, label: 'Staff', icon: UserCog },
     { to: `${base}/complaints`, label: 'Complaints', icon: MessageSquareWarning },
-    { to: `${base}/maintenance`, label: 'Maintenance', icon: Wrench },
     { to: `${base}/communication`, label: 'Notices', icon: Megaphone },
     { to: `${base}/reports`, label: 'Reports', icon: FileBarChart },
     { to: `${base}/settings`, label: 'Settings', icon: Settings },
@@ -370,7 +369,6 @@ export function OwnerShell() {
                   { to: `${base}/inventory`, label: 'Inventory', icon: Package },
                   { to: `${base}/staff`, label: 'Staff & Salaries', icon: UserCog },
                   { to: `${base}/complaints`, label: 'Complaints', icon: MessageSquareWarning },
-                  { to: `${base}/maintenance`, label: 'Maintenance', icon: Wrench },
                   { to: `${base}/communication`, label: 'Notices', icon: Megaphone },
                   { to: `${base}/reports`, label: 'Reports', icon: FileBarChart },
                   { to: `${base}/settings`, label: 'Settings', icon: Settings },

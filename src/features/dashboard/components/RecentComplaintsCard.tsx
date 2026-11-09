@@ -142,10 +142,10 @@ export function RecentComplaintsCard({
       <div className="mt-3 pt-2.5 border-t border-[#ECE5DA] flex items-center justify-between text-xs text-[#77736B]">
         <span>Resolution tracking</span>
         <button
-          onClick={() => nav('maintenance')}
+          onClick={() => nav('complaints')}
           className="font-medium text-[#343B2B] hover:underline cursor-pointer"
         >
-          Maintenance orders →
+          View all complaints →
         </button>
       </div>
     </div>

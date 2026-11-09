@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
-  LayoutDashboard, BedDouble, Users, Wallet, Receipt, MessageSquareWarning, Wrench, UtensilsCrossed,
+  LayoutDashboard, BedDouble, Users, Wallet, Receipt, MessageSquareWarning, UtensilsCrossed,
   Package, UserCog, Megaphone, FileBarChart, LogOut, Menu, X, ChefHat, Home, Briefcase,
   Headphones, ChevronRight, UserPlus, MoreHorizontal, KeyRound
 } from 'lucide-react';
@@ -74,7 +74,6 @@ export function ManagerShell() {
     { to: `${base}/inventory`, label: 'Inventory', icon: Package },
     { to: `${base}/staff`, label: 'Staff & Attendance', icon: UserCog },
     { to: `${base}/complaints`, label: 'Complaints', icon: MessageSquareWarning },
-    { to: `${base}/maintenance`, label: 'Maintenance', icon: Wrench },
     { to: `${base}/communication`, label: 'Notices', icon: Megaphone },
     { to: `${base}/reports`, label: 'Reports', icon: FileBarChart },
   ];
@@ -393,7 +392,6 @@ export function ManagerShell() {
                   { to: `${base}/inventory`, label: 'Inventory', icon: Package },
                   { to: `${base}/staff`, label: 'Staff & Attendance', icon: UserCog },
                   { to: `${base}/complaints`, label: 'Complaints', icon: MessageSquareWarning },
-                  { to: `${base}/maintenance`, label: 'Maintenance', icon: Wrench },
                   { to: `${base}/communication`, label: 'Notices', icon: Megaphone },
                   { to: `${base}/reports`, label: 'Reports', icon: FileBarChart },
                 ].map((item) => (

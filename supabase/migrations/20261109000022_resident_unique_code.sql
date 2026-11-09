@@ -60,3 +60,4 @@ returns jsonb language sql stable security definer set search_path = '' as $$
   where r.user_id = auth.uid() and r.status = 'active'
   limit 1;
 $$;
+
