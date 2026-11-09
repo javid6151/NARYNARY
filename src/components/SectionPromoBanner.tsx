@@ -24,7 +24,10 @@ interface SectionPromoBannerProps {
   imageSrc: string;
   primaryAction?: ActionButton;
   secondaryAction?: ActionButton;
+  extraActions?: ReactNode;
+  controls?: ReactNode;
   statsBadge?: string;
+  fromTop?: boolean;
   className?: string;
 }
 
@@ -35,13 +38,18 @@ export function SectionPromoBanner({
   imageSrc,
   primaryAction,
   secondaryAction,
+  extraActions,
+  controls,
   statsBadge,
+  fromTop = false,
   className = '',
 }: SectionPromoBannerProps) {
+  const containerClasses = fromTop
+    ? `relative -mt-6 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-7 sm:pt-8 pb-9 sm:pb-11 mb-5 flex flex-col justify-between ${className}`
+    : `relative overflow-hidden rounded-[26px] p-6 sm:p-8 min-h-[195px] flex flex-col justify-between bg-[#F5F0E8] border border-[#DED6CB]/35 shadow-[0_2px_14px_rgba(48,39,31,0.03)] mb-6 group ${className}`;
+
   return (
-    <div
-      className={`relative overflow-hidden rounded-[26px] p-6 sm:p-8 min-h-[195px] flex flex-col justify-between bg-[#F5F0E8] border border-[#DED6CB]/35 shadow-[0_2px_14px_rgba(48,39,31,0.03)] mb-6 group ${className}`}
-    >
+    <div className={containerClasses}>
       {/* Ambient Photographic Background Layer with low intensity & bottom gradient fade */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none select-none" aria-hidden="true">
         <div
@@ -58,8 +66,8 @@ export function SectionPromoBanner({
         />
       </div>
 
-      {/* Top Header / Eyebrow */}
-      <div className="relative z-10 flex items-start justify-between gap-4">
+      {/* Top Header / Eyebrow & Controls */}
+      <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-4">
         <div>
           <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#343B2B] block mb-1.5">
             {eyebrow}
@@ -74,16 +82,21 @@ export function SectionPromoBanner({
           )}
         </div>
 
-        {statsBadge && (
-          <div className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFEFC] border border-[#DED6CB] text-xs font-semibold text-[#30271F] shadow-2xs">
-            <span className="size-2 rounded-full bg-emerald-500" />
-            <span>{statsBadge}</span>
+        {(controls || statsBadge) && (
+          <div className="flex flex-wrap items-center gap-2.5 z-30 relative self-start md:self-auto">
+            {controls}
+            {statsBadge && (
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FFFEFC] border border-[#DED6CB] text-xs font-semibold text-[#30271F] shadow-2xs">
+                <span className="size-2 rounded-full bg-emerald-500" />
+                <span>{statsBadge}</span>
+              </div>
+            )}
           </div>
         )}
       </div>
 
       {/* Action Buttons with signature deep olive pill button & porcelain secondary */}
-      {(primaryAction || secondaryAction) && (
+      {(primaryAction || secondaryAction || extraActions) && (
         <div className="relative z-10 mt-6 pt-1 flex flex-wrap items-center gap-3">
           {primaryAction && (
             <button
@@ -107,6 +120,8 @@ export function SectionPromoBanner({
               <span>{secondaryAction.label}</span>
             </button>
           )}
+
+          {extraActions}
         </div>
       )}
     </div>

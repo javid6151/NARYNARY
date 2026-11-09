@@ -7,7 +7,7 @@ import { BedDouble, Building2, Plus } from 'lucide-react';
 import { useAsync } from '../../lib/hooks';
 import { useAuth } from '../access/useAuth';
 import { useBuilding } from '../access/useBuilding';
-import { Async, Button, Card, Empty, PageHeader, Toast } from '../../components/ui';
+import { Async, Button, Card, Empty, Toast } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
 import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import { CheckoutDialog } from '../residents/components/CheckoutDialog';
@@ -56,40 +56,17 @@ export default function Buildings() {
 
   return (
     <>
-      <PageHeader
-        title="Rooms & Beds"
-        subtitle={building ? `${building.name}${building.address ? ' · ' + building.address : ''}` : undefined}
-        actions={
-          <>
-            <BuildingPicker />
-            {isOwner && (
-              <Button variant="secondary" onClick={() => setDrawer('building')}>
-                <Building2 className="size-4" />
-                Request building
-              </Button>
-            )}
-            <Button variant="secondary" onClick={() => setDrawer('floor')}>
-              <Plus className="size-4" />
-              Add floor
-            </Button>
-            <Button onClick={() => setDrawer('room')} disabled={!floors.length}>
-              <Plus className="size-4" />
-              Add room
-            </Button>
-          </>
-        }
-      />
-      {isOwner && <PendingBuildings />}
-
       <SectionPromoBanner
+        fromTop
         eyebrow="PROPERTY GROWTH"
         title="Better Managed Spaces, Happier Residents."
         subtitle={
           building
-            ? `Managing ${building.name} · Live occupancy tracking, floor layout and bed allocations.`
+            ? `Managing ${building.name}${building.address ? ' · ' + building.address : ''}`
             : 'Live floor-by-floor occupancy and room allocation across your PG hostels.'
         }
         imageSrc="/owner-assets/buildings-hero.jpg"
+        controls={<BuildingPicker />}
         statsBadge={allBeds.length > 0 ? `${Math.round((occupied / allBeds.length) * 100)}% Occupancy` : undefined}
         primaryAction={{
           label: 'Add Room',
@@ -101,7 +78,19 @@ export default function Buildings() {
           onClick: () => setDrawer('floor'),
           icon: Plus,
         }}
+        extraActions={
+          isOwner ? (
+            <button
+              onClick={() => setDrawer('building')}
+              className="inline-flex items-center gap-2 px-5 py-2.5 sm:py-3 rounded-2xl bg-[#FFFEFC] hover:bg-[#ECE5DA] text-[#30271F] text-xs sm:text-[13.5px] font-semibold border border-[#DED6CB] transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
+            >
+              <Building2 className="size-4 text-[#343B2B]" />
+              <span>Request building</span>
+            </button>
+          ) : undefined
+        }
       />
+      {isOwner && <PendingBuildings />}
 
       <Async state={layout}>
         {() =>
