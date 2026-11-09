@@ -168,7 +168,7 @@ export function FloorLayout({
                       'px-2 py-0.5 rounded-full text-[11px] font-bold border',
                       isFull
                         ? 'bg-[#FDF1EC] text-[#B9674B] border-[#B9674B]/20'
-                        : 'bg-[#EAF3E4] text-[#2F6B27] border-[#CAD7BF]',
+                        : 'bg-[#EBF0E6] text-[#242D1F] border-[#CAD7BF]',
                     )}
                   >
                     {isFull ? 'Occupied' : 'Available'}
@@ -210,7 +210,7 @@ export function FloorLayout({
                     )}
                   </div>
 
-                  <span className={cx('font-bold tabular', isFull ? 'text-[#30271F]' : 'text-[#2F6B27]')}>
+                  <span className={cx('font-bold tabular', isFull ? 'text-[#30271F]' : 'text-[#343B2B]')}>
                     {occ} / {r.beds.length} beds
                   </span>
                 </div>

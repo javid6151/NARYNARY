@@ -40,6 +40,7 @@ export default function Buildings() {
   const room = floor?.rooms.find((r) => r.room_id === roomId) ?? null;
   const allBeds = floors.flatMap((f) => f.rooms.flatMap((r) => r.beds));
   const occupied = allBeds.filter((b) => b.resident_id).length;
+  const occupancyPct = allBeds.length > 0 ? Math.round((occupied / allBeds.length) * 100) : 0;
   const isOwner = authIsOwner || staff?.role === 'owner' || Boolean(access?.is_platform_admin) || Boolean(access?.owned_tenant);
   const saved = (msg: string) => {
     setDrawer(null);
@@ -109,14 +110,24 @@ export default function Buildings() {
                       <p className="text-xs text-[#77736B]">{building.address || 'Active hostel facility'}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 self-start sm:self-auto">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#EAF3E4] text-[#2F6B27] border border-[#CAD7BF]">
-                      <span className="size-2 rounded-full bg-[#2F6B27]" />
-                      {allBeds.length > 0 ? Math.round((occupied / allBeds.length) * 100) : 0}% Occupancy
-                    </span>
-                    <span className="text-xs font-bold text-[#30271F] tabular px-2.5 py-1 rounded-lg bg-[#F5F0E8] border border-[#DED6CB]">
-                      {occupied} / {allBeds.length} Beds
-                    </span>
+                  <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-auto">
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EBF0E6] border border-[#CAD7BF] text-[#242D1F] shadow-2xs">
+                      <span className="relative flex size-2 shrink-0">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4A5D3E] opacity-60" />
+                        <span className="relative inline-flex rounded-full size-2 bg-[#343B2B]" />
+                      </span>
+                      <span className="text-xs font-medium text-[#56634C] flex items-baseline gap-1">
+                        <strong className="text-[13px] font-bold tabular text-[#242D1F]">{occupancyPct}%</strong>
+                        <span>Occupancy</span>
+                      </span>
+                    </div>
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#F5F0E8] border border-[#DED6CB] text-[#30271F] shadow-2xs">
+                      <BedDouble className="size-3.5 text-[#77736B] shrink-0" />
+                      <span className="text-xs font-medium text-[#77736B] flex items-baseline gap-1">
+                        <strong className="text-[13px] font-bold tabular text-[#30271F]">{occupied}</strong>
+                        <span>/ {allBeds.length} Beds</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}
