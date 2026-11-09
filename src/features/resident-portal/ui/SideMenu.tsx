@@ -48,7 +48,7 @@ export function SideMenu({ p, open, onClose }: { p: ResidentProfile; open: boole
       <div className="absolute inset-0 bg-ink/40" onClick={onClose} aria-hidden />
       <aside role="dialog" aria-modal="true" aria-label="Menu" className="relative h-full w-[80%] max-w-xs bg-white flex flex-col">
         <div className="p-5 bg-[#343B2B] text-white flex items-center gap-3">
-          <PgLogo logoUrl={p.logo_url} name={p.business_name} size="md" className="bg-white/15" />
+          <PgLogo tenantId={p.tenant_id} logoUrl={p.logo_url} name={p.business_name} size="md" className="bg-white/15" />
           <div className="flex-1 min-w-0">
             <p className="font-bold text-[15px] truncate leading-tight">{p.business_name}</p>
             <p className="text-[12px] text-white/80 truncate mt-0.5">{p.full_name} · Room {p.room_number}</p>

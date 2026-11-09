@@ -47,7 +47,7 @@ export function ResProfile({ p }: { p: ResidentProfile }) {
       <section className="resident-profile-card p-4 space-y-3">
         <div className="flex items-center justify-between pb-3 border-b border-[#EAE3D7]">
           <div className="flex items-center gap-2.5 min-w-0">
-            <PgLogo logoUrl={p.logo_url} name={p.business_name} size="md" />
+            <PgLogo tenantId={p.tenant_id} logoUrl={p.logo_url} name={p.business_name} size="md" />
             <div className="min-w-0">
               <h2 className="text-[15px] font-bold text-[#30271F] leading-tight truncate">
                 {p.business_name}

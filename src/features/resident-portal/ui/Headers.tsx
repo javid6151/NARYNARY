@@ -27,7 +27,7 @@ export function BrandHeader({
       </button>
 
       {/* Specific PG Logo (or monogram fallback) */}
-      <PgLogo logoUrl={p?.logo_url} name={pgName} size="sm" />
+      <PgLogo tenantId={p?.tenant_id} logoUrl={p?.logo_url} name={pgName} size="sm" />
 
       <div className="flex-1 leading-tight min-w-0">
         <p className="resident-brand-name text-[18px] font-bold tracking-tight text-[#30271F] truncate">{pgName}</p>

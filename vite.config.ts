@@ -284,6 +284,77 @@ function authApiPlugin() {
             return json({ ok: true, fullName: cleanName, phone: cleanPhone });
           }
 
+          if (req.method === 'POST' && req.url === '/api/tenant/branding') {
+            const { tenantId, logoData, businessName } = await readBody();
+            if (!tenantId) return json({ error: 'tenantId is required' }, 400);
+
+            let logoUrl: string | null = null;
+
+            if (logoData) {
+              let buffer: Buffer;
+              let contentType = 'image/png';
+              if (typeof logoData === 'string' && logoData.startsWith('data:')) {
+                const match = logoData.match(/^data:([^;]+);base64,(.*)$/);
+                if (match) {
+                  contentType = match[1];
+                  buffer = Buffer.from(match[2], 'base64');
+                } else {
+                  buffer = Buffer.from(logoData, 'utf8');
+                }
+              } else {
+                buffer = Buffer.from(logoData, 'base64');
+              }
+
+              // Ensure pg-logos bucket exists
+              try {
+                await supabaseAdmin.storage.createBucket('pg-logos', { public: true });
+              } catch {}
+
+              const path = `${tenantId}.png`;
+              const { error: upErr } = await supabaseAdmin.storage.from('pg-logos').upload(path, buffer, {
+                contentType,
+                upsert: true,
+                cacheControl: '0',
+              });
+
+              if (upErr) {
+                console.error('Failed to upload logo to pg-logos bucket:', upErr);
+                return json({ error: 'Storage upload failed: ' + upErr.message }, 500);
+              }
+
+              const { data: pub } = supabaseAdmin.storage.from('pg-logos').getPublicUrl(path);
+              logoUrl = `${pub.publicUrl}?t=${Date.now()}`;
+            }
+
+            if (businessName && typeof businessName === 'string' && businessName.trim()) {
+              await supabaseAdmin
+                .from('tenants')
+                .update({ business_name: businessName.trim(), updated_at: new Date().toISOString() })
+                .eq('id', tenantId);
+            }
+
+            return json({ ok: true, logoUrl, businessName: businessName?.trim() });
+          }
+
+          if (req.method === 'DELETE' && req.url?.startsWith('/api/tenant/branding')) {
+            const urlObj = new URL(req.url, 'http://localhost');
+            const tenantId = urlObj.searchParams.get('tenantId');
+            if (tenantId) {
+              await supabaseAdmin.storage.from('pg-logos').remove([`${tenantId}.png`]);
+            }
+            return json({ ok: true });
+          }
+
+          if (req.method === 'GET' && req.url?.startsWith('/api/tenant/branding')) {
+            const urlObj = new URL(req.url, 'http://localhost');
+            const tenantId = urlObj.searchParams.get('tenantId');
+            if (!tenantId) return json({ error: 'tenantId is required' }, 400);
+
+            const { data: pub } = supabaseAdmin.storage.from('pg-logos').getPublicUrl(`${tenantId}.png`);
+            const { data: t } = await supabaseAdmin.from('tenants').select('business_name').eq('id', tenantId).maybeSingle();
+            return json({ logoUrl: `${pub.publicUrl}?t=${Date.now()}`, businessName: t?.business_name });
+          }
+
           if (req.method === 'POST' && req.url === '/api/auth/set-resident-password') {
             const { residentId, phone, email, fullName, password, tenantId } = await readBody();
             if (!password || password.length < 6) {

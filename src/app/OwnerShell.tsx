@@ -86,13 +86,15 @@ export function OwnerShell() {
     staff?.tenant_name || access?.owned_tenant?.business_name || 'PG Business';
   const tenantLogoUrl =
     staff?.logo_url || access?.owned_tenant?.logo_url || null;
+  const tenantId =
+    staff?.tenant_id || access?.owned_tenant?.tenant_id || access?.memberships?.[0]?.tenant_id;
 
   const sidebar = (
     <nav aria-label="Owner Main Navigation" className="flex flex-col h-full bg-[#F5F0E8] text-[#30271F] border-r border-[#DED6CB] select-none">
       {/* Brand Header */}
       <div className="h-18 px-5 flex items-center justify-between border-b border-[#DED6CB]">
         <div className="flex items-center gap-3 min-w-0">
-          <PgLogo logoUrl={tenantLogoUrl} name={tenantBusinessName} size="md" />
+          <PgLogo tenantId={tenantId} logoUrl={tenantLogoUrl} name={tenantBusinessName} size="md" />
           <span className="font-bold text-[17px] tracking-tight text-[#30271F] truncate">
             {tenantBusinessName}
           </span>
@@ -222,7 +224,7 @@ export function OwnerShell() {
 
           {/* Mobile Brand */}
           <div className="lg:hidden flex items-center gap-2 min-w-0">
-            <PgLogo logoUrl={tenantLogoUrl} name={tenantBusinessName} size="xs" />
+            <PgLogo tenantId={tenantId} logoUrl={tenantLogoUrl} name={tenantBusinessName} size="xs" />
             <span className="font-bold text-[15px] text-[#30271F] truncate max-w-36">
               {tenantBusinessName}
             </span>

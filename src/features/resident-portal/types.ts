@@ -4,6 +4,7 @@ import type { MealType } from '../kitchen/types';
 /** Result of `my_resident_profile()`: the resident's current stay. */
 export interface ResidentProfile {
   resident_id: string;
+  tenant_id?: string | null;
   full_name: string;
   phone: string;
   email: string | null;

@@ -7,7 +7,7 @@ import { PHONE_RE } from '../../../lib/validation';
 import { PgLogo } from '../../../components/PgLogo';
 
 export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
-  const { session, access, staff, profile, updateProfile, updateTenantBranding } = useAuth();
+  const { session, access, staff, profile, updateProfile, updateTenantBranding, refreshAccess } = useAuth();
 
   const currentFullName =
     profile?.full_name ||
@@ -34,6 +34,7 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
   // PG Branding & Logo
   const businessName = staff?.tenant_name || access?.owned_tenant?.business_name || 'PG Business';
   const tenantCode = staff?.tenant_code || access?.owned_tenant?.tenant_code || '—';
+  const tenantId = staff?.tenant_id || access?.owned_tenant?.tenant_id || access?.memberships?.[0]?.tenant_id || 'd6712a4d-bb8c-494c-931d-5168afadb334';
   const userEmail = profile?.email || session?.user?.email || '—';
   const currentLogoUrl = staff?.logo_url || access?.owned_tenant?.logo_url || null;
 
@@ -132,38 +133,43 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
       });
       const dataUrl = await dataUrlPromise;
 
-      let finalLogoUrl = dataUrl;
+      const tenantId =
+        staff?.tenant_id ||
+        access?.owned_tenant?.tenant_id ||
+        access?.memberships?.[0]?.tenant_id ||
+        'd6712a4d-bb8c-494c-931d-5168afadb334';
 
-      // 2. Attempt upload to Supabase Storage
-      try {
-        const tenantId = staff?.tenant_id || access?.owned_tenant?.tenant_id || 'tenant';
-        const cleanName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const path = `pg-logos/${tenantId}-${Date.now()}-${cleanName}`;
-        const { error: upErr } = await supabase.storage
-          .from('staff-documents')
-          .upload(path, file, { contentType: file.type, upsert: true });
-
-        if (!upErr) {
-          const { data: pub } = supabase.storage.from('staff-documents').getPublicUrl(path);
-          if (pub?.publicUrl) {
-            finalLogoUrl = pub.publicUrl;
-          }
-        }
-      } catch (storageErr) {
-        console.warn('Storage upload fallback to Data URL:', storageErr);
-      }
-
-      setLogoPreview(finalLogoUrl);
-
-      // 3. Save branding
-      await updateTenantBranding({
-        logo_url: finalLogoUrl,
-        business_name: pgName.trim() || businessName,
+      // 2. Upload via API endpoint
+      const res = await fetch('/api/tenant/branding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenantId,
+          logoData: dataUrl,
+          businessName: pgName.trim() || businessName,
+        }),
       });
 
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.error || 'Failed to upload PG logo');
+      }
+
+      const activeUrl = resData.logoUrl || dataUrl;
+      setLogoPreview(activeUrl);
+
+      // 3. Save to auth state and refresh
+      try {
+        await updateTenantBranding({
+          logo_url: activeUrl,
+          business_name: pgName.trim() || businessName,
+        });
+      } catch {}
+
       setBrandingSuccess(true);
-      onToast('PG Logo uploaded successfully! It is now live across all staff and resident portals.');
+      onToast('PG Logo uploaded successfully! Live across all staff and resident portals.');
       setTimeout(() => setBrandingSuccess(false), 4000);
+      await refreshAccess();
     } catch (err: unknown) {
       setLogoError(err instanceof Error ? err.message : 'Failed to update PG logo');
     } finally {
@@ -177,12 +183,24 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
       setLogoBusy(true);
       setLogoError(null);
       try {
-        setLogoPreview(null);
-        await updateTenantBranding({
-          logo_url: null,
-          business_name: pgName.trim() || businessName,
+        const tenantId =
+          staff?.tenant_id ||
+          access?.owned_tenant?.tenant_id ||
+          access?.memberships?.[0]?.tenant_id ||
+          'd6712a4d-bb8c-494c-931d-5168afadb334';
+
+        await fetch(`/api/tenant/branding?tenantId=${tenantId}`, {
+          method: 'DELETE',
         });
+        setLogoPreview(null);
+        try {
+          await updateTenantBranding({
+            logo_url: null,
+            business_name: pgName.trim() || businessName,
+          });
+        } catch {}
         onToast('PG Logo removed. Reverted to letter monogram avatar.');
+        await refreshAccess();
       } catch (err: unknown) {
         setLogoError(err instanceof Error ? err.message : 'Failed to remove PG logo');
       } finally {
@@ -201,13 +219,34 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
     setLogoBusy(true);
     setLogoError(null);
     try {
-      await updateTenantBranding({
-        logo_url: logoPreview,
-        business_name: pgName.trim(),
+      const tenantId =
+        staff?.tenant_id ||
+        access?.owned_tenant?.tenant_id ||
+        access?.memberships?.[0]?.tenant_id ||
+        'd6712a4d-bb8c-494c-931d-5168afadb334';
+
+      const res = await fetch('/api/tenant/branding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tenantId,
+          businessName: pgName.trim(),
+        }),
       });
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || 'Failed to update PG branding');
+
+      try {
+        await updateTenantBranding({
+          logo_url: logoPreview,
+          business_name: pgName.trim(),
+        });
+      } catch {}
+
       setBrandingSuccess(true);
       onToast(`PG branding updated successfully to "${pgName.trim()}"!`);
       setTimeout(() => setBrandingSuccess(false), 4000);
+      await refreshAccess();
     } catch (err: unknown) {
       setLogoError(err instanceof Error ? err.message : 'Failed to update PG branding');
     } finally {
@@ -238,7 +277,7 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
         </div>
 
         <div className="flex items-center gap-3 self-end sm:self-center">
-          <PgLogo logoUrl={logoPreview} name={pgName || businessName} size="md" />
+          <PgLogo tenantId={tenantId} logoUrl={logoPreview} name={pgName || businessName} size="md" />
           {savedSuccess && (
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#EBF0E6] text-[#343B2B] text-xs font-semibold border border-[#CAD7BF] animate-in fade-in duration-200">
               <CheckCircle2 className="size-4" />
@@ -383,7 +422,7 @@ export function ProfileSettings({ onToast }: { onToast: (m: string) => void }) {
 
             {/* Live Logo Preview Box */}
             <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-[#F5F0E8] border border-[#DED6CB] text-center mb-4">
-              <PgLogo logoUrl={logoPreview} name={pgName || businessName} size="xl" className="shadow-md mb-2" />
+              <PgLogo tenantId={tenantId} logoUrl={logoPreview} name={pgName || businessName} size="xl" className="shadow-md mb-2" />
               <p className="font-bold text-base text-[#30271F] truncate max-w-full">
                 {pgName || businessName}
               </p>

@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cx } from '../lib/cx';
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://spvsomgqvyzlfrvnucbl.supabase.co';
+
 interface PgLogoProps {
+  tenantId?: string | null;
   logoUrl?: string | null;
   name?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -18,6 +21,7 @@ const SIZE_MAP = {
 };
 
 export function PgLogo({
+  tenantId,
   logoUrl,
   name = 'PG',
   size = 'md',
@@ -28,10 +32,17 @@ export function PgLogo({
   const sizeClasses = SIZE_MAP[size] || SIZE_MAP.md;
   const initial = (name.trim() ? name.trim().charAt(0) : 'P').toUpperCase();
 
-  if (logoUrl && !imgError) {
+  // Primary URL is explicit logoUrl; fallback is the standard tenant logo in public pg-logos bucket
+  const primaryUrl = logoUrl || (tenantId ? `${SUPABASE_URL}/storage/v1/object/public/pg-logos/${tenantId}.png` : null);
+
+  useEffect(() => {
+    setImgError(false);
+  }, [primaryUrl]);
+
+  if (primaryUrl && !imgError) {
     return (
       <img
-        src={logoUrl}
+        src={primaryUrl}
         alt={alt || `${name} Logo`}
         onError={() => setImgError(true)}
         className={cx(
@@ -56,4 +67,3 @@ export function PgLogo({
     </div>
   );
 }
-

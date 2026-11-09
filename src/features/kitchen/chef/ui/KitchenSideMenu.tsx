@@ -15,6 +15,7 @@ export function KitchenSideMenu({ name, open, onClose }: { name: string; open: b
   const base = useKitchenBase();
   const tenantBusinessName = chef?.tenant_name || staff?.tenant_name || building?.name || 'PG Kitchen';
   const tenantLogoUrl = chef?.logo_url || staff?.logo_url || null;
+  const tenantId = chef?.tenant_id || staff?.tenant_id || building?.tenant_id;
 
   const links = [
     { to: base, label: 'Home', icon: Home, end: true },
@@ -41,7 +42,7 @@ export function KitchenSideMenu({ name, open, onClose }: { name: string; open: b
       <div className="absolute inset-0 bg-[#30271F]/40 backdrop-blur-xs" onClick={onClose} aria-hidden />
       <aside role="dialog" aria-modal="true" aria-label="Menu" className="relative h-full w-[82%] max-w-xs bg-[#F5F0E8] text-[#30271F] flex flex-col border-r border-[#DED6CB] shadow-2xl animate-in slide-in-from-left duration-200">
         <div className="p-5 bg-[#343B2B] text-white flex items-center gap-3">
-          <PgLogo logoUrl={tenantLogoUrl} name={tenantBusinessName} size="md" className="bg-white/10" />
+          <PgLogo tenantId={tenantId} logoUrl={tenantLogoUrl} name={tenantBusinessName} size="md" className="bg-white/10" />
           <div className="flex-1 min-w-0">
             <p className="font-bold text-[15px] truncate">{tenantBusinessName}</p>
             <p className="text-[12px] text-white/75 truncate">{building?.name ? `${building.name} · ${name || 'Chef'}` : (name || 'Chef')}</p>

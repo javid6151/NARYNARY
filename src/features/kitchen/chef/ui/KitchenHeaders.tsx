@@ -16,6 +16,7 @@ export function KitchenBrandHeader({ name, onMenu }: { name: string; onMenu: () 
   const { building } = useBuilding();
   const tenantBusinessName = chef?.tenant_name || staff?.tenant_name || building?.name || 'PG Kitchen';
   const tenantLogoUrl = chef?.logo_url || staff?.logo_url || null;
+  const tenantId = chef?.tenant_id || staff?.tenant_id || building?.tenant_id;
 
   return (
     <header className="sticky top-0 z-20 bg-[#FFFEFC]/92 backdrop-blur-md border-b border-[#DED6CB] -mx-4 px-4 h-16 flex items-center gap-3 shadow-2xs mb-4">
@@ -28,7 +29,7 @@ export function KitchenBrandHeader({ name, onMenu }: { name: string; onMenu: () 
       </button>
 
       <div className="flex items-center gap-2.5 min-w-0">
-        <PgLogo logoUrl={tenantLogoUrl} name={tenantBusinessName} size="sm" />
+        <PgLogo tenantId={tenantId} logoUrl={tenantLogoUrl} name={tenantBusinessName} size="sm" />
         <span className="font-bold text-[16px] text-[#30271F] truncate">
           {tenantBusinessName}
         </span>
