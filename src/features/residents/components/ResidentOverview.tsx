@@ -1,13 +1,23 @@
 /** Overview tab of the resident drawer: rent/outstanding/check-in tiles and personal details + portal credentials. */
 import { useState } from 'react';
-import { Bell, KeyRound, MessageCircle, Copy, Check } from 'lucide-react';
+import { Bell, KeyRound, MessageCircle, Copy, Check, Pencil, ArrowLeftRight } from 'lucide-react';
 import { fmtDate, inr, label } from '../../../lib/format';
 import { Button, Confirm, Field, Input } from '../../../components/ui';
 import { setResidentPassword } from '../../auth/api';
 import type { ResidentDetails, ResidentRow } from '../types';
 import { getResidentPortalUrl } from '../../../lib/portals';
 
-export function ResidentOverview({ r, details: x }: { r: ResidentRow; details: ResidentDetails }) {
+export function ResidentOverview({
+  r,
+  details: x,
+  onEditRent,
+  onTransfer,
+}: {
+  r: ResidentRow;
+  details: ResidentDetails;
+  onEditRent?: () => void;
+  onTransfer?: () => void;
+}) {
   const [openPassModal, setOpenPassModal] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [busy, setBusy] = useState(false);
@@ -63,8 +73,21 @@ export function ResidentOverview({ r, details: x }: { r: ResidentRow; details: R
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
         <div className="rounded-lg border border-line p-3">
-          <p className="text-[12px] text-muted">Monthly rent</p>
-          <p className="font-semibold tabular">{inr(r.monthly_rent)}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-[12px] text-muted">Monthly rent</p>
+            {onEditRent && r.status === 'active' && (
+              <button
+                type="button"
+                onClick={onEditRent}
+                className="text-[11px] font-semibold text-brand-700 hover:underline flex items-center gap-0.5 cursor-pointer"
+                title="Change agreed monthly rent"
+              >
+                <Pencil className="size-2.5" />
+                <span>Change</span>
+              </button>
+            )}
+          </div>
+          <p className="font-semibold tabular text-sm mt-0.5">{inr(r.monthly_rent)}</p>
         </div>
         <div className="rounded-lg border border-line p-3">
           <p className="text-[12px] text-muted">Paid status</p>
@@ -73,8 +96,21 @@ export function ResidentOverview({ r, details: x }: { r: ResidentRow; details: R
           </p>
         </div>
         <div className="rounded-lg border border-line p-3">
-          <p className="text-[12px] text-muted">Check-in</p>
-          <p className="font-semibold">{fmtDate(r.admission_date)}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-[12px] text-muted">Check-in</p>
+            {onTransfer && r.status === 'active' && r.building_id && (
+              <button
+                type="button"
+                onClick={onTransfer}
+                className="text-[11px] font-semibold text-amber-700 hover:underline flex items-center gap-0.5 cursor-pointer"
+                title="Transfer to vacant bed or swap beds"
+              >
+                <ArrowLeftRight className="size-2.5" />
+                <span>Swap</span>
+              </button>
+            )}
+          </div>
+          <p className="font-semibold text-sm mt-0.5">{fmtDate(r.admission_date)}</p>
         </div>
       </div>
 

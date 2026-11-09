@@ -12,6 +12,10 @@ export function ReviewStep({ res, terms, location, docCount, error }: {
   docCount: number;
   error: ApiError | null;
 }) {
+  const disc = Number(terms.discount || 0);
+  const stdDues = Number(terms.monthly_rent || 0) + Number(terms.security_deposit || 0) + Number(terms.setup_fee || 0);
+  const netPayable = Math.max(0, stdDues - disc);
+
   const rows: [string, string][] = [
     ['Resident', res.full_name],
     ['Mobile', res.phone],
@@ -21,13 +25,15 @@ export function ReviewStep({ res, terms, location, docCount, error }: {
     ['Monthly rent', inr(terms.monthly_rent)],
     ['Security deposit', inr(terms.security_deposit)],
     ['Setup fee', inr(terms.setup_fee)],
+    ...(disc > 0 ? ([['Admission discount', `- ${inr(disc)}`]] as [string, string][]) : []),
+    ['Net Joining Total', inr(netPayable)],
     ['Mess', terms.mess_included ? 'Included' : 'Not included'],
     [
       'Admission fee payment',
       terms.payment_status === 'paid'
         ? (terms.payment_method === 'upi'
-            ? `Paid via UPI (UTR: ${terms.payment_reference || '—'})`
-            : `Paid in Cash${terms.payment_reference ? ` (Receipt: ${terms.payment_reference})` : ''}`)
+            ? `Paid ${inr(netPayable)} via UPI (UTR: ${terms.payment_reference || '—'})`
+            : `Paid ${inr(netPayable)} in Cash${terms.payment_reference ? ` (Receipt: ${terms.payment_reference})` : ''}`)
         : `Not Paid (Reminder: ${terms.reminder_date || 'Not set'})`,
     ],
     ['Portal Password', res.portal_password || '—'],

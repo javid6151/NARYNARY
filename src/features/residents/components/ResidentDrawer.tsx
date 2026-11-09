@@ -3,7 +3,7 @@
  * and the actions record payment / edit / checkout for active residents.
  */
 import { useState } from 'react';
-import { LogOut as CheckoutIcon, Pencil, Wallet } from 'lucide-react';
+import { ArrowLeftRight, LogOut as CheckoutIcon, Pencil, Plus, Wallet } from 'lucide-react';
 import { useAsync } from '../../../lib/hooks';
 import { fmtDate, inr, label } from '../../../lib/format';
 import { Async, Avatar, Badge, Button, Drawer, Empty, Table, Tabs, Td } from '../../../components/ui';
@@ -11,10 +11,14 @@ import { ResidentDocuments } from '../../files/components/ResidentDocuments';
 import { RecordPaymentDrawer } from '../../billing/components/RecordPaymentDrawer';
 import { receiptNo } from '../../billing/receipt';
 import { getResident, listResidentCharges, listResidentComplaints, listResidentPayments } from '../api';
-import type { ResidentRow } from '../types';
+import type { ResidentCharge, ResidentRow } from '../types';
 import { CheckoutDialog } from './CheckoutDialog';
 import { EditResident } from './EditResident';
 import { ResidentOverview } from './ResidentOverview';
+import { EditChargeDrawer } from './EditChargeDrawer';
+import { AddChargeDrawer } from './AddChargeDrawer';
+import { EditMonthlyRentModal } from './EditMonthlyRentModal';
+import { TransferSwapDrawer } from '../../property/components/TransferSwapDrawer';
 
 type Tab = 'overview' | 'documents' | 'charges' | 'payments' | 'complaints';
 
@@ -23,6 +27,11 @@ export function ResidentDrawer({ r, onClose, onChanged }: { r: ResidentRow; onCl
   const [edit, setEdit] = useState(false);
   const [checkout, setCheckout] = useState(false);
   const [pay, setPay] = useState(false);
+  const [transfer, setTransfer] = useState(false);
+  const [editCharge, setEditCharge] = useState<ResidentCharge | null>(null);
+  const [addChargeOpen, setAddChargeOpen] = useState(false);
+  const [editRentOpen, setEditRentOpen] = useState(false);
+
   // Charges/payments reload when the outstanding amount changes (after a payment).
   const charges = useAsync(() => listResidentCharges(r.id), [r.id, r.outstanding]);
   const payments = useAsync(() => listResidentPayments(r.id), [r.id, r.outstanding]);
@@ -43,11 +52,22 @@ export function ResidentDrawer({ r, onClose, onChanged }: { r: ResidentRow; onCl
           </p>
         </div>
         {r.status === 'active' && (
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button size="sm" onClick={() => setPay(true)}>
               <Wallet className="size-4" />
               Record payment
             </Button>
+            {r.building_id && (
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => setTransfer(true)}
+                title="Transfer to vacant room or swap beds"
+              >
+                <ArrowLeftRight className="size-4 text-amber-700" />
+                Transfer / Swap
+              </Button>
+            )}
             <Button size="sm" variant="secondary" onClick={() => setEdit(true)}>
               <Pencil className="size-4" />
               Edit
@@ -71,30 +91,65 @@ export function ResidentDrawer({ r, onClose, onChanged }: { r: ResidentRow; onCl
         ]}
       />
 
-      {tab === 'overview' && <Async state={detail}>{(d) => <ResidentOverview r={r} details={d} />}</Async>}
+      {tab === 'overview' && (
+        <Async state={detail}>
+          {(d) => (
+            <ResidentOverview
+              r={r}
+              details={d}
+              onEditRent={() => setEditRentOpen(true)}
+              onTransfer={() => setTransfer(true)}
+            />
+          )}
+        </Async>
+      )}
 
       {tab === 'documents' && <ResidentDocuments residentId={r.id} canEdit />}
 
       {tab === 'charges' && (
-        <Async state={charges}>
-          {(cs) =>
-            cs.length === 0 ? (
-              <Empty title="No charges" />
-            ) : (
-              <Table head={['Charge', 'Due', 'Amount', 'Paid', 'Status']}>
-                {cs.map((c) => (
-                  <tr key={c.id}>
-                    <Td>{c.description}</Td>
-                    <Td>{fmtDate(c.due_date)}</Td>
-                    <Td className="tabular">{inr(c.amount)}</Td>
-                    <Td className="tabular">{inr(c.paid_amount)}</Td>
-                    <Td><Badge status={c.status} /></Td>
-                  </tr>
-                ))}
-              </Table>
-            )
-          }
-        </Async>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-muted">Itemized rent, utilities, and fee charges.</p>
+            {r.status === 'active' && (
+              <Button size="sm" variant="secondary" onClick={() => setAddChargeOpen(true)}>
+                <Plus className="size-4" />
+                Add charge
+              </Button>
+            )}
+          </div>
+          <Async state={charges}>
+            {(cs) =>
+              cs.length === 0 ? (
+                <Empty title="No charges" />
+              ) : (
+                <Table head={['Charge', 'Due', 'Amount', 'Paid', 'Status', 'Actions']}>
+                  {cs.map((c) => (
+                    <tr key={c.id}>
+                      <Td className="font-medium text-ink">{c.description}</Td>
+                      <Td>{fmtDate(c.due_date)}</Td>
+                      <Td className="tabular font-semibold">{inr(c.amount)}</Td>
+                      <Td className="tabular text-ok font-medium">{inr(c.paid_amount)}</Td>
+                      <Td><Badge status={c.status} /></Td>
+                      <Td>
+                        {c.status !== 'waived' && c.status !== 'cancelled' && (
+                          <button
+                            type="button"
+                            onClick={() => setEditCharge(c)}
+                            className="text-xs font-semibold text-brand-700 hover:text-brand-900 hover:underline cursor-pointer flex items-center gap-1"
+                            title="Edit charge details or give discount"
+                          >
+                            <Pencil className="size-3" />
+                            <span>Edit / Discount</span>
+                          </button>
+                        )}
+                      </Td>
+                    </tr>
+                  ))}
+                </Table>
+              )
+            }
+          </Async>
+        </div>
       )}
 
       {tab === 'payments' && (
@@ -171,6 +226,54 @@ export function ResidentDrawer({ r, onClose, onChanged }: { r: ResidentRow; onCl
           onChanged(m);
         }}
       />
+      {editCharge && (
+        <EditChargeDrawer
+          charge={editCharge}
+          residentId={r.id}
+          onClose={() => setEditCharge(null)}
+          onSaved={(m) => {
+            setEditCharge(null);
+            charges.reload();
+            onChanged(m);
+          }}
+        />
+      )}
+      {addChargeOpen && (
+        <AddChargeDrawer
+          residentId={r.id}
+          residentName={r.full_name}
+          onClose={() => setAddChargeOpen(false)}
+          onSaved={(m) => {
+            setAddChargeOpen(false);
+            charges.reload();
+            onChanged(m);
+          }}
+        />
+      )}
+      {editRentOpen && (
+        <EditMonthlyRentModal
+          residentId={r.id}
+          currentRent={r.monthly_rent || 0}
+          residentName={r.full_name}
+          onClose={() => setEditRentOpen(false)}
+          onSaved={(m) => {
+            setEditRentOpen(false);
+            onChanged(m);
+          }}
+        />
+      )}
+      {transfer && r.building_id && (
+        <TransferSwapDrawer
+          resident={r}
+          buildingId={r.building_id}
+          onClose={() => setTransfer(false)}
+          onDone={(m) => {
+            setTransfer(false);
+            onChanged(m);
+            onClose();
+          }}
+        />
+      )}
     </Drawer>
   );
 }

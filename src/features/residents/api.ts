@@ -133,6 +133,88 @@ export interface AdmissionPaymentOptions {
   reference?: string | null;
   reminderDate?: string | null;
   reminderNote?: string | null;
+  discount?: number;
+}
+
+/** Update an existing charge's amount, description, or due date. */
+export async function updateCharge(c: { chargeId: string; amount: number; description?: string; dueDate?: string }): Promise<void> {
+  const res = await fetch('/api/billing/update-charge', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(c),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to update charge');
+  }
+}
+
+/** Apply a discount or concession to charges without recording income/profit. */
+export async function applyDiscount(d: { residentId: string; discountAmount: number; chargeId?: string; reason?: string }): Promise<void> {
+  const res = await fetch('/api/billing/apply-discount', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(d),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to apply discount');
+  }
+}
+
+/** Add a new charge (utility, meal, late fee, other) for a resident. */
+export function addCharge(residentId: string, type: string, description: string, amount: number, due: string) {
+  return rpc('add_charge', {
+    p_resident: residentId,
+    p_type: type,
+    p_description: description,
+    p_amount: amount,
+    p_due: due,
+  });
+}
+
+/** Waive a charge via database function. */
+export function waiveCharge(chargeId: string, reason: string) {
+  return rpc('waive_charge', { p_charge: chargeId, p_reason: reason });
+}
+
+/** Transfer resident to a vacant bed. */
+export async function transferResidentBed(t: { residentId: string; newBedId: string; newRent?: number; notes?: string }): Promise<void> {
+  const res = await fetch('/api/resident/transfer-bed', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(t),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to transfer resident');
+  }
+}
+
+/** Swap beds between two active residents. */
+export async function swapResidentBeds(s: { residentIdA: string; residentIdB: string; notes?: string }): Promise<void> {
+  const res = await fetch('/api/resident/swap-beds', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(s),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to swap resident beds');
+  }
+}
+
+/** Update monthly rent for future billing cycles. */
+export async function updateResidentMonthlyRent(residentId: string, monthlyRent: number): Promise<void> {
+  const res = await fetch('/api/resident/update-monthly-rent', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ residentId, monthlyRent }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to update monthly rent');
+  }
 }
 
 /** Auto-approves an admission immediately upon creation so bed is allocated and resident is active, and activates portal access. */

@@ -130,6 +130,7 @@ export interface TermsForm {
   monthly_rent: string;
   security_deposit: string;
   setup_fee: string;
+  discount?: string;
   mess_included: boolean;
   source: string;
   payment_status: 'paid' | 'not_paid';

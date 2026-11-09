@@ -1,6 +1,6 @@
 /** Bed allocation panel for one room: occupant + checkout, pending admission, or "Admit resident". */
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, LogOut as CheckoutIcon, Pencil, UserPlus, X } from 'lucide-react';
+import { ArrowLeftRight, ChevronRight, LogOut as CheckoutIcon, Pencil, UserPlus, X } from 'lucide-react';
 import { Avatar, Badge, Button, Card } from '../../../components/ui';
 import { cx } from '../../../lib/cx';
 import type { LayoutBed, LayoutRoom } from '../types';
@@ -11,12 +11,14 @@ export function RoomBeds({
   onClose,
   onCheckout,
   onSelectResident,
+  onTransfer,
 }: {
   room: LayoutRoom;
   onEdit: () => void;
   onClose: () => void;
   onCheckout: (bed: LayoutBed) => void;
   onSelectResident?: (residentId: string) => void;
+  onTransfer?: (bed: LayoutBed) => void;
 }) {
   const nav = useNavigate();
   const actions = (
@@ -80,18 +82,35 @@ export function RoomBeds({
                     </p>
                   </div>
                 </button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCheckout(b);
-                  }}
-                  className="shrink-0"
-                >
-                  <CheckoutIcon className="size-3.5" />
-                  Checkout
-                </Button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {onTransfer && (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onTransfer(b);
+                      }}
+                      title="Move to vacant bed or swap beds"
+                      className="shrink-0"
+                    >
+                      <ArrowLeftRight className="size-3.5 text-amber-700" />
+                      Swap
+                    </Button>
+                  )}
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCheckout(b);
+                    }}
+                    className="shrink-0"
+                  >
+                    <CheckoutIcon className="size-3.5" />
+                    Checkout
+                  </Button>
+                </div>
               </div>
             ) : b.pending_admission ? (
               <Button variant="secondary" size="sm" className="w-full mt-4" onClick={() => nav('../residents')}>

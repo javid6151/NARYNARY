@@ -23,6 +23,7 @@ import { FloorLayout } from './components/FloorLayout';
 import { PendingBuildings } from './components/PendingBuildings';
 import { RoomBeds } from './components/RoomBeds';
 import { RoomDrawer } from './components/RoomDrawer';
+import { TransferSwapDrawer } from './components/TransferSwapDrawer';
 
 export default function Buildings() {
   const { staff, isOwner: authIsOwner, access } = useAuth();
@@ -35,6 +36,7 @@ export default function Buildings() {
   const [roomId, setRoomId] = useState<string | null>(null);
   const [drawer, setDrawer] = useState<null | 'floor' | 'room' | 'edit' | 'building'>(null);
   const [checkout, setCheckout] = useState<LayoutBed | null>(null);
+  const [transferBed, setTransferBed] = useState<LayoutBed | null>(null);
   const [selectedResident, setSelectedResident] = useState<ResidentRow | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -176,6 +178,7 @@ export default function Buildings() {
                   onClose={() => setRoomId(null)}
                   onCheckout={setCheckout}
                   onSelectResident={openResident}
+                  onTransfer={setTransferBed}
                 />
               )}
             </div>
@@ -234,6 +237,23 @@ export default function Buildings() {
                 setSelectedResident(null);
               }
             });
+          }}
+        />
+      )}
+      {transferBed && buildingId && (
+        <TransferSwapDrawer
+          resident={{
+            id: transferBed.resident_id!,
+            full_name: transferBed.resident_name || 'Resident',
+            room_number: room?.room_number,
+            bed_label: transferBed.label,
+          }}
+          buildingId={buildingId}
+          onClose={() => setTransferBed(null)}
+          onDone={(msg) => {
+            setTransferBed(null);
+            setToast(msg);
+            layout.reload();
           }}
         />
       )}

@@ -659,15 +659,53 @@ function authApiPlugin() {
               phone: cleanPhone,
             });
 
-            // 5. Handle initial fee payment (Paid via UPI/Cash vs Not Paid with reminder)
+            // 5. Handle initial fee payment & discount (Discount reduces dues without inflating revenue)
+            const discount = Math.max(0, Number(payment?.discount || 0));
+            let chargesToProcess: any[] = [];
             const { data: charges } = await supabaseAdmin
               .from('rent_charges')
-              .select('id, amount, charge_type')
+              .select('id, amount, charge_type, description')
               .eq('admission_id', admissionId);
 
-            const totalAmount = (charges || []).reduce((s: number, c: any) => s + Number(c.amount), 0);
+            if (charges && charges.length > 0) {
+              chargesToProcess = charges;
+              if (discount > 0) {
+                // Apply discount across charges (starting with setup_fee, then rent/deposit)
+                let discountRemaining = discount;
+                for (const c of chargesToProcess) {
+                  if (discountRemaining <= 0) break;
+                  const cAmount = Number(c.amount);
+                  if (cAmount <= discountRemaining) {
+                    discountRemaining -= cAmount;
+                    c.amount = 0;
+                    c.status = 'waived';
+                    await supabaseAdmin
+                      .from('rent_charges')
+                      .update({
+                        status: 'waived',
+                        description: `${c.description || c.charge_type} (Waived: ₹${cAmount} discount)`,
+                      })
+                      .eq('id', c.id);
+                  } else {
+                    const newAmt = cAmount - discountRemaining;
+                    await supabaseAdmin
+                      .from('rent_charges')
+                      .update({
+                        amount: newAmt,
+                        description: `${c.description || c.charge_type} (Less ₹${discountRemaining} discount)`,
+                      })
+                      .eq('id', c.id);
+                    c.amount = newAmt;
+                    discountRemaining = 0;
+                  }
+                }
+              }
+            }
 
-            if (payment?.status === 'paid' && totalAmount > 0) {
+            const activeCharges = chargesToProcess.filter((c) => Number(c.amount) > 0 && c.status !== 'waived');
+            const netAmount = activeCharges.reduce((s: number, c: any) => s + Number(c.amount), 0);
+
+            if (payment?.status === 'paid' && netAmount > 0) {
               const isUpi = payment.method === 'upi';
               const pRef = payment.reference?.trim() || (isUpi ? null : 'Cash Receipt');
 
@@ -675,15 +713,15 @@ function authApiPlugin() {
                 tenant_id: adm.tenant_id,
                 resident_id: resident.id,
                 building_id: adm.building_id,
-                amount: totalAmount,
+                amount: netAmount,
                 payment_method: isUpi ? 'upi' : 'cash',
                 transaction_reference: pRef,
                 paid_at: new Date().toISOString(),
                 recorded_by: user.id,
                 status: 'confirmed',
                 notes: isUpi
-                  ? `Admission fee paid via UPI (UTR: ${pRef || '—'})`
-                  : `Admission fee collected in cash${pRef ? ` (${pRef})` : ''}`,
+                  ? `Admission fee paid via UPI (UTR: ${pRef || '—'})${discount > 0 ? ` · ₹${discount} discount applied` : ''}`
+                  : `Admission fee collected in cash${pRef ? ` (${pRef})` : ''}${discount > 0 ? ` · ₹${discount} discount applied` : ''}`,
               }).select('id').single();
 
               if (tx?.id) {
@@ -715,8 +753,8 @@ function authApiPlugin() {
                   issued_by: user.id,
                 });
 
-                if (charges && charges.length > 0) {
-                  for (const c of (charges as any[])) {
+                if (activeCharges.length > 0) {
+                  for (const c of activeCharges) {
                     await supabaseAdmin.from('payment_allocations').insert({
                       tenant_id: adm.tenant_id,
                       payment_transaction_id: tx.id,
@@ -729,13 +767,13 @@ function authApiPlugin() {
               }
 
               await supabaseAdmin.from('admissions').update({
-                review_notes: `Admission fee paid via ${isUpi ? `UPI (UTR: ${payment.reference || '—'})` : `Cash (${payment.reference || 'Cash'})`}`,
+                review_notes: `Admission fee paid via ${isUpi ? `UPI (UTR: ${payment.reference || '—'})` : `Cash (${payment.reference || 'Cash'})`}${discount > 0 ? ` (₹${discount} discount granted)` : ''}`,
               }).eq('id', admissionId);
             } else {
               // Not Paid (or reminder set): leave charges as unpaid
               const reminderText = payment?.reminderDate
-                ? `Unpaid Fee. Reminder on ${payment.reminderDate}${payment.reminderNote ? `: ${payment.reminderNote}` : ''}`
-                : `Unpaid Fee${payment?.reminderNote ? ` (${payment.reminderNote})` : ''}`;
+                ? `Unpaid Fee. Reminder on ${payment.reminderDate}${payment.reminderNote ? `: ${payment.reminderNote}` : ''}${discount > 0 ? ` (₹${discount} discount granted)` : ''}`
+                : `Unpaid Fee${payment?.reminderNote ? ` (${payment.reminderNote})` : ''}${discount > 0 ? ` (₹${discount} discount granted)` : ''}`;
 
               await supabaseAdmin.from('admissions').update({
                 review_notes: reminderText,
@@ -1387,6 +1425,262 @@ function authApiPlugin() {
               .eq('building_id', buildingId)
               .order('room_number');
             return json(rooms || []);
+          }
+
+          // ------------------------------------------------------------------ Resident Room Transfer / Swap & Rent
+          if (req.method === 'POST' && req.url === '/api/resident/transfer-bed') {
+            const { residentId, newBedId, newRent } = await readBody();
+            if (!residentId || !newBedId) {
+              return json({ error: 'residentId and newBedId are required' }, 400);
+            }
+
+            const { data: currentAssign, error: cErr } = await supabaseAdmin
+              .from('resident_room_assignments')
+              .select('*')
+              .eq('resident_id', residentId)
+              .is('end_at', null)
+              .maybeSingle();
+
+            if (cErr || !currentAssign) {
+              return json({ error: 'Active resident room assignment not found' }, 404);
+            }
+
+            const { data: destBed, error: bErr } = await supabaseAdmin
+              .from('beds')
+              .select('id, building_id, room_id, bed_label, status')
+              .eq('id', newBedId)
+              .single();
+
+            if (bErr || !destBed || destBed.status !== 'active') {
+              return json({ error: 'Target bed not found or inactive' }, 400);
+            }
+
+            const { data: occupied } = await supabaseAdmin
+              .from('resident_room_assignments')
+              .select('id')
+              .eq('bed_id', newBedId)
+              .is('end_at', null)
+              .maybeSingle();
+
+            if (occupied) {
+              return json({ error: 'Target bed is already occupied' }, 409);
+            }
+
+            const nowIso = new Date().toISOString();
+            await supabaseAdmin
+              .from('resident_room_assignments')
+              .update({ end_at: nowIso })
+              .eq('id', (currentAssign as any).id);
+
+            const { data: newAssign, error: insErr } = await supabaseAdmin
+              .from('resident_room_assignments')
+              .insert({
+                tenant_id: (currentAssign as any).tenant_id,
+                resident_id: residentId,
+                admission_id: (currentAssign as any).admission_id,
+                building_id: (destBed as any).building_id,
+                room_id: (destBed as any).room_id,
+                bed_id: newBedId,
+                start_at: nowIso,
+                assigned_by: (currentAssign as any).assigned_by,
+              })
+              .select('id')
+              .single();
+
+            if (insErr) {
+              return json({ error: insErr.message }, 500);
+            }
+
+            if (newRent !== undefined && Number(newRent) >= 0) {
+              await supabaseAdmin
+                .from('admissions')
+                .update({ monthly_rent: Number(newRent) })
+                .eq('id', (currentAssign as any).admission_id);
+            }
+
+            return json({ ok: true, assignmentId: newAssign?.id, bedLabel: (destBed as any).bed_label });
+          }
+
+          if (req.method === 'POST' && req.url === '/api/resident/swap-beds') {
+            const { residentIdA, residentIdB } = await readBody();
+            if (!residentIdA || !residentIdB) {
+              return json({ error: 'Both residentIdA and residentIdB are required' }, 400);
+            }
+            if (residentIdA === residentIdB) {
+              return json({ error: 'Cannot swap a resident with themselves' }, 400);
+            }
+
+            const { data: assignA } = await supabaseAdmin
+              .from('resident_room_assignments')
+              .select('*')
+              .eq('resident_id', residentIdA)
+              .is('end_at', null)
+              .maybeSingle();
+
+            const { data: assignB } = await supabaseAdmin
+              .from('resident_room_assignments')
+              .select('*')
+              .eq('resident_id', residentIdB)
+              .is('end_at', null)
+              .maybeSingle();
+
+            if (!assignA || !assignB) {
+              return json({ error: 'Both residents must have an active room assignment to swap' }, 404);
+            }
+
+            const nowIso = new Date().toISOString();
+            await supabaseAdmin.from('resident_room_assignments').update({ end_at: nowIso }).in('id', [assignA.id, assignB.id]);
+
+            await supabaseAdmin.from('resident_room_assignments').insert({
+              tenant_id: assignA.tenant_id,
+              resident_id: residentIdA,
+              admission_id: assignA.admission_id,
+              building_id: assignB.building_id,
+              room_id: assignB.room_id,
+              bed_id: assignB.bed_id,
+              start_at: nowIso,
+              assigned_by: assignA.assigned_by,
+            });
+
+            await supabaseAdmin.from('resident_room_assignments').insert({
+              tenant_id: assignB.tenant_id,
+              resident_id: residentIdB,
+              admission_id: assignB.admission_id,
+              building_id: assignA.building_id,
+              room_id: assignA.room_id,
+              bed_id: assignA.bed_id,
+              start_at: nowIso,
+              assigned_by: assignB.assigned_by,
+            });
+
+            return json({ ok: true, message: 'Beds swapped successfully' });
+          }
+
+          if (req.method === 'POST' && req.url === '/api/resident/update-monthly-rent') {
+            const { residentId, monthlyRent } = await readBody();
+            const rent = Number(monthlyRent);
+            if (!residentId || isNaN(rent) || rent < 0) {
+              return json({ error: 'residentId and valid monthlyRent are required' }, 400);
+            }
+            const { data: adm } = await supabaseAdmin
+              .from('admissions')
+              .select('id')
+              .eq('resident_id', residentId)
+              .eq('status', 'approved')
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (!adm) return json({ error: 'Active admission not found' }, 404);
+            await supabaseAdmin.from('admissions').update({ monthly_rent: rent }).eq('id', (adm as any).id);
+            return json({ ok: true, monthlyRent: rent });
+          }
+
+          // ------------------------------------------------------------------ Charge Editing & Discounts
+          if (req.method === 'POST' && req.url === '/api/billing/update-charge') {
+            const { chargeId, amount, description, dueDate } = await readBody();
+            if (!chargeId) {
+              return json({ error: 'chargeId is required' }, 400);
+            }
+
+            const { data: charge } = await supabaseAdmin
+              .from('rent_charge_balances')
+              .select('*')
+              .eq('id', chargeId)
+              .single();
+
+            if (!charge) return json({ error: 'Charge not found' }, 404);
+
+            const newAmt = Number(amount);
+            if (newAmt < Number(charge.paid_amount || 0)) {
+              return json({ error: `Amount cannot be less than already paid (₹${charge.paid_amount})` }, 400);
+            }
+
+            const paidAmt = Number(charge.paid_amount || 0);
+            const status = paidAmt >= newAmt ? 'paid' : paidAmt > 0 ? 'partially_paid' : 'unpaid';
+
+            await supabaseAdmin.from('rent_charges').update({
+              amount: newAmt,
+              description: description || charge.description,
+              due_date: dueDate || charge.due_date,
+              status,
+              updated_at: new Date().toISOString(),
+            }).eq('id', chargeId);
+
+            return json({ ok: true });
+          }
+
+          if (req.method === 'POST' && req.url === '/api/billing/apply-discount') {
+            const { residentId, chargeId, discountAmount, reason } = await readBody();
+            const discount = Number(discountAmount);
+            if (!discount || discount <= 0) {
+              return json({ error: 'Valid discount amount required' }, 400);
+            }
+
+            if (chargeId) {
+              const { data: charge } = await supabaseAdmin
+                .from('rent_charge_balances')
+                .select('*')
+                .eq('id', chargeId)
+                .single();
+
+              if (!charge) return json({ error: 'Charge not found' }, 404);
+              if (discount > Number(charge.balance)) {
+                return json({ error: `Discount cannot exceed remaining balance (₹${charge.balance})` }, 400);
+              }
+
+              if (discount === Number(charge.balance) && Number(charge.paid_amount) === 0) {
+                await supabaseAdmin.from('rent_charges').update({
+                  status: 'waived',
+                  description: `${charge.description} (Waived: ${reason || 'Discount'})`,
+                  updated_at: new Date().toISOString(),
+                }).eq('id', chargeId);
+              } else {
+                const newAmt = Number(charge.amount) - discount;
+                await supabaseAdmin.from('rent_charges').update({
+                  amount: newAmt,
+                  description: `${charge.description} (Less ₹${discount} discount: ${reason || 'Concession'})`,
+                  updated_at: new Date().toISOString(),
+                }).eq('id', chargeId);
+              }
+
+              return json({ ok: true, discountApplied: discount });
+            }
+
+            const { data: openCharges } = await supabaseAdmin
+              .from('rent_charge_balances')
+              .select('*')
+              .eq('resident_id', residentId)
+              .in('status', ['unpaid', 'partially_paid'])
+              .order('due_date', { ascending: true });
+
+            if (!openCharges || openCharges.length === 0) {
+              return json({ error: 'No open charges found to apply discount' }, 400);
+            }
+
+            let left = discount;
+            for (const c of openCharges) {
+              if (left <= 0) break;
+              const bal = Number(c.balance);
+              const take = Math.min(left, bal);
+              if (take === bal && Number(c.paid_amount) === 0) {
+                await supabaseAdmin.from('rent_charges').update({
+                  status: 'waived',
+                  description: `${c.description} (Waived: ${reason || 'Discount'})`,
+                  updated_at: new Date().toISOString(),
+                }).eq('id', (c as any).id);
+              } else {
+                const newAmt = Number(c.amount) - take;
+                await supabaseAdmin.from('rent_charges').update({
+                  amount: newAmt,
+                  description: `${c.description} (Less ₹${take} discount: ${reason || 'Concession'})`,
+                  updated_at: new Date().toISOString(),
+                }).eq('id', (c as any).id);
+              }
+              left -= take;
+            }
+
+            return json({ ok: true, discountApplied: discount - left });
           }
 
           next();

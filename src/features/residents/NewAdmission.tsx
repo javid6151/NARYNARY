@@ -62,6 +62,7 @@ export default function NewAdmission() {
     monthly_rent: '',
     security_deposit: '',
     setup_fee: '0',
+    discount: '0',
     mess_included: true,
     source: '',
     payment_status: 'paid',
@@ -187,6 +188,7 @@ export default function NewAdmission() {
           reference: terms.payment_reference?.trim() || null,
           reminderDate: terms.reminder_date || null,
           reminderNote: terms.reminder_note?.trim() || null,
+          discount: Number(terms.discount || 0),
         });
       } catch (e) {
         console.warn('Auto-approval error:', e);
