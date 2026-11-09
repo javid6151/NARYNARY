@@ -67,7 +67,6 @@ export default function Buildings() {
         }
         imageSrc="/owner-assets/buildings-hero.jpg"
         controls={<BuildingPicker />}
-        statsBadge={allBeds.length > 0 ? `${Math.round((occupied / allBeds.length) * 100)}% Occupancy` : undefined}
         primaryAction={{
           label: 'Add Room',
           onClick: () => setDrawer('room'),
