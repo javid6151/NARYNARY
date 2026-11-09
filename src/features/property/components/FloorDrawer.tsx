@@ -14,7 +14,9 @@ export function FloorDrawer({ open, onClose, buildingId, nextNumber, onSaved }: 
 }) {
   const [n, setN] = useState(String(nextNumber));
   const [name, setName] = useState('');
-  const m = useMutation(() => createFloor(buildingId, Number(n), name || null));
+  const m = useMutation(() =>
+    createFloor(buildingId, Number(n), name.trim() || (Number(n) === 0 ? 'Ground Floor' : `Floor ${n}`))
+  );
 
   const footer = (
     <>
