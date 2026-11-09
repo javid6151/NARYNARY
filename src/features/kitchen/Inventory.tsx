@@ -28,7 +28,6 @@ import {
   Drawer,
   Empty,
   Input,
-  PageHeader,
   Select,
   StatCard,
   Table,
@@ -115,33 +114,17 @@ export default function Inventory() {
 
   return (
     <>
-      <PageHeader
-        title="Inventory"
-        subtitle="Unified stock per hostel: track Purchases, Chef Daily Usage, Expected vs. Actual stock, and Physical Reconciliation."
-        actions={
-          <>
-            <BuildingPicker />
-            <Button variant="secondary" onClick={() => setAddItem(true)}>
-              <Plus className="size-4" />
-              Add item
-            </Button>
-            <Button variant="secondary" onClick={() => setReconcile(true)}>
-              <ClipboardCheck className="size-4" />
-              Reconcile stock
-            </Button>
-            <Button onClick={() => setMove({ action: 'purchase' })}>
-              <ShoppingCart className="size-4" />
-              Record purchase
-            </Button>
-          </>
-        }
-      />
-
       <SectionPromoBanner
+        fromTop
         eyebrow="STOCK INTELLIGENCE"
         title="Accurate Inventory, Zero Waste Kitchens."
-        subtitle="Track purchases, chef daily consumption, expected vs. actual stock, and physical audit logs."
+        subtitle={
+          building
+            ? `${building.name} · Track purchases, chef consumption, expected vs. actual stock, and audits.`
+            : 'Track purchases, chef daily consumption, expected vs. actual stock, and physical audit logs.'
+        }
         imageSrc="/owner-assets/inventory-hero.jpg"
+        controls={<BuildingPicker />}
         statsBadge={`${rows.length} Items Monitored`}
         primaryAction={{
           label: 'Record Purchase',
@@ -153,6 +136,15 @@ export default function Inventory() {
           onClick: () => setReconcile(true),
           icon: ClipboardCheck,
         }}
+        extraActions={
+          <button
+            onClick={() => setAddItem(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 sm:py-3 rounded-2xl bg-[#FFFEFC] hover:bg-[#ECE5DA] text-[#30271F] text-xs sm:text-[13.5px] font-semibold border border-[#DED6CB] transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
+          >
+            <Plus className="size-4 text-[#343B2B]" />
+            <span>Add Item</span>
+          </button>
+        }
       />
 
       {/* KPI Tiles */}

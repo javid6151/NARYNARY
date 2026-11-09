@@ -59,28 +59,52 @@
   color: #fff;
 }
 
+.resident-brand-header--overlay {
+  border-bottom: 1px solid rgba(222, 214, 203, 0.6);
+  background: rgba(247, 243, 237, 0.88);
+  backdrop-filter: blur(14px);
+  color: var(--resident-ink);
+}
+
 .resident-brand-header--overlay button {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(48, 39, 31, 0.05);
+  color: var(--resident-ink);
   backdrop-filter: blur(12px);
 }
 
 .resident-home-hero {
-  min-height: 25.5rem;
+  min-height: 24rem;
   position: relative;
   overflow: hidden;
-  background-color: #40322a;
-  background-image:
-    linear-gradient(180deg, rgba(21, 16, 13, 0.25) 0%, rgba(21, 16, 13, 0.04) 34%, rgba(21, 16, 13, 0.83) 100%),
-    url('/resident-assets/warm-residence-interior.png');
+  background-color: var(--resident-paper);
+}
+
+.resident-home-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/resident-assets/warm-residence-interior.png');
   background-size: cover;
-  background-position: center;
+  background-position: center 38%;
+  opacity: 0.28;
+  mix-blend-mode: multiply;
+  filter: contrast(95%);
+  pointer-events: none;
+}
+
+.resident-home-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(247, 243, 237, 0.1) 0%, rgba(247, 243, 237, 0.45) 45%, rgba(247, 243, 237, 0.92) 80%, var(--resident-paper) 100%);
+  pointer-events: none;
 }
 
 .resident-home-hero__content {
-  position: absolute;
-  inset: auto 0 0;
-  padding: 2rem 1rem 1.25rem;
-  color: #fff;
+  position: relative;
+  z-index: 10;
+  padding: 1.5rem 1rem 1.25rem;
+  color: var(--resident-ink);
 }
 
 .resident-hero-eyebrow,
@@ -91,20 +115,21 @@
   text-transform: uppercase;
 }
 
-.resident-hero-eyebrow { color: rgba(255, 255, 255, 0.72); }
+.resident-hero-eyebrow { color: var(--resident-clay-deep); }
 .resident-section-eyebrow { color: var(--resident-clay); }
 
 .resident-hero-stay {
   margin-top: 1rem;
   display: flex;
   align-items: center;
-  gap: 0.7rem;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  border-radius: 1rem;
-  padding: 0.75rem;
-  background: rgba(37, 27, 21, 0.35);
-  box-shadow: 0 10px 24px rgba(10, 7, 5, 0.16);
+  gap: 0.75rem;
+  border: 1px solid rgba(222, 214, 203, 0.8);
+  border-radius: 1.25rem;
+  padding: 0.85rem 1rem;
+  background: rgba(255, 254, 252, 0.92);
+  box-shadow: 0 4px 16px rgba(48, 39, 31, 0.05);
   backdrop-filter: blur(14px);
+  color: var(--resident-ink);
 }
 
 .resident-status-dot {
@@ -177,8 +202,7 @@
   color: var(--resident-clay);
 }
 
-.resident-menu-teaser,
-.resident-menu-showcase {
+.resident-menu-teaser {
   background-color: #342820;
   background-image:
     linear-gradient(90deg, rgba(28, 21, 17, 0.9) 0%, rgba(28, 21, 17, 0.54) 48%, rgba(28, 21, 17, 0.08) 100%),
@@ -190,12 +214,34 @@
 }
 
 .resident-menu-showcase {
-  min-height: 11rem;
+  min-height: 11.5rem;
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: end;
-  background-image:
-    linear-gradient(180deg, rgba(28, 21, 17, 0.08), rgba(28, 21, 17, 0.86)),
-    url('/resident-assets/today-menu-dinner.png');
+  background-color: var(--resident-paper);
+  color: var(--resident-ink);
+}
+
+.resident-menu-showcase::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/resident-assets/today-menu-dinner.png');
+  background-size: cover;
+  background-position: center 38%;
+  opacity: 0.28;
+  mix-blend-mode: multiply;
+  filter: contrast(95%);
+  pointer-events: none;
+}
+
+.resident-menu-showcase::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(247, 243, 237, 0.1) 0%, rgba(247, 243, 237, 0.45) 45%, rgba(247, 243, 237, 0.92) 80%, var(--resident-paper) 100%);
+  pointer-events: none;
 }
 
 .resident-notice-preview {
@@ -212,17 +258,41 @@
 .resident-payments-hero {
   position: relative;
   overflow: hidden;
-  border-radius: 1.5rem;
-  padding: 1.25rem;
-  background:
-    radial-gradient(circle at 88% 4%, rgba(226, 175, 100, 0.32), transparent 28%),
-    linear-gradient(145deg, #2d2520, #514037);
-  color: #fff;
-  box-shadow: 0 14px 28px rgba(53, 42, 34, 0.19);
+  background-color: var(--resident-paper);
+  color: var(--resident-ink);
+}
+
+.resident-payments-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/owner-assets/payments-hero.jpg');
+  background-size: cover;
+  background-position: center 38%;
+  opacity: 0.28;
+  mix-blend-mode: multiply;
+  filter: contrast(95%);
+  pointer-events: none;
+}
+
+.resident-payments-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(247, 243, 237, 0.1) 0%, rgba(247, 243, 237, 0.45) 45%, rgba(247, 243, 237, 0.92) 80%, var(--resident-paper) 100%);
+  pointer-events: none;
 }
 
 .resident-payments-hero .resident-primary-button {
-  background: #fff6eb;
+  background: #343B2B;
+  color: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(52, 59, 43, 0.2);
+  transition: all 150ms ease;
+}
+.resident-payments-hero .resident-primary-button:hover {
+  background: #252A1F;
+}
   color: var(--resident-clay-deep);
   box-shadow: none;
 }
@@ -273,24 +343,38 @@
 
 .resident-profile-hero {
   position: relative;
-  min-height: 13rem;
+  min-height: 12.5rem;
   overflow: hidden;
   display: flex;
   align-items: end;
-  border-radius: 1.5rem;
-  padding: 1rem;
-  color: #fff;
-  background-color: #3b3029;
-  background-image:
-    linear-gradient(180deg, rgba(27, 21, 17, 0.08), rgba(27, 21, 17, 0.81)),
-    url('/resident-assets/warm-residence-interior.png');
+  background-color: var(--resident-paper);
+  color: var(--resident-ink);
+}
+
+.resident-profile-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url('/resident-assets/warm-residence-interior.png');
   background-size: cover;
-  background-position: center 59%;
+  background-position: center 38%;
+  opacity: 0.28;
+  mix-blend-mode: multiply;
+  filter: contrast(95%);
+  pointer-events: none;
+}
+
+.resident-profile-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(247, 243, 237, 0.1) 0%, rgba(247, 243, 237, 0.45) 45%, rgba(247, 243, 237, 0.92) 80%, var(--resident-paper) 100%);
+  pointer-events: none;
 }
 
 .resident-profile-avatar {
-  border: 3px solid rgba(255, 255, 255, 0.88);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.2);
+  border: 3px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 16px rgba(48, 39, 31, 0.12);
 }
 
 .resident-portal .resident-profile-card { border-radius: 1.15rem; }
@@ -324,8 +408,7 @@
   }
 
   .resident-main { max-width: 65rem; margin: 0 auto; }
-  .resident-home-hero, .resident-profile-hero { border-radius: 1.5rem; }
-  .resident-home-hero { min-height: 30rem; }
+  .resident-home-hero { min-height: 28rem; }
   .resident-portal nav[aria-label='Resident'] > div { max-width: 38rem; border-radius: 1rem 1rem 0 0; }
 }
 

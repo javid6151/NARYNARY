@@ -8,7 +8,7 @@ import { toApiError, type ApiError } from '../../lib/api';
 import { downloadCsv, isoDate } from '../../lib/format';
 import { useAuth } from '../access/useAuth';
 import { useBuilding } from '../access/useBuilding';
-import { Button, Card, ErrorBanner, Field, Input, PageHeader } from '../../components/ui';
+import { Button, Card, ErrorBanner, Field, Input } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
 import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import { REPORTS, type ReportRow } from './definitions';
@@ -51,17 +51,17 @@ export default function Reports() {
 
   return (
     <>
-      <PageHeader
-        title="Reports"
-        subtitle="Choose a report, apply filters, preview and export. Exports contain only data you’re allowed to see."
-        actions={<BuildingPicker />}
-      />
-
       <SectionPromoBanner
+        fromTop
         eyebrow="BUSINESS INTELLIGENCE"
         title="Authoritative Reports, Permanent Audit History."
-        subtitle="Export comprehensive ledgers for revenue, resident check-ins, mess headcount, and property occupancy."
+        subtitle={
+          context
+            ? `${context} · Comprehensive ledgers for revenue, resident check-ins, mess headcount, and occupancy.`
+            : 'Export comprehensive ledgers for revenue, resident check-ins, mess headcount, and property occupancy.'
+        }
         imageSrc="/owner-assets/payments-hero.jpg"
+        controls={<BuildingPicker />}
         statsBadge={`${defs.length} Report Categories`}
         primaryAction={{
           label: `Generate ${sel.title}`,

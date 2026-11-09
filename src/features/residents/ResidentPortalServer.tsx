@@ -13,7 +13,7 @@ import { useBuilding } from '../access/useBuilding';
 import { BuildingPicker } from '../../components/BuildingPicker';
 import {
   Button, Card, Empty, ErrorBanner, Field,
-  Input, Loading, PageHeader, Table, Td
+  Input, Loading, Table, Td
 } from '../../components/ui';
 import {
   listResidentPortalAccounts, manageResidentPortalAccess,
@@ -192,31 +192,14 @@ Please sign in to view your room allotment, rent payment receipts, mess meals, n
   };
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Resident Portal Server & Access"
-        subtitle="Approve resident portal access, generate passwords, ban/suspend accounts, and control login permissions."
-        actions={
-          <div className="flex items-center gap-2">
-            <BuildingPicker allowAll />
-            <a
-              href={residentPortalUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-200 hover:bg-brand-100 transition-colors"
-            >
-              <ExternalLink className="size-3.5" />
-              Open Resident Portal
-            </a>
-          </div>
-        }
-      />
-
+    <>
       <SectionPromoBanner
+        fromTop
         eyebrow="PORTAL SECURITY & AUTH"
         title="Resident Portal Server & Access."
         subtitle="Approve resident logins, issue encrypted passwords, monitor access permissions, and launch Resident Portal."
         imageSrc="/owner-assets/residents-hero.jpg"
+        controls={<BuildingPicker allowAll />}
         statsBadge={`${activeCount} Active Accounts`}
         primaryAction={{
           label: 'Launch Resident Portal',
@@ -229,6 +212,8 @@ Please sign in to view your room allotment, rent payment receipts, mess meals, n
           icon: RefreshCw,
         }}
       />
+
+      <div className="space-y-6">
 
       {toast && (
         <div className="p-3 rounded-xl bg-ok-bg border border-ok/30 text-xs text-ok flex items-center justify-between">
@@ -661,6 +646,7 @@ Please sign in to view your room allotment, rent payment receipts, mess meals, n
           </div>
         )}
       </ModalDialog>
-    </div>
+      </div>
+    </>
   );
 }

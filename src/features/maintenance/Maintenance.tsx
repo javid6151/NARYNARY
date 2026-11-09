@@ -4,11 +4,11 @@
  * so nothing is duplicated between this page and Expenses.
  */
 import { useMemo, useState } from 'react';
-import { AlarmClock, AlertCircle, Loader, Plus, Receipt, Search, Wrench } from 'lucide-react';
+import { AlarmClock, AlertCircle, Loader, Receipt, Search, Wrench } from 'lucide-react';
 import { useAsync } from '../../lib/hooks';
 import { fmtDate, inr, isoDate, label } from '../../lib/format';
 import { useBuilding } from '../access/useBuilding';
-import { Async, Badge, Button, Card, Empty, Input, PageHeader, StatCard, Table, Tabs, Td, Toast } from '../../components/ui';
+import { Async, Badge, Button, Card, Empty, Input, StatCard, Table, Tabs, Td, Toast } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
 import { useExpenses } from '../expenses/useExpenses';
 import { AddExpenseDrawer } from '../expenses/components/AddExpenseDrawer';
@@ -79,24 +79,17 @@ export default function Maintenance() {
 
   return (
     <>
-      <PageHeader
-        title="Maintenance"
-        subtitle="Repairs, service requests and their costs."
-        actions={
-          <>
-            <BuildingPicker />
-            <Button onClick={() => setCreate(true)}>
-              <Plus className="size-4" />
-              New request
-            </Button>
-          </>
-        }
-      />
       <SectionPromoBanner
+        fromTop
         eyebrow="FACILITY OPERATIONS"
         title="Flawless Spaces, Prompt Resolutions."
-        subtitle="Coordinate repairs, assign technicians, track work orders, and maintain unified service expense ledgers."
+        subtitle={
+          buildingId
+            ? 'Coordinate repairs, assign technicians, track work orders, and maintain unified service expense ledgers.'
+            : 'Coordinate repairs, assign technicians, track work orders, and maintain unified service expense ledgers.'
+        }
         imageSrc="/owner-assets/lounge-promo.jpg"
+        controls={<BuildingPicker />}
         statsBadge={`${count('open') + count('assigned')} Active Requests`}
         primaryAction={{
           label: 'New Work Order',

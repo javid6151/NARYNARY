@@ -57,6 +57,8 @@ export function KitchenHome({ name }: { name: string }) {
 
       {/* Hero Photographic Banner with signature pill button */}
       <SectionPromoBanner
+        fromTop
+        className="!-mt-4 sm:!-mt-4 lg:!-mt-4"
         eyebrow="CULINARY & MESS OPERATIONS"
         title="Wholesome Meals, Delighted Residents."
         subtitle={

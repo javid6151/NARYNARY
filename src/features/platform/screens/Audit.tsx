@@ -2,7 +2,7 @@
 import { ScrollText } from 'lucide-react';
 import { useAsync } from '../../../lib/hooks';
 import { fmtDateTime, label } from '../../../lib/format';
-import { Async, Card, PageHeader, Table, Td } from '../../../components/ui';
+import { Async, Card, Table, Td } from '../../../components/ui';
 import { SectionPromoBanner } from '../../../components/SectionPromoBanner';
 import { listPlatformAuditLogs } from '../../audit/api';
 import { activityLabel } from '../../audit/activityLabel';
@@ -14,9 +14,8 @@ export function Audit() {
 
   return (
     <>
-      <PageHeader title="Platform audit log" subtitle="Most recent 300 privileged and business actions." />
-
       <SectionPromoBanner
+        fromTop
         eyebrow="SECURITY & GOVERNANCE"
         title="Cross-Tenant Audit Ledger."
         subtitle="Permanent immutable history of privileged actions, approvals, quota modifications, and logins."

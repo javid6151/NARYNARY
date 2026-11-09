@@ -7,7 +7,7 @@ import { AlertCircle, Download, Plus, Receipt, Search, Wallet } from 'lucide-rea
 import { useAsync } from '../../lib/hooks';
 import { downloadCsv, fmtDate, inr, isoDate, label } from '../../lib/format';
 import { useBuilding } from '../access/useBuilding';
-import { Async, Badge, Button, Card, Empty, Input, PageHeader, Select, StatCard, Table, Tabs, Td, Toast } from '../../components/ui';
+import { Async, Badge, Button, Card, Empty, Input, Select, StatCard, Table, Tabs, Td, Toast } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
 import { listExpenseCategories } from './api';
 import { payStatus } from './payStatus';
@@ -65,24 +65,17 @@ export default function Expenses() {
 
   return (
     <>
-      <PageHeader
-        title="Expenses"
-        subtitle="One ledger for bills, maintenance, salaries and purchases. Paid and outstanding are calculated from payments."
-        actions={
-          <>
-            <BuildingPicker />
-            <Button onClick={() => setAdd(true)}>
-              <Plus className="size-4" />
-              Add expense
-            </Button>
-          </>
-        }
-      />
       <SectionPromoBanner
+        fromTop
         eyebrow="OPERATIONAL EXPENSES"
         title="Unified Ledgers, Zero Discrepancies."
-        subtitle="Manage utility bills, maintenance charges, staff payroll, and vendor disbursements with automated audit tracking."
+        subtitle={
+          building
+            ? `${building.name} · Bills, maintenance, staff payroll, and vendor disbursements.`
+            : 'Manage utility bills, maintenance charges, staff payroll, and vendor disbursements with automated audit tracking.'
+        }
         imageSrc="/owner-assets/payments-hero.jpg"
+        controls={<BuildingPicker />}
         statsBadge={rows.length > 0 ? `${inr(sum('total_amount'))} Total Incurred` : undefined}
         primaryAction={{
           label: 'Add Expense',

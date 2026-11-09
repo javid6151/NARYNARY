@@ -23,15 +23,15 @@ export function ResProfile({ p }: { p: ResidentProfile }) {
   return (
     <>
       <TopBar title="Profile" />
-      <section className="resident-profile-hero -mt-2">
-        <div className="flex items-center gap-3">
+      <section className="resident-profile-hero -mt-4 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-6 pb-8 mb-4">
+        <div className="relative z-10 flex items-center gap-3.5">
           <span className="resident-profile-avatar rounded-full shrink-0">
             <Avatar name={p.full_name} size={60} />
           </span>
           <div className="min-w-0">
-            <p className="text-[21px] leading-tight font-semibold truncate">{p.full_name}</p>
-            <p className="text-[13px] text-white/75 flex items-center gap-1 mt-1 truncate"><MapPin className="size-3.5 shrink-0" />{p.building_name}</p>
-            <p className="text-[12px] font-medium flex items-center gap-1.5 mt-2"><span className="resident-status-dot" aria-hidden />Active resident</p>
+            <p className="text-[22px] leading-tight font-bold text-[#30271F] truncate">{p.full_name}</p>
+            <p className="text-[13px] text-[#5C554B] flex items-center gap-1 mt-1 truncate"><MapPin className="size-3.5 shrink-0 text-[#77736B]" />{p.building_name}</p>
+            <p className="text-[12px] font-semibold text-[#2F6B27] flex items-center gap-1.5 mt-2"><span className="resident-status-dot" aria-hidden />Active resident</p>
           </div>
         </div>
       </section>

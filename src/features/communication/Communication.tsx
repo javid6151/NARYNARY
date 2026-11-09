@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { Megaphone, MessageSquare } from 'lucide-react';
 import { useBuilding } from '../access/useBuilding';
-import { PageHeader, Tabs, Toast } from '../../components/ui';
+import { Tabs, Toast } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
 import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import { Chat } from './components/Chat';
@@ -22,16 +22,13 @@ export default function Communication() {
   const [toast, setToast] = useState<string | null>(null);
   return (
     <>
-      <PageHeader
-        title="Communication"
-        subtitle="Chats, notices, polls, resident posts and visitor passes for the selected building."
-        actions={<BuildingPicker />}
-      />
       <SectionPromoBanner
+        fromTop
         eyebrow="COMMUNITY BROADCAST"
         title="Connected Residents, Clear Announcements."
         subtitle="Publish official hostel notices, manage community discussions, conduct polls, and review visitor requests."
         imageSrc="/owner-assets/lounge-promo.jpg"
+        controls={<BuildingPicker />}
         primaryAction={{
           label: 'Post Notice',
           onClick: () => setTab('notices'),

@@ -5,7 +5,7 @@ import { BedDouble, Bell, DoorOpen, Download, MessageSquareWarning, Plus, Search
 import { useAsync } from '../../lib/hooks';
 import { downloadCsv, fmtDate, inr } from '../../lib/format';
 import { useBuilding } from '../access/useBuilding';
-import { Async, Avatar, Badge, Button, Card, Empty, Input, PageHeader, StatCard, Table, Tabs, Td, Toast } from '../../components/ui';
+import { Async, Avatar, Badge, Button, Card, Empty, Input, StatCard, Table, Tabs, Td, Toast } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
 import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import { listActiveResidents, listOpenComplaintIds, listPastResidents } from './api';
@@ -61,32 +61,17 @@ export default function Residents() {
 
   return (
     <>
-      <PageHeader
-        title="PG Members / Residents"
-        subtitle="Everyone currently staying, with room, bed and dues."
-        actions={
-          <>
-            <BuildingPicker />
-            <Button variant="secondary" onClick={() => setVacantModalOpen(true)}>
-              <DoorOpen className="size-4 text-emerald-600" />
-              Vacant rooms
-            </Button>
-            <Button variant="secondary" disabled={!rows.length} onClick={exportCsv}>
-              <Download className="size-4" />
-              Export
-            </Button>
-            <Button onClick={() => nav('new')}>
-              <Plus className="size-4" />
-              Add resident
-            </Button>
-          </>
-        }
-      />
       <SectionPromoBanner
+        fromTop
         eyebrow="RESIDENT COMMUNITY"
         title="Effortless Check-ins, Connected Hostel Life."
-        subtitle="Manage resident profiles, portal access credentials, and fee payments across all buildings."
+        subtitle={
+          building
+            ? `${building.name} · Manage resident profiles, portal access credentials, and fee payments.`
+            : 'Manage resident profiles, portal access credentials, and fee payments across all buildings.'
+        }
         imageSrc="/owner-assets/residents-hero.jpg"
+        controls={<BuildingPicker />}
         statsBadge={`${rows.length} Active Residents`}
         primaryAction={{
           label: 'Add Resident',
@@ -98,6 +83,16 @@ export default function Residents() {
           onClick: () => setVacantModalOpen(true),
           icon: DoorOpen,
         }}
+        extraActions={
+          <button
+            disabled={!rows.length}
+            onClick={exportCsv}
+            className="inline-flex items-center gap-2 px-5 py-2.5 sm:py-3 rounded-2xl bg-[#FFFEFC] hover:bg-[#ECE5DA] text-[#30271F] text-xs sm:text-[13.5px] font-semibold border border-[#DED6CB] transition-all cursor-pointer shadow-2xs active:scale-[0.98] disabled:opacity-50"
+          >
+            <Download className="size-4 text-[#343B2B]" />
+            <span>Export CSV</span>
+          </button>
+        }
       />
       {status === 'active' && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ShieldCheck, User } from 'lucide-react';
-import { PageHeader, Tabs, Toast } from '../../components/ui';
+import { Tabs, Toast } from '../../components/ui';
 import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import { Categories } from './components/Categories';
 import { MealRules } from './components/MealRules';
@@ -13,8 +13,8 @@ export default function Settings() {
   const [toast, setToast] = useState<string | null>(null);
   return (
     <>
-      <PageHeader title="Settings" subtitle="Personal profile, team access, plan, meal rules and categories." />
       <SectionPromoBanner
+        fromTop
         eyebrow="ORGANIZATION & CONTROLS"
         title="Enterprise Configuration, Ironclad Security."
         subtitle="Manage your personal profile, team member roles, subscription billing, automated meal rules, and accounting expense categories."

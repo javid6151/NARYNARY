@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Building2 } from 'lucide-react';
 import { useAsync } from '../../../lib/hooks';
 import { fmtDate } from '../../../lib/format';
-import { Async, Badge, Button, Card, Empty, PageHeader, Table, Td, Toast } from '../../../components/ui';
+import { Async, Badge, Button, Card, Empty, Table, Td, Toast } from '../../../components/ui';
 import { SectionPromoBanner } from '../../../components/SectionPromoBanner';
 import { listTenants } from '../api';
 import type { TenantAccount } from '../types';
@@ -17,9 +17,8 @@ export function Tenants() {
 
   return (
     <>
-      <PageHeader title="Tenant accounts" subtitle="PG businesses on the platform." />
-
       <SectionPromoBanner
+        fromTop
         eyebrow="TENANT DIRECTORY & LICENSING"
         title="Active PG Businesses & Subscriptions."
         subtitle="Manage customer accounts, trial periods, subscription quotas, and tenant lifecycle statuses."

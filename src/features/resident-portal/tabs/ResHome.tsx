@@ -49,18 +49,18 @@ export function ResHome({ p }: { p: ResidentProfile }) {
     <>
       <SideMenu p={p} open={menuOpen} onClose={() => setMenuOpen(false)} />
 
-      <section className="resident-home-hero -mx-4 -mt-4">
+      <section className="resident-home-hero -mx-4 -mt-4 sm:-mx-6 lg:-mx-8">
         <BrandHeader subtitle="Resident portal" onMenu={() => setMenuOpen(true)} overlay />
-        <div className="resident-home-hero__content">
+        <div className="resident-home-hero__content px-4 sm:px-6 lg:px-8 pb-6">
           <p className="resident-hero-eyebrow">Your place, made simple</p>
-          <h1 className="mt-1 text-[29px] leading-tight font-semibold">Hello, {p.full_name.split(' ')[0]}.</h1>
+          <h1 className="mt-1 text-[29px] leading-tight font-bold text-[#30271F]">Hello, {p.full_name.split(' ')[0]}.</h1>
           <div className="resident-hero-stay">
-            <span className="rounded-full ring-2 ring-white/70 shrink-0"><Avatar name={p.full_name} size={42} /></span>
+            <span className="rounded-full ring-2 ring-[#343B2B]/20 shrink-0"><Avatar name={p.full_name} size={42} /></span>
             <span className="min-w-0 flex-1">
-              <span className="block text-[13px] font-medium truncate">Room {p.room_number} · Bed {p.bed_label}</span>
-              <span className="block text-[12px] text-white/70 truncate">{p.building_name}</span>
+              <span className="block text-[13px] font-semibold text-[#30271F] truncate">Room {p.room_number} · Bed {p.bed_label}</span>
+              <span className="block text-[12px] text-[#77736B] truncate">{p.building_name}</span>
             </span>
-            <span className="text-[11px] font-medium flex items-center gap-1.5 whitespace-nowrap"><span className="resident-status-dot" aria-hidden />Active</span>
+            <span className="text-[11px] font-semibold text-[#2F6B27] flex items-center gap-1.5 whitespace-nowrap"><span className="resident-status-dot" aria-hidden />Active</span>
           </div>
         </div>
       </section>

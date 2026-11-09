@@ -8,7 +8,7 @@ import { useAsync } from '../../lib/hooks';
 import { downloadCsv, inr, isoDate } from '../../lib/format';
 import { useAuth } from '../access/useAuth';
 import { useBuilding } from '../access/useBuilding';
-import { Async, Button, Card, Empty, Input, PageHeader, StatCard, Tabs, Toast } from '../../components/ui';
+import { Async, Button, Card, Empty, Input, StatCard, Tabs, Toast } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
 import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import { listOpenCharges, listPayments } from './api';
@@ -71,32 +71,17 @@ export default function Payments() {
 
   return (
     <>
-      <PageHeader
-        title="Payments"
-        subtitle="Rent dues, collections and receipts."
-        actions={
-          <>
-            <BuildingPicker />
-            <Button variant="secondary" onClick={() => setCharge(true)}>
-              <Plus className="size-4" />
-              Add charge
-            </Button>
-            <Button variant="secondary" onClick={() => setGen(true)}>
-              <CalendarPlus className="size-4" />
-              Generate monthly rent
-            </Button>
-            <Button onClick={() => setRecord('pick')}>
-              <Wallet className="size-4" />
-              Record payment
-            </Button>
-          </>
-        }
-      />
       <SectionPromoBanner
+        fromTop
         eyebrow="FINANCIAL HEALTH"
         title="Authoritative Collections, Transparent Cashflow."
-        subtitle="Track rent dues, generate automated monthly charges, and record instant verified receipts."
+        subtitle={
+          building
+            ? `${building.name} · Track rent dues, generate automated monthly charges, and record instant receipts.`
+            : 'Track rent dues, generate automated monthly charges, and record instant verified receipts.'
+        }
         imageSrc="/owner-assets/payments-hero.jpg"
+        controls={<BuildingPicker />}
         statsBadge={`${inr(collected)} Collected`}
         primaryAction={{
           label: 'Record Payment',
@@ -108,6 +93,15 @@ export default function Payments() {
           onClick: () => setGen(true),
           icon: CalendarPlus,
         }}
+        extraActions={
+          <button
+            onClick={() => setCharge(true)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 sm:py-3 rounded-2xl bg-[#FFFEFC] hover:bg-[#ECE5DA] text-[#30271F] text-xs sm:text-[13.5px] font-semibold border border-[#DED6CB] transition-all cursor-pointer shadow-2xs active:scale-[0.98]"
+          >
+            <Plus className="size-4 text-[#343B2B]" />
+            <span>Add Charge</span>
+          </button>
+        }
       />
       <div className="bg-[#FFFEFC] border border-[#DED6CB] rounded-2xl p-4 sm:p-5 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
         <div>

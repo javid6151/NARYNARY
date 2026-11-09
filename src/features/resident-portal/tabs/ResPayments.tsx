@@ -90,16 +90,18 @@ export function ResPayments({ p }: { p: ResidentProfile }) {
     <>
       <TopBar title="Payments" action={filterButton} />
 
-      <section className="resident-payments-hero">
-        <p className="resident-hero-eyebrow">Payments & receipts</p>
-        <div className="mt-2 flex items-end justify-between gap-3">
-        <div>
-          <p className="text-[14px] text-white/72">Total outstanding</p>
-          <p className="text-[30px] font-semibold tabular tracking-tight">{inr(total, true)}</p>
+      <section className="resident-payments-hero -mt-4 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-6 pb-8 mb-4">
+        <div className="relative z-10">
+          <p className="resident-hero-eyebrow">Payments & receipts</p>
+          <div className="mt-2 flex items-end justify-between gap-3">
+            <div>
+              <p className="text-[13.5px] text-[#5C554B]">Total outstanding</p>
+              <p className="text-[30px] font-bold text-[#30271F] tabular tracking-tight">{inr(total, true)}</p>
+            </div>
+            <Button className="resident-primary-button" onClick={() => setPay(true)}>Pay now</Button>
+          </div>
+          <p className="mt-2 text-[12.5px] text-[#77736B]">A clear record of every charge, payment and receipt.</p>
         </div>
-          <Button className="resident-primary-button" onClick={() => setPay(true)}>Pay now</Button>
-        </div>
-        <p className="mt-3 text-[12px] text-white/72">A clear record of every charge, payment and receipt.</p>
       </section>
 
       <div role="tablist" className="resident-tablist flex overflow-x-auto border-b border-[var(--resident-line)]">

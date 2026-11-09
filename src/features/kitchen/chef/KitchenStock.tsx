@@ -34,6 +34,8 @@ export function KitchenStock() {
       <KitchenTopBar title="Hostel Inventory Stock" />
 
       <SectionPromoBanner
+        fromTop
+        className="!-mt-4 sm:!-mt-4 lg:!-mt-4"
         eyebrow="PANTRY & INVENTORY"
         title="Stock Levels & Consumption Audit."
         subtitle="Track pantry ingredient balances, unit levels, and permanent movement ledgers."

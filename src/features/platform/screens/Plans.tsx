@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useAsync } from '../../../lib/hooks';
 import { inr } from '../../../lib/format';
-import { Async, Badge, Button, Card, PageHeader, Table, Td, Toast } from '../../../components/ui';
+import { Async, Badge, Button, Card, Table, Td, Toast } from '../../../components/ui';
 import { SectionPromoBanner } from '../../../components/SectionPromoBanner';
 import { listPlans } from '../api';
 import type { Plan } from '../types';
@@ -18,12 +18,8 @@ export function Plans() {
 
   return (
     <>
-      <PageHeader
-        title="Subscription plans"
-        subtitle="Pricing and limits are configuration — changes apply to new subscriptions."
-      />
-
       <SectionPromoBanner
+        fromTop
         eyebrow="SAAS MONETIZATION"
         title="Subscription Plans & Tier Configuration."
         subtitle="Configure resident quotas, manager and chef limits, trial days, and recurring monthly pricing."

@@ -32,6 +32,8 @@ export function KitchenCooking() {
       <KitchenTopBar title="Today’s Cooking & Headcount" />
 
       <SectionPromoBanner
+        fromTop
+        className="!-mt-4 sm:!-mt-4 lg:!-mt-4"
         eyebrow="DAILY MEAL PRODUCTION"
         title="Live Headcounts, Zero Waste."
         subtitle="Review resident responses, track meal counts, and record ingredient usage."

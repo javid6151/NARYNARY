@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Users, UtensilsCrossed } from 'lucide-react';
 import { useBuilding } from '../access/useBuilding';
-import { PageHeader, Tabs } from '../../components/ui';
+import { Tabs } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
 import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import { MealReviews } from './components/MealReviews';
@@ -13,17 +13,13 @@ export default function Food() {
   const [tab, setTab] = useState<'today' | 'week' | 'reviews'>('today');
   return (
     <>
-      <PageHeader
-        title="Food / Mess"
-        subtitle="Plan menus, see live headcounts from residents’ meal responses, and read reviews."
-        actions={<BuildingPicker />}
-      />
-
       <SectionPromoBanner
+        fromTop
         eyebrow="NUTRITION & DINING"
         title="Wholesome Daily Meals, Delighted Residents."
         subtitle="Plan breakfast, lunch, and dinner menus with live resident headcounts and rating feedback."
         imageSrc="/owner-assets/food-hero.jpg"
+        controls={<BuildingPicker />}
         primaryAction={{
           label: tab === 'week' ? 'Weekly Menu Planner' : 'Plan Weekly Menu',
           onClick: () => setTab('week'),

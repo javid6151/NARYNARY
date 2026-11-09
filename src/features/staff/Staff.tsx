@@ -8,7 +8,7 @@ import { useAsync } from '../../lib/hooks';
 import { fmtDate, inr, isoDate, label } from '../../lib/format';
 import { useAuth } from '../access/useAuth';
 import { useBuilding } from '../access/useBuilding';
-import { Async, Badge, Button, Card, Empty, PageHeader, StatCard, Table, Tabs, Td, Toast } from '../../components/ui';
+import { Async, Badge, Button, Card, Empty, StatCard, Table, Tabs, Td, Toast } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
 import { listAttendance, listStaff } from './api';
 import type { AttendanceMark, StaffMember } from './types';
@@ -58,24 +58,17 @@ export default function Staff() {
 
   return (
     <>
-      <PageHeader
-        title="Staff management"
-        subtitle="Roster, daily attendance, end-of-day work reports and salaries."
-        actions={
-          <>
-            <BuildingPicker />
-            <Button onClick={() => setEdit({})}>
-              <Plus className="size-4" />
-              Add staff
-            </Button>
-          </>
-        }
-      />
       <SectionPromoBanner
+        fromTop
         eyebrow="WORKFORCE & OPERATIONS"
         title="Dedicated Teams, Elevated Service."
-        subtitle="Oversee building staff rosters, daily biometric attendance, end-of-day operational logs, and payroll disbursements."
+        subtitle={
+          buildingId
+            ? 'Oversee building staff rosters, daily biometric attendance, end-of-day operational logs, and payroll disbursements.'
+            : 'Oversee building staff rosters, daily biometric attendance, end-of-day operational logs, and payroll disbursements.'
+        }
         imageSrc="/owner-assets/residents-hero.jpg"
+        controls={<BuildingPicker />}
         statsBadge={`${active.length} On Roster · ${present} On Duty`}
         primaryAction={{
           label: 'Add Staff Member',

@@ -12,7 +12,7 @@ import { ApiError, newKey } from '../../lib/api';
 import { useAsync, useMutation } from '../../lib/hooks';
 import { isoDate } from '../../lib/format';
 import { useBuilding } from '../access/useBuilding';
-import { Async, Button, Card, PageHeader } from '../../components/ui';
+import { Async, Button, Card } from '../../components/ui';
 import { BuildingPicker } from '../../components/BuildingPicker';
 import { SectionPromoBanner } from '../../components/SectionPromoBanner';
 import { uploadFile } from '../files/api';
@@ -197,8 +197,8 @@ export default function NewAdmission() {
 
   return (
     <>
-      <PageHeader title="New admission" subtitle={building?.name} crumbs="PG Members / New Admission" actions={<BuildingPicker />} />
       <SectionPromoBanner
+        fromTop
         eyebrow="RESIDENT ONBOARDING"
         title="New Admission & Bed Allocation."
         subtitle={
@@ -207,6 +207,7 @@ export default function NewAdmission() {
             : 'Onboard new residents with bed allocation and instant login credentials.'
         }
         imageSrc="/owner-assets/residents-hero.jpg"
+        controls={<BuildingPicker />}
         primaryAction={{
           label: 'Back to Residents',
           onClick: () => nav('../residents'),

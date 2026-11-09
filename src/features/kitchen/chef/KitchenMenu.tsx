@@ -32,10 +32,12 @@ export function KitchenMenu() {
   const [toast, setToast] = useState<string | null>(null);
 
   return (
-    <div className="space-y-4">
+    <>
       <KitchenTopBar title="Weekly Menu Planner" />
 
       <SectionPromoBanner
+        fromTop
+        className="!-mt-4 sm:!-mt-4 lg:!-mt-4"
         eyebrow="CULINARY CALENDAR"
         title="7-Day Weekly Menu Planner."
         subtitle="Schedule balanced breakfast, lunch, and dinner menus for all hostel residents."
@@ -47,7 +49,8 @@ export function KitchenMenu() {
         }}
       />
 
-      <div className="flex flex-col sm:flex-row gap-2.5">
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row gap-2.5">
         <BuildingPicker />
         <Input
           type="date"
@@ -112,6 +115,7 @@ export function KitchenMenu() {
         />
       )}
       <Toast message={toast} onDone={() => setToast(null)} />
-    </div>
+      </div>
+    </>
   );
 }

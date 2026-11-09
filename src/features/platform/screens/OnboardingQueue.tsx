@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ClipboardCheck } from 'lucide-react';
 import { useAsync } from '../../../lib/hooks';
 import { fmtDateTime } from '../../../lib/format';
-import { Async, Badge, Button, Card, Empty, PageHeader, Table, Tabs, Td, Toast } from '../../../components/ui';
+import { Async, Badge, Button, Card, Empty, Table, Tabs, Td, Toast } from '../../../components/ui';
 import { SectionPromoBanner } from '../../../components/SectionPromoBanner';
 import { listOnboardingRequests } from '../api';
 import { PENDING_ONBOARDING, type PlatformOnboardingRequest } from '../types';
@@ -20,12 +20,8 @@ export function OnboardingQueue() {
 
   return (
     <>
-      <PageHeader
-        title="Owner onboarding requests"
-        subtitle="Verify each PG business before it gets operational access."
-      />
-
       <SectionPromoBanner
+        fromTop
         eyebrow="PG VERIFICATION & APPROVALS"
         title="Tenant Verification & Onboarding."
         subtitle="Review pending PG businesses, inspect submitted documents, and grant authorized operational access."

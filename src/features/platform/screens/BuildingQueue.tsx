@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Building2 } from 'lucide-react';
 import { useAsync, useMutation } from '../../../lib/hooks';
 import { fmtDate } from '../../../lib/format';
-import { Async, Badge, Button, Card, Empty, ErrorBanner, Input, PageHeader, Table, Td, Toast } from '../../../components/ui';
+import { Async, Badge, Button, Card, Empty, ErrorBanner, Input, Table, Td, Toast } from '../../../components/ui';
 import { SectionPromoBanner } from '../../../components/SectionPromoBanner';
 import { listBuildingRequests, reviewBuilding } from '../api';
 
@@ -25,12 +25,8 @@ export function BuildingQueue() {
 
   return (
     <>
-      <PageHeader
-        title="Additional building requests"
-        subtitle="Existing tenants requesting more buildings."
-      />
-
       <SectionPromoBanner
+        fromTop
         eyebrow="PROPERTY EXPANSION"
         title="Building Expansion Requests."
         subtitle="Review and approve additional hostel facilities requested by active PG tenant businesses."

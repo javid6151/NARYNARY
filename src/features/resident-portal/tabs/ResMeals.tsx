@@ -30,11 +30,11 @@ export function ResMeals({ p }: { p: ResidentProfile }) {
   return (
     <>
       <TopBar title="Today's menu" />
-      <section className="resident-menu-showcase -mt-2 rounded-2xl p-4">
-        <div>
+      <section className="resident-menu-showcase -mt-4 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-6 pb-8 mb-4">
+        <div className="relative z-10">
           <p className="resident-hero-eyebrow">Prepared for you</p>
-          <h2 className="text-[23px] font-semibold mt-1">A thoughtful table,<br />every day.</h2>
-          <p className="text-[12px] text-white/75 mt-2">Check the day’s meals or let the kitchen know you won’t be joining.</p>
+          <h2 className="text-[24px] font-bold text-[#30271F] mt-1">A thoughtful table,<br />every day.</h2>
+          <p className="text-[13px] text-[#5C554B] mt-2">Check the day’s meals or let the kitchen know you won’t be joining.</p>
         </div>
       </section>
       <p className="text-[13px] text-muted -mt-1">

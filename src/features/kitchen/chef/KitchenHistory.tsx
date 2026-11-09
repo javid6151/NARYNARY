@@ -31,6 +31,8 @@ export function KitchenHistory() {
       <KitchenTopBar title="Cooking & Consumption History" />
 
       <SectionPromoBanner
+        fromTop
+        className="!-mt-4 sm:!-mt-4 lg:!-mt-4"
         eyebrow="CULINARY AUDIT"
         title="Recorded Meals & Ingredient Ledger."
         subtitle="Permanent historical log of prepared meals, resident headcounts served, and consumed stock."
